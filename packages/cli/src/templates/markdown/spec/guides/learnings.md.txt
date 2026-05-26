@@ -1,0 +1,6 @@
+# Project Learnings
+
+Append-only reusable insights captured by `devflow knowledge learn`.
+
+Entries use closed `&lt;spec-entry&gt;` blocks so they can live inside normal
+markdown while still being searchable and loadable as structured knowledge.

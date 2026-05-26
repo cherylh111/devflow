@@ -1,0 +1,9 @@
+{
+  "version": "0.6.0-beta.13",
+  "description": "Beta patch: add the devflow-core SDK package, finalize thread channel naming/context commands, and publish core with the CLI.",
+  "breaking": true,
+  "recommendMigrate": false,
+  "changelog": "**Enhancements:**\n- feat(core): add `@enpd/devflow-core` with public `channel`, `task`, and `testing` exports for Node consumers.\n- feat(channel): use `devflow channel create --type threads` for thread channels and add `devflow channel context`, `devflow channel title`, and `devflow channel thread rename`.\n- feat(channel): add `--context-file` and `--context-raw` as canonical context flags while accepting `--linked-context-*` aliases.\n\n**Internal:**\n- chore(release): publish `@enpd/devflow-core` before `@enpd/devflow` with one version, one dist-tag, provenance, and packed CLI dependency checks.",
+  "migrations": [],
+  "notes": "Beta users should replace `devflow channel create --type thread` with `devflow channel create --type threads`. Run `devflow update` to pull in the core SDK-backed channel commands. No file migration is required."
+}
