@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to pull in the manifest ownership fixes and updated hook templates. No migration required because file paths did not change."
 }
+

@@ -1,5 +1,5 @@
 /**
- * Tests for `tl mem extract --phase` (brainstorm window slicing).
+ * Tests for `devflow mem extract --phase` (brainstorm window slicing).
  *
  * The MVP definition (PRD 05-08-mem-phase-slice):
  *   brainstorm window = [task.py create, task.py start)
@@ -175,7 +175,7 @@ describe("parseTaskPyCommandsAll (dogfood-driven edge cases)", () => {
   it("strips $(...) closing paren from --slug value", () => {
     // Real pattern in scripted brainstorm: TASK_DIR=$(... --slug NAME)
     const all = parseTaskPyCommandsAll(
-      'TASK_DIR=$(python3 ./.devflow/scripts/task.py create "fix: tl mem --since drops cross-day sessions" --slug mem-since-cross-day-filter)',
+      'TASK_DIR=$(python3 ./.devflow/scripts/task.py create "fix: devflow mem --since drops cross-day sessions" --slug mem-since-cross-day-filter)',
     );
     expect(all).toHaveLength(1);
     expect(all[0]).toMatchObject({
@@ -621,3 +621,4 @@ describe("collectClaudeTurnsAndEvents", () => {
     expect(events).toEqual([]);
   });
 });
+

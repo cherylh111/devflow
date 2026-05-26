@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to sync. New platforms: `devflow init --platform copilot` or `--platform windsurf`."
 }
+

@@ -14,3 +14,4 @@
   ],
   "notes": "Patch on top of 0.5.10. Run `devflow update` — your `.devflow/config.yaml` gets a commented-out `session_auto_commit: true` block appended automatically. Uncomment and flip to `false` if your `.gitignore` excludes `.devflow/` and you want auto-commit off entirely."
 }
+

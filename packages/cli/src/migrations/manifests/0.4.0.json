@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Stable promotion of v0.4.0-rc.1 — no new src/ changes since rc.1, no new migrations in this manifest. Users on 0.3.x: run `devflow update` to apply the full 0.4.0 cycle (36 file deletions for the merged before-dev/check commands are handled automatically via safe-file-delete with hash verification — your local edits are preserved). Users on any 0.4.0 prerelease: `devflow update` is a clean version bump. Install: `npm install -g @enpd/devflow`."
 }
+

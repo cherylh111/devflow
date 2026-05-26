@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure template-content fix for opencode users. No path migrations. `devflow update` auto-updates the 3 plugin files (unmodified copies) or prompts for confirm with diff (if you customized them)."
 }
+

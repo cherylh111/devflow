@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure CLI-side bug fix — no project file migrations. If upgrading from 0.4.x with an `update.skip` in config.yaml, this release finally lets the 0.5.0-beta.0 breaking migration complete cleanly: run `devflow update --migrate` to finish any half-migrated state from prior 0.5 beta upgrades."
 }
+

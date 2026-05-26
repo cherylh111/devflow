@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { Command } from "commander";
+import { InvalidArgumentError, type Command } from "commander";
 
 import { isProvider, listProviders, type Provider } from "./adapters/index.js";
 import {
@@ -10,6 +10,7 @@ import {
 import { createChannel } from "./create.js";
 import { parseTrace } from "./dev-parse-trace.js";
 import { channelKill } from "./kill.js";
+import { channelInterrupt } from "./interrupt.js";
 import { channelList } from "./list.js";
 import { channelMessages } from "./messages.js";
 import { channelPrune, channelRm } from "./rm.js";
@@ -20,12 +21,22 @@ import {
   channelThreadPost,
   channelThreadRename,
   channelThreadShow,
-  channelThreadsList,
+  channelForumList,
 } from "./threads.js";
 import { channelTitleClear, channelTitleSet } from "./title.js";
 import { runSupervisor } from "./supervisor.js";
 import { channelWait, parseDuration } from "./wait.js";
 import { parseCsv } from "./store/schema.js";
+import { parseInboxPolicy } from "@enpd/devflow-core/channel";
+
+function parseNonNegativeInteger(value: string): number {
+  if (!/^\d+$/.test(value)) {
+    throw new InvalidArgumentError(
+      `expected a non-negative integer, got '${value}'`,
+    );
+  }
+  return Number(value);
+}
 
 export function registerChannelCommand(program: Command): void {
   const channel = program
@@ -38,7 +49,7 @@ export function registerChannelCommand(program: Command): void {
     .command("create <name>")
     .description("Create a new channel (collaboration session)")
     .option("--scope <scope>", "channel scope: project | global")
-    .option("--type <type>", "channel type: chat | threads", "chat")
+    .option("--type <type>", "channel type: chat | forum", "chat")
     .option("--task <path>", "associated DevFlow task directory")
     .option("--project <slug>", "project slug")
     .option("--labels <csv>", "comma-separated labels")
@@ -111,14 +122,16 @@ export function registerChannelCommand(program: Command): void {
     .description("Send a message into the channel")
     .requiredOption("--as <agent>", "agent name sending")
     .option("--scope <scope>", "channel scope: project | global")
-    .option("--tag <tag>", "tag (e.g. interrupt / phase_done / question)")
-    .option("--kind <tag>", "legacy alias for --tag")
     .option(
       "--to <agents>",
       "comma-separated target agents (default: broadcast)",
     )
     .option("--stdin", "read message body from stdin")
     .option("--text-file <path>", "read message body from file")
+    .option(
+      "--delivery-mode <mode>",
+      "targeted delivery validation: appendOnly | requireKnownWorker | requireRunningWorker",
+    )
     .argument(
       "[text]",
       "inline text body (otherwise use --stdin / --text-file)",
@@ -132,11 +145,10 @@ export function registerChannelCommand(program: Command): void {
         const opts = raw as {
           as: string;
           scope?: string;
-          tag?: string;
-          kind?: string;
           to?: string;
           stdin?: boolean;
           textFile?: string;
+          deliveryMode?: string;
         };
         try {
           await channelSend(name, {
@@ -145,9 +157,8 @@ export function registerChannelCommand(program: Command): void {
             stdin: opts.stdin,
             textFile: opts.textFile,
             scope: opts.scope,
-            tag: opts.tag,
-            kind: opts.kind,
             to: opts.to,
+            deliveryMode: opts.deliveryMode,
           });
         } catch (err) {
           console.error(
@@ -166,8 +177,10 @@ export function registerChannelCommand(program: Command): void {
     .option("--scope <scope>", "channel scope: project | global")
     .option("--timeout <duration>", "max wait (e.g. 30s, 2m, 1h)")
     .option("--from <agents>", "only wake on events from these agents (CSV)")
-    .option("--kind <kind>", "only wake on this event kind")
-    .option("--tag <tag>", "only wake on this user tag")
+    .option(
+      "--kind <kind[,kind...]>",
+      "only wake on these event kinds (CSV, OR semantics)",
+    )
     .option("--thread <key>", "only wake on this thread key")
     .option("--action <action>", "only wake on this thread action")
     .option(
@@ -185,7 +198,6 @@ export function registerChannelCommand(program: Command): void {
         timeout?: string;
         from?: string;
         kind?: string;
-        tag?: string;
         scope?: string;
         thread?: string;
         action?: string;
@@ -199,7 +211,6 @@ export function registerChannelCommand(program: Command): void {
           timeoutMs: parseDuration(opts.timeout),
           from: opts.from,
           kind: opts.kind,
-          tag: opts.tag,
           scope: opts.scope,
           thread: opts.thread,
           action: opts.action,
@@ -215,6 +226,50 @@ export function registerChannelCommand(program: Command): void {
         process.exit(1);
       }
     });
+
+  channel
+    .command("interrupt <name>")
+    .description("Interrupt a worker turn and send a replacement instruction")
+    .requiredOption("--as <agent>", "agent name requesting the interrupt")
+    .requiredOption("--to <agent>", "target worker name")
+    .option("--scope <scope>", "channel scope: project | global")
+    .option("--stdin", "read interrupt message body from stdin")
+    .option("--text-file <path>", "read interrupt message body from file")
+    .argument(
+      "[text]",
+      "inline interrupt message (otherwise use --stdin / --text-file)",
+    )
+    .action(
+      async (
+        name: string,
+        text: string | undefined,
+        raw: Record<string, unknown>,
+      ) => {
+        const opts = raw as {
+          as: string;
+          to: string;
+          scope?: string;
+          stdin?: boolean;
+          textFile?: string;
+        };
+        try {
+          await channelInterrupt(name, {
+            as: opts.as,
+            to: opts.to,
+            text,
+            stdin: opts.stdin,
+            textFile: opts.textFile,
+            scope: opts.scope,
+          });
+        } catch (err) {
+          console.error(
+            chalk.red("Error:"),
+            err instanceof Error ? err.message : err,
+          );
+          process.exit(1);
+        }
+      },
+    );
 
   channel
     .command("spawn <name>")
@@ -242,6 +297,10 @@ export function registerChannelCommand(program: Command): void {
       "auto-kill worker after this duration (e.g. 30m, 1h, 7200s)",
     )
     .option(
+      "--warn-before <duration>",
+      "emit supervisor_warning before timeout (default 5m; 0ms disables)",
+    )
+    .option(
       "--file <path>",
       "include a file's content as context in the worker's system prompt (glob supported, repeatable)",
       (val: string, prev: string[] | undefined) => [...(prev ?? []), val],
@@ -257,6 +316,19 @@ export function registerChannelCommand(program: Command): void {
       "--by <agent>",
       "identity recorded as the spawn author (defaults to DEVFLOW_CHANNEL_AS env or 'main')",
     )
+    .option(
+      "--inbox-policy <policy>",
+      "worker inbox delivery policy: explicitOnly | broadcastAndExplicit (default explicitOnly)",
+    )
+    .option(
+      "--idle-timeout <duration>",
+      "OOM-guard idle-cleanup TTL for this worker (default 5m; 0 disables)",
+    )
+    .option(
+      "--max-live-workers <n>",
+      "spawn-time live-worker budget for this project/scope (default 6; 0 disables)",
+      parseNonNegativeInteger,
+    )
     .action(async (name: string, raw: Record<string, unknown>) => {
       const opts = raw as {
         agent?: string;
@@ -266,10 +338,14 @@ export function registerChannelCommand(program: Command): void {
         model?: string;
         resume?: string;
         timeout?: string;
+        warnBefore?: string;
         file?: string[];
         jsonl?: string[];
         by?: string;
         scope?: string;
+        inboxPolicy?: string;
+        idleTimeout?: string;
+        maxLiveWorkers?: number;
       };
       if (opts.provider !== undefined && !isProvider(opts.provider)) {
         console.error(
@@ -287,10 +363,14 @@ export function registerChannelCommand(program: Command): void {
           model: opts.model,
           resume: opts.resume,
           timeoutMs: parseDuration(opts.timeout),
+          warnBeforeMs: parseDuration(opts.warnBefore),
           files: opts.file,
           jsonls: opts.jsonl,
           by: opts.by,
           scope: opts.scope,
+          inboxPolicy: parseInboxPolicy(opts.inboxPolicy),
+          idleTimeoutMs: parseDuration(opts.idleTimeout),
+          maxLiveWorkers: opts.maxLiveWorkers,
         });
       } catch (err) {
         console.error(
@@ -332,7 +412,6 @@ export function registerChannelCommand(program: Command): void {
     .option("--message <text>", "inline prompt text")
     .option("--message-file <path>", "read prompt body from file")
     .option("--stdin", "read prompt body from stdin")
-    .option("--tag <tag>", "user tag (e.g. interrupt / phase_done / question)")
     .option(
       "--timeout <duration>",
       "max time to wait for done (e.g. 30s, 5m, 1h; default 5m)",
@@ -349,7 +428,6 @@ export function registerChannelCommand(program: Command): void {
         message?: string;
         messageFile?: string;
         stdin?: boolean;
-        tag?: string;
         timeout?: string;
       };
       if (opts.provider !== undefined && !isProvider(opts.provider)) {
@@ -372,7 +450,6 @@ export function registerChannelCommand(program: Command): void {
           message: opts.message,
           textFile: opts.messageFile,
           stdin: opts.stdin,
-          tag: opts.tag,
           timeoutMs: parseDuration(opts.timeout),
         });
       } catch (err) {
@@ -509,7 +586,6 @@ export function registerChannelCommand(program: Command): void {
     )
     .option("--from <agents>", "filter by author (CSV)")
     .option("--to <target>", "filter by routing target")
-    .option("--tag <tag>", "filter by user tag (e.g. interrupt, final_answer)")
     .option("--thread <key>", "filter by thread key")
     .option("--action <action>", "filter by thread action")
     .option("--no-progress", "hide progress events (tool calls, deltas)")
@@ -522,7 +598,6 @@ export function registerChannelCommand(program: Command): void {
         kind?: string;
         from?: string;
         to?: string;
-        tag?: string;
         scope?: string;
         thread?: string;
         action?: string;
@@ -537,7 +612,6 @@ export function registerChannelCommand(program: Command): void {
           kind: opts.kind,
           from: opts.from,
           to: opts.to,
-          tag: opts.tag,
           scope: opts.scope,
           thread: opts.thread,
           action: opts.action,
@@ -575,7 +649,7 @@ export function registerChannelCommand(program: Command): void {
 
   channel
     .command("post <name> <action>")
-    .description("Append a structured thread event to a threads channel")
+    .description("Append a structured thread event to a forum channel")
     .requiredOption("--as <agent>", "agent name posting")
     .option("--scope <scope>", "channel scope: project | global")
     .option("--thread <key>", "thread key (required except opened)")
@@ -630,16 +704,16 @@ export function registerChannelCommand(program: Command): void {
     );
 
   channel
-    .command("threads <name>")
-    .description("List threads in a thread channel")
+    .command("forum <name>")
+    .description("List threads in a forum channel")
     .option("--scope <scope>", "channel scope: project | global")
     .option("--status <status>", "filter by thread status")
     .option("--raw", "print raw reduced thread JSON")
     .action(async (name: string, raw: Record<string, unknown>) => {
       try {
-        await channelThreadsList(
+        await channelForumList(
           name,
-          raw as Parameters<typeof channelThreadsList>[1],
+          raw as Parameters<typeof channelForumList>[1],
         );
       } catch (err) {
         console.error(
@@ -679,7 +753,7 @@ export function registerChannelCommand(program: Command): void {
 
   thread
     .command("rename <name> <oldThread> <newThread>")
-    .description("Rename a thread inside a threads channel")
+    .description("Rename a thread inside a forum channel")
     .requiredOption("--as <agent>", "agent name")
     .option("--scope <scope>", "channel scope: project | global")
     .action(

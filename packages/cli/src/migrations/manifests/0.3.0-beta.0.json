@@ -295,3 +295,4 @@
   ],
   "notes": "Part 1: Command namespace migration - Claude Code uses subdirectory namespacing (.claude/commands/devflow/), Cursor uses filename prefix (.cursor/commands/devflow-*). Part 2: Shell to Python migration - All .devflow/scripts/*.sh files are archived to .devflow/scripts-shell-archive/ (not deleted). The multi-agent/ directory (with hyphen) is replaced by multi_agent/ (with underscore). Empty source directories are automatically cleaned up after rename."
 }
+

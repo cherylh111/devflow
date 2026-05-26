@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "RC install: `npm install -g @enpd/devflow@rc`. Existing Gemini installs: re-run `devflow init --gemini` or delete `.gemini/skills/` manually."
 }
+

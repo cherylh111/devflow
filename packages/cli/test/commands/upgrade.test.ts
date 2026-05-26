@@ -76,20 +76,30 @@ describe("upgrade command", () => {
   it("executes npm install for real upgrades", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const runner = vi.fn(() => ({ status: 0, signal: null }));
-    const plan = buildUpgradeCommand({ tag: "latest" });
 
     await upgrade({ tag: "latest" }, runner);
 
-    expect(runner).toHaveBeenCalledWith(
-      plan.command,
-      plan.args,
-      plan.spawnOptions,
-    );
+    const expected =
+      process.platform === "win32"
+        ? {
+            command: "cmd.exe",
+            args: ["/d", "/s", "/c", "npm install -g @enpd/devflow@latest"],
+            binaryCheck: "where devflow",
+          }
+        : {
+            command: "npm",
+            args: ["install", "-g", "@enpd/devflow@latest"],
+            binaryCheck: "which devflow",
+          };
+    expect(runner).toHaveBeenCalledWith(expected.command, expected.args, {
+      stdio: "inherit",
+      shell: false,
+    });
     expect(log).toHaveBeenCalledWith(
       expect.stringContaining("devflow --version"),
     );
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining(plan.binaryCheckCommand),
+      expect.stringContaining(expected.binaryCheck),
     );
 
     log.mockRestore();
@@ -98,14 +108,16 @@ describe("upgrade command", () => {
   it("fails when npm exits non-zero", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const runner = vi.fn(() => ({ status: 1, signal: null }));
-    const plan = buildUpgradeCommand({ tag: "latest" });
+    const binaryCheck =
+      process.platform === "win32" ? "where devflow" : "which devflow";
 
     await expect(upgrade({ tag: "latest" }, runner)).rejects.toThrow(
       new RegExp(
-        `npm install failed with exit code 1\\.[\\s\\S]*Troubleshooting:[\\s\\S]*Manual command: npm install -g @enpd/devflow@latest[\\s\\S]*npm config get prefix[\\s\\S]*${plan.binaryCheckCommand}`,
+        `npm install failed with exit code 1\\.[\\s\\S]*Troubleshooting:[\\s\\S]*Manual command: npm install -g @enpd/devflow@latest[\\s\\S]*npm config get prefix[\\s\\S]*${binaryCheck}`,
       ),
     );
 
     log.mockRestore();
   });
 });
+

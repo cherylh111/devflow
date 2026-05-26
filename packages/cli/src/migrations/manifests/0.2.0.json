@@ -47,3 +47,4 @@
   ],
   "notes": "Complex migrations (features→tasks, traces→journal) require running scripts/migrate-features-to-tasks.sh"
 }
+

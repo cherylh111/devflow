@@ -53,10 +53,9 @@ Run the project's lint, type-check, and test commands. Fix any failures before p
 
 ### Spec Sync
 
-- [ ] Does `.devflow/spec/` need hard-rule updates? (new patterns, conventions, implementation contracts)
-- [ ] Does `.devflow/spec/guides/learnings.md` need a lightweight learning entry? (gotchas, caveats, lessons not yet mandatory rules)
+- [ ] Does `.devflow/spec/` need updates? (new patterns, conventions, lessons learned)
 
-> "If I fixed a bug or discovered something non-obvious, should I document it so future me won't hit the same issue?" → If YES, choose the right path: `devflow-update-spec` for enforceable rules, `devflow-learn` / `devflow learn` for searchable lightweight learnings.
+> "If I fixed a bug or discovered something non-obvious, should I document it so future me won't hit the same issue?" → If YES, update the relevant spec doc.
 
 ## Step 5: Cross-Layer Dimensions (if applicable)
 

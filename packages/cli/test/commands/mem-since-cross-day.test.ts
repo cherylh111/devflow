@@ -1,5 +1,5 @@
 /**
- * Tests for `tl mem --since` cross-day session filtering.
+ * Tests for `devflow mem --since` cross-day session filtering.
  *
  * Regression for PRD 05-08-mem-since-cross-day-filter: list filtering used to
  * apply `inRange()` to a single timestamp (claude/codex: created, opencode:
@@ -292,3 +292,4 @@ describe("codexListSessions interval-overlap filter", () => {
 // =============================================================================
 // OpenCode — coverage dropped in 0.6.0-beta.4 (adapter degraded; see header).
 // =============================================================================
+

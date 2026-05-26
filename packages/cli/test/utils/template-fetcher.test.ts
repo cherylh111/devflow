@@ -633,43 +633,47 @@ gitDescribe("git-backed registry backend", () => {
     );
   });
 
-  it("downloads marketplace templates through the same Git backend", async () => {
-    await withGitRegistry(
-      {
-        "marketplace/index.json": JSON.stringify({
-          version: 1,
-          templates: [
-            {
-              id: "backend",
-              type: "spec",
-              name: "Backend",
-              path: "templates/backend",
-            },
-          ],
-        }),
-        "templates/backend/rules.md": "remote rules\n",
-      },
-      "marketplace",
-      async ({ registry, tmpDir }) => {
-        const cwd = path.join(tmpDir, "project");
-        const result = await downloadTemplateById(
-          cwd,
-          "backend",
-          "overwrite",
-          undefined,
-          registry,
-        );
+  it(
+    "downloads marketplace templates through the same Git backend",
+    async () => {
+      await withGitRegistry(
+        {
+          "marketplace/index.json": JSON.stringify({
+            version: 1,
+            templates: [
+              {
+                id: "backend",
+                type: "spec",
+                name: "Backend",
+                path: "templates/backend",
+              },
+            ],
+          }),
+          "templates/backend/rules.md": "remote rules\n",
+        },
+        "marketplace",
+        async ({ registry, tmpDir }) => {
+          const cwd = path.join(tmpDir, "project");
+          const result = await downloadTemplateById(
+            cwd,
+            "backend",
+            "overwrite",
+            undefined,
+            registry,
+          );
 
-        expect(result.success).toBe(true);
-        expect(
-          fs.readFileSync(
-            path.join(cwd, ".devflow", "spec", "rules.md"),
-            "utf-8",
-          ),
-        ).toBe("remote rules\n");
-      },
-    );
-  });
+          expect(result.success).toBe(true);
+          expect(
+            fs.readFileSync(
+              path.join(cwd, ".devflow", "spec", "rules.md"),
+              "utf-8",
+            ),
+          ).toBe("remote rules\n");
+        },
+      );
+    },
+    20_000,
+  );
 
   it("uses an explicit Git backend for prefetched marketplace templates", async () => {
     await withGitRegistry(

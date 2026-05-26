@@ -7,7 +7,10 @@ import { update } from "../commands/update.js";
 import { upgrade } from "../commands/upgrade.js";
 import { uninstall } from "../commands/uninstall.js";
 import { runMem } from "../commands/mem.js";
-import { registerKnowledgeCommand } from "../commands/knowledge/index.js";
+import {
+  runWorkflowCommand,
+  WorkflowCommandError,
+} from "../commands/workflow.js";
 import { registerChannelCommand } from "../commands/channel/index.js";
 import { DIR_NAMES } from "../constants/paths.js";
 import { PACKAGE_NAME, VERSION } from "../constants/version.js";
@@ -100,6 +103,14 @@ program
   .option(
     "-r, --registry <source>",
     "Use a custom template registry (e.g., gh:myorg/myrepo/specs)",
+  )
+  .option(
+    "--workflow <id>",
+    "Workflow template id for .devflow/workflow.md (default: native; e.g., tdd, channel-driven-subagent-dispatch)",
+  )
+  .option(
+    "--workflow-source <source>",
+    "Custom marketplace source for the --workflow lookup (e.g., gh:myorg/myrepo/marketplace)",
   )
   .action(async (options: Record<string, unknown>) => {
     try {
@@ -224,7 +235,50 @@ program
     }
   });
 
+program
+  .command("workflow")
+  .description(
+    "List or switch the project's .devflow/workflow.md template (native, tdd, channel-driven-subagent-dispatch, or marketplace)",
+  )
+  .option(
+    "-t, --template <id>",
+    "Workflow template id (e.g., native, tdd, channel-driven-subagent-dispatch)",
+  )
+  .option(
+    "-m, --marketplace <source>",
+    "Custom marketplace source (e.g., gh:myorg/myrepo/marketplace)",
+  )
+  .option("--list", "List available workflow templates and exit")
+  .option("-f, --force", "Overwrite a modified workflow.md without asking")
+  .option(
+    "-n, --create-new",
+    "Write .devflow/workflow.md.new instead of replacing the active workflow",
+  )
+  .action(async (options: Record<string, unknown>) => {
+    try {
+      await runWorkflowCommand({
+        template: options.template as string | undefined,
+        marketplace: options.marketplace as string | undefined,
+        list: options.list as boolean | undefined,
+        force: options.force as boolean | undefined,
+        createNew: options.createNew as boolean | undefined,
+      });
+    } catch (error) {
+      if (error instanceof WorkflowCommandError) {
+        console.error(chalk.red("Error:"), error.message);
+        process.exit(1);
+      }
+      console.error(
+        chalk.red("Error:"),
+        error instanceof Error ? error.message : error,
+      );
+      if (process.env.DEBUG || process.env.DEVFLOW_DEBUG) {
+        console.error(error instanceof Error ? error.stack : error);
+      }
+      process.exit(1);
+    }
+  });
+
 registerChannelCommand(program);
-registerKnowledgeCommand(program);
 
 program.parse();

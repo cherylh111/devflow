@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure template-content fix for codex users. No path migrations — `devflow update` will flag `.codex/agents/devflow-check.toml` as a template update and either auto-update (if unmodified) or prompt for confirm (if you customized it)."
 }
+

@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure CLI-side bug fix — no project file migrations. If you upgraded to any 0.5.0-beta.0..beta.3 and see `Phase Index section not found in workflow.md` from `get_context.py`, this release fixes it: run `devflow update --migrate`. Unmodified workflow.md auto-updates; if you customized it, you'll see the \"Modified by you\" confirm prompt with a diff — pick `Overwrite` to get the new 0.5.0 structure, or merge your edits manually into the new template."
 }
+

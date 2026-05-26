@@ -679,7 +679,7 @@ def _extract_range(content: str, start_header: str, end_header: str) -> str:
 
 
 _BREADCRUMB_TAG_RE = re.compile(
-    r"\[workflow-state:([A-Za-z0-9_-]+)\]\s*\n.*?\n\s*\[/workflow-state:\1\]",
+    r"\[workflow-state:(?P<status>[A-Za-z0-9_-]+)\]\s*\n.*?\n\s*\[/workflow-state:(?P=status)\]",
     re.DOTALL,
 )
 
@@ -812,11 +812,15 @@ DevFlow compact SessionStart context. Use it to orient the session; load details
 Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.
 </ready>""")
 
+    context_text = output.getvalue()
     result = {
+        # Claude Code / Qoder / CodeBuddy / Droid / Gemini / Copilot format
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",
-            "additionalContext": output.getvalue(),
-        }
+            "additionalContext": context_text,
+        },
+        # Cursor sessionStart format (top-level snake_case per Cursor docs)
+        "additional_context": context_text,
     }
 
     # Output JSON - stdout is already configured for UTF-8

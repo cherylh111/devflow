@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "RC install: `npm install -g @enpd/devflow@rc`. Codex users: trust this project (`[projects.\"<abs path>\"].trust_level = \"trusted\"` in `~/.codex/config.toml`) so hooks and the project-level [features] block activate."
 }
+

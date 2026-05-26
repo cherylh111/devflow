@@ -1,3 +1,4 @@
+import type { DeliveryMode } from "../internal/store/delivery.js";
 import type {
   ChannelScope,
   ContextEntry,
@@ -22,7 +23,7 @@ export interface MutationCommonOptions {
 export interface CreateChannelOptions
   extends ChannelAddressOptions,
     MutationCommonOptions {
-  type?: "chat" | "threads";
+  type?: "chat" | "forum";
   task?: string;
   project?: string;
   labels?: string[];
@@ -36,14 +37,22 @@ export interface CreateChannelOptions
 export interface SendMessageOptions
   extends ChannelAddressOptions,
     MutationCommonOptions {
+  idempotencyKey?: string;
   text: string;
   to?: string | string[];
-  tag?: string;
+  /**
+   * Delivery validation mode. Defaults to `appendOnly`, which preserves
+   * append-only / pre-spawn backlog behavior. Strict modes append the
+   * message first, then append `undeliverable` events for targeted
+   * workers that fail the selected condition.
+   */
+  deliveryMode?: DeliveryMode;
 }
 
 export interface PostThreadOptions
   extends ChannelAddressOptions,
     MutationCommonOptions {
+  idempotencyKey?: string;
   action:
     | "opened"
     | "comment"

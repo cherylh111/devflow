@@ -2,6 +2,7 @@ import {
   readChannelEvents as readEventsInternal,
   type ChannelEvent,
   type ContextChannelEvent,
+  type ReadChannelEventsPagination,
   type ThreadChannelEvent,
 } from "../internal/store/events.js";
 import { reduceChannelMetadata } from "../internal/store/channel-metadata.js";
@@ -12,12 +13,20 @@ import {
 } from "../internal/store/thread-state.js";
 import { normalizeThreadKey } from "../internal/store/schema.js";
 import type { ChannelMetadata } from "../internal/store/schema.js";
-import { readThreadsChannelEvents } from "./assert.js";
+import { readForumChannelEvents } from "./assert.js";
 import { resolveChannelRef } from "./resolve.js";
 import type { ChannelAddressOptions } from "./types.js";
 
+/**
+ * Cursor pagination options. Omitting all of them returns every event,
+ * preserving the read-all default for existing callers.
+ */
+export interface ReadChannelEventsOptions
+  extends ChannelAddressOptions,
+    ReadChannelEventsPagination {}
+
 export async function readChannelEvents(
-  opts: ChannelAddressOptions,
+  opts: ReadChannelEventsOptions,
 ): Promise<ChannelEvent[]> {
   const ref = resolveChannelRef({
     channel: opts.channel,
@@ -25,7 +34,11 @@ export async function readChannelEvents(
     ...(opts.projectKey !== undefined ? { projectKey: opts.projectKey } : {}),
     ...(opts.cwd !== undefined ? { cwd: opts.cwd } : {}),
   });
-  return readEventsInternal(opts.channel, ref.project);
+  return readEventsInternal(opts.channel, ref.project, {
+    ...(opts.afterSeq !== undefined ? { afterSeq: opts.afterSeq } : {}),
+    ...(opts.beforeSeq !== undefined ? { beforeSeq: opts.beforeSeq } : {}),
+    ...(opts.limit !== undefined ? { limit: opts.limit } : {}),
+  });
 }
 
 export async function readChannelMetadata(
@@ -35,7 +48,7 @@ export async function readChannelMetadata(
   return reduceChannelMetadata(events);
 }
 
-export async function listThreads(
+export async function listForumThreads(
   opts: ChannelAddressOptions,
 ): Promise<ThreadState[]> {
   const ref = resolveChannelRef({
@@ -44,10 +57,10 @@ export async function listThreads(
     ...(opts.projectKey !== undefined ? { projectKey: opts.projectKey } : {}),
     ...(opts.cwd !== undefined ? { cwd: opts.cwd } : {}),
   });
-  const events = await readThreadsChannelEvents(
+  const events = await readForumChannelEvents(
     opts.channel,
     ref.project,
-    "threads",
+    "forum",
   );
   return reduceThreads(events);
 }
@@ -61,7 +74,7 @@ export async function showThread(
     ...(opts.projectKey !== undefined ? { projectKey: opts.projectKey } : {}),
     ...(opts.cwd !== undefined ? { cwd: opts.cwd } : {}),
   });
-  const events = await readThreadsChannelEvents(
+  const events = await readForumChannelEvents(
     opts.channel,
     ref.project,
     "thread",

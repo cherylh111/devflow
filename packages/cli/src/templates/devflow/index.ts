@@ -60,6 +60,7 @@ export const commonDevFlowConfig = readTemplate(
   "scripts/common/devflow_config.py",
 );
 export const commonSafeCommit = readTemplate("scripts/common/safe_commit.py");
+export const commonTrace = readTemplate("scripts/common/trace.py");
 
 // Python scripts - main
 export const getDeveloperScript = readTemplate("scripts/get_developer.py");
@@ -104,6 +105,7 @@ export function getAllScripts(): Map<string, string> {
   scripts.set("common/workflow_phase.py", commonWorkflowPhase);
   scripts.set("common/devflow_config.py", commonDevFlowConfig);
   scripts.set("common/safe_commit.py", commonSafeCommit);
+  scripts.set("common/trace.py", commonTrace);
 
   // Main
   scripts.set("get_developer.py", getDeveloperScript);

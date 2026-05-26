@@ -76,12 +76,12 @@ describe("uninstall() integration", () => {
   });
 
   it("#3 init → uninstall → project is clean", async () => {
-    await init({ yes: true, claude: true, qoder: true, force: true });
+    await init({ yes: true, claude: true, cursor: true, force: true });
 
     // Sanity: init wrote things.
     expect(fs.existsSync(path.join(tmpDir, ".devflow"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(true);
 
     const hashesBefore = loadHashes(tmpDir);
     expect(Object.keys(hashesBefore).length).toBeGreaterThan(0);
@@ -164,19 +164,19 @@ describe("uninstall() integration", () => {
   });
 
   it("#6 user-modified devflow file is still deleted (manifest defines scope)", async () => {
-    await init({ yes: true, qoder: true, force: true });
+    await init({ yes: true, cursor: true, force: true });
 
-    // Pick any manifest-tracked file under .qoder/ and overwrite it.
+    // Pick any manifest-tracked file under .cursor/ and overwrite it.
     const hashesBefore = loadHashes(tmpDir);
-    const qoderTrackedPath = Object.keys(hashesBefore).find((p) =>
-      p.startsWith(".qoder/"),
+    const cursorTrackedPath = Object.keys(hashesBefore).find((p) =>
+      p.startsWith(".cursor/"),
     );
-    if (!qoderTrackedPath) {
+    if (!cursorTrackedPath) {
       throw new Error(
-        "Test fixture: expected at least one .qoder/ entry in manifest",
+        "Test fixture: expected at least one .cursor/ entry in manifest",
       );
     }
-    const abs = path.join(tmpDir, ...qoderTrackedPath.split("/"));
+    const abs = path.join(tmpDir, ...cursorTrackedPath.split("/"));
     fs.writeFileSync(abs, "USER MODIFIED CONTENT\n");
 
     await uninstall({ yes: true });
@@ -201,30 +201,45 @@ describe("uninstall() integration", () => {
     expect(fs.existsSync(userHookDir)).toBe(true);
   });
 
-  it("#8a empty managed sub-dirs and root dir are pruned (qoder: after uninstall)", async () => {
-    await init({ yes: true, qoder: true, force: true });
+  it("#8a empty managed sub-dirs and root dir are pruned (kilo: no structured config)", async () => {
+    // Kilo has no hooks.json/settings.json/config.toml/package.json — every
+    // manifest file is opaque and gets deleted, so the entire .kilocode/
+    // tree should disappear, demonstrating both nested-subdir cleanup and
+    // empty-platform-root cleanup.
+    await init({ yes: true, kilo: true, force: true });
 
+    // Detect kilo's actual config dir from manifest entries.
     const hashesBefore = loadHashes(tmpDir);
-    const qoderEntry = Object.keys(hashesBefore).find(
-      (p) => !p.startsWith(".devflow/") && p !== "AGENTS.md" && p.startsWith(".qoder/"),
+    const kiloEntry = Object.keys(hashesBefore).find(
+      (p) => !p.startsWith(".devflow/") && p !== "AGENTS.md",
     );
-    if (!qoderEntry) throw new Error("test fixture: no qoder entries found");
-    expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(true);
+    if (!kiloEntry) throw new Error("test fixture: no kilo entries found");
+    const kiloRoot = kiloEntry.split("/")[0];
+    expect(fs.existsSync(path.join(tmpDir, kiloRoot))).toBe(true);
 
     await uninstall({ yes: true });
 
-    // After uninstall, if all files were opaque, the dir should be gone.
-    // If structured files remain (settings.json), the dir may survive.
-    // Either outcome is valid — just verify .devflow/ is gone.
-    expect(fs.existsSync(path.join(tmpDir, ".devflow"))).toBe(false);
+    // Empty platform root dir should be removed.
+    expect(fs.existsSync(path.join(tmpDir, kiloRoot))).toBe(false);
   });
 
   it("#8b platform root dir survives only when scrubbing leaves residual structured content", async () => {
-    await init({ yes: true, claude: true, force: true });
+    // Cursor's hooks.json template contains `{ version: 1, hooks: {...} }`.
+    // After devflow hooks are stripped, `{ version: 1 }` remains — not fully
+    // empty per the scrubber, so the file (and therefore .cursor/) survive.
+    // This documents the boundary of the cleanup contract.
+    await init({ yes: true, cursor: true, force: true });
     await uninstall({ yes: true });
 
-    // .devflow/ should be gone
-    expect(fs.existsSync(path.join(tmpDir, ".devflow"))).toBe(false);
+    // Sub-directories under .cursor/ that became empty should be gone.
+    for (const sub of ["agents", "commands", "hooks", "skills"]) {
+      expect(fs.existsSync(path.join(tmpDir, ".cursor", sub))).toBe(false);
+    }
+    // hooks.json residual (version: 1) keeps .cursor/ alive.
+    if (fs.existsSync(path.join(tmpDir, ".cursor"))) {
+      const remaining = fs.readdirSync(path.join(tmpDir, ".cursor"));
+      expect(remaining).toEqual(["hooks.json"]);
+    }
   });
 
   it("#8 .claude/settings.json with extra user fields keeps user fields, strips devflow hooks", async () => {

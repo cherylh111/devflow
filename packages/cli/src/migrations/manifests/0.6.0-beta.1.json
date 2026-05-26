@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Beta patch on top of 0.6.0-beta.0. Run `devflow update` (no `--migrate` needed). Behavior change matches 0.5.9 — if you previously uncommented `dispatch_mode: sub-agent`, that opt-in still routes to the legacy dispatch flow; if commented (the default), behavior switches to inline."
 }
+

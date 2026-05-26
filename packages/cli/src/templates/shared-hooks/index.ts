@@ -32,8 +32,14 @@ export type SharedHookName =
 
 export type SharedHookPlatform =
   | "claude"
+  | "cursor"
+  | "codex"
+  | "gemini"
   | "qoder"
-  | "codebuddy";
+  | "copilot"
+  | "codebuddy"
+  | "droid"
+  | "kiro";
 
 /**
  * Which shared hooks each platform actually invokes. Single source of truth
@@ -66,12 +72,26 @@ export const SHARED_HOOKS_BY_PLATFORM: Record<
     "inject-workflow-state.py",
     "inject-subagent-context.py",
   ],
+  cursor: [
+    "session-start.py",
+    "inject-shell-session-context.py",
+    "inject-subagent-context.py",
+  ],
+  codex: ["inject-workflow-state.py"],
+  gemini: ["session-start.py", "inject-workflow-state.py"],
   qoder: ["session-start.py", "inject-workflow-state.py"],
+  copilot: ["inject-workflow-state.py"],
   codebuddy: [
     "session-start.py",
     "inject-workflow-state.py",
     "inject-subagent-context.py",
   ],
+  droid: [
+    "session-start.py",
+    "inject-workflow-state.py",
+    "inject-subagent-context.py",
+  ],
+  kiro: ["inject-subagent-context.py"],
 };
 
 /**

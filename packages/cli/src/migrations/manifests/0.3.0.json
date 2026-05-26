@@ -9,3 +9,4 @@
   "aiInstructions": "When assisting users upgrading from 0.2.x to 0.3.0:\n1. Search for files containing `.devflow/scripts/*.sh` references and update to `.py`\n2. Replace `multi-agent/` directory references with `multi_agent/` (underscore)\n3. Always use `python3` explicitly, not just `python` (Windows compatibility)\n4. Check ALL locations: docstrings, help text, error messages, markdown docs\n5. Run `devflow update --migrate` to remove legacy shell scripts\n\nNote: Users upgrading from any 0.3.0 prerelease (beta/rc) need no file changes — only the version stamp is updated.",
   "notes": "Aggregated release covering beta.0 through rc.6. All file migrations were applied in beta.0 — shell scripts are archived to .devflow/scripts-shell-archive/ (not deleted). Users upgrading from any 0.3.0 prerelease will see no file changes — only the .version stamp is updated. New projects get all 9 platform options via `devflow init`."
 }
+

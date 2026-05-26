@@ -6,20 +6,6 @@ When you learn something valuable (from debugging, implementing, or discussion),
 
 ---
 
-## Spec vs Learning Entry
-
-Use this skill for enforceable implementation knowledge: contracts, conventions, error behavior, test requirements, and decisions future agents must obey.
-
-If the insight is useful but not yet a mandatory rule, capture it as a lightweight learning instead:
-
-```bash
-devflow learn "<insight>" --keywords keyword1,keyword2 --task current
-```
-
-Those entries live in `.devflow/spec/guides/learnings.md` and are queried with `devflow knowledge search`, `show`, `load`, `health`, and `stats`.
-
----
-
 ## Code-Spec First Rule (CRITICAL)
 
 In this project, "spec" for implementation work means **code-spec**:
@@ -61,7 +47,6 @@ For triggered tasks, include all sections below:
 | **Hit a gotcha** | Learned that X must be done before Y | Relevant spec + "Common Mistakes" section |
 | **Established a convention** | Team agreed on naming pattern | Quality guidelines |
 | **New thinking trigger** | "Don't forget to check X before doing Y" | `guides/*.md` (as a checklist item) |
-| **Lightweight lesson** | Useful gotcha, not a settled rule | `devflow learn` |
 
 **Key Insight**: Code-spec updates are NOT just for problems. Every feature implementation contains design decisions and contracts that future AI/developers need to execute safely.
 

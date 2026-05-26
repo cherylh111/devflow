@@ -42,6 +42,7 @@ from common.safe_commit import (
     safe_devflow_paths_to_add,
 )
 from common.tasks import load_task
+from common.trace import record_session_insight
 from common.config import (
     get_packages,
     get_session_auto_commit,
@@ -454,6 +455,20 @@ def add_session(
         branch,
     ):
         return 1
+
+    current = get_current_task(repo_root)
+    insight_paths = record_session_insight(
+        repo_root,
+        title=title,
+        summary=summary,
+        commit=commit,
+        extra_content=extra_content,
+        task_ref=current,
+        branch=branch,
+        package=package,
+    )
+    for insight_path in insight_paths:
+        print(f"[OK] Session insight: {insight_path}", file=sys.stderr)
 
     print("", file=sys.stderr)
     print("========================================", file=sys.stderr)

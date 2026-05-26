@@ -32,7 +32,6 @@ import {
   guidesIndexContent,
   guidesCrossLayerThinkingGuideContent,
   guidesCodeReuseThinkingGuideContent,
-  guidesLearningsContent,
 } from "../templates/markdown/index.js";
 
 import { writeFile, ensureDir } from "../utils/file-writer.js";
@@ -60,6 +59,14 @@ export interface WorkflowOptions {
   packages?: DetectedPackage[];
   /** Package names that use remote templates (skip blank spec for these) */
   remoteSpecPackages?: Set<string>;
+  /**
+   * Optional override for `.devflow/workflow.md` content. When omitted the
+   * bundled native template is written. Set by `init --workflow` (or
+   * `--workflow-source`) after the resolver has fetched marketplace content.
+   * Caller is still responsible for removing the `.devflow/workflow.md` hash
+   * entry for non-native workflows so update.ts treats them as user-managed.
+   */
+  workflowMdOverride?: string;
 }
 
 /**
@@ -83,6 +90,7 @@ export async function createWorkflowStructure(
   const skipSpecTemplates = options?.skipSpecTemplates ?? false;
   const packages = options?.packages;
   const remoteSpecPackages = options?.remoteSpecPackages;
+  const workflowMd = options?.workflowMdOverride ?? workflowMdTemplate;
 
   // Create base .devflow directory
   ensureDir(path.join(cwd, DIR_NAMES.WORKFLOW));
@@ -92,10 +100,10 @@ export async function createWorkflowStructure(
     executable: true,
   });
 
-  // Copy workflow.md from templates
+  // Copy workflow.md (native bundled template or selected marketplace variant)
   await writeFile(
     path.join(cwd, PATHS.WORKFLOW_GUIDE_FILE),
-    replacePythonCommandLiterals(workflowMdTemplate),
+    replacePythonCommandLiterals(workflowMd),
   );
 
   // Copy .gitignore from templates
@@ -222,7 +230,6 @@ async function createSpecTemplates(
       name: "code-reuse-thinking-guide.md",
       content: guidesCodeReuseThinkingGuideContent,
     },
-    { name: "learnings.md", content: guidesLearningsContent },
   ];
   for (const doc of guidesDocs) {
     await writeFile(path.join(guidesDir, doc.name), doc.content);

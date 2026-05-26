@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to sync new files (config.yaml, config.py) and updated templates."
 }
+

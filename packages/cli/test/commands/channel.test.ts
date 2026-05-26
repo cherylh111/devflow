@@ -10,8 +10,12 @@ import {
   channelContextAdd,
   channelContextList,
 } from "../../src/commands/channel/context.js";
+import { channelInterrupt } from "../../src/commands/channel/interrupt.js";
 import { channelMessages } from "../../src/commands/channel/messages.js";
 import { channelSend } from "../../src/commands/channel/send.js";
+import { runInboxWatcher } from "../../src/commands/channel/supervisor/inbox.js";
+import { applyParseResult } from "../../src/commands/channel/supervisor/stdout.js";
+import { TurnTracker } from "../../src/commands/channel/supervisor/turns.js";
 import {
   channelTitleClear,
   channelTitleSet,
@@ -23,13 +27,14 @@ import {
   channelRoot,
   eventsPath,
   projectKey,
+  workerFile,
 } from "../../src/commands/channel/store/paths.js";
 import { parseCsv } from "../../src/commands/channel/store/schema.js";
 import { reduceThreads } from "../../src/commands/channel/store/thread-state.js";
 
 const noop = (): void => undefined;
 
-describe("channel storage and thread channels", () => {
+describe("channel storage and forum channels", () => {
   let tmpDir: string;
   let projectDir: string;
   let oldRoot: string | undefined;
@@ -79,7 +84,7 @@ describe("channel storage and thread channels", () => {
     await createChannel("roadmap", {
       by: "main",
       scope: "global",
-      type: "threads",
+      type: "forum",
       description: "Local DevFlow feedback board",
       contextFile: [linkedFile],
       contextRaw: ["watch channel UX"],
@@ -150,7 +155,7 @@ describe("channel storage and thread channels", () => {
       .mocked(console.log)
       .mock.calls.map(([line]) => String(line))
       .join("\n");
-    expect(boardOutput).toContain("Thread channel: showing threads");
+    expect(boardOutput).toContain("Forum channel: showing threads");
     expect(boardOutput).toContain("issue-1 [processed] Channel thread mode");
 
     vi.mocked(console.log).mockClear();
@@ -195,12 +200,35 @@ describe("channel storage and thread channels", () => {
     });
   });
 
+  it("writes undeliverable events for strict CLI delivery mode", async () => {
+    await createChannel("strict-send", { by: "main" });
+
+    await channelSend("strict-send", {
+      as: "main",
+      text: "hello",
+      to: "ghost",
+      deliveryMode: "requireKnownWorker",
+    });
+
+    const events = await readChannelEvents(
+      "strict-send",
+      projectKey(projectDir),
+    );
+    expect(events.at(-1)).toMatchObject({
+      kind: "undeliverable",
+      targetWorker: "ghost",
+      messageSeq: 2,
+      reason: "worker-unknown",
+      origin: "cli",
+    });
+  });
+
   it("posts thread event text from a file with send-compatible trimming", async () => {
     const bodyFile = path.join(tmpDir, "body.md");
     fs.writeFileSync(bodyFile, "## Review\n\nLooks good.\n\n");
     await createChannel("file-post", {
       by: "main",
-      type: "threads",
+      type: "forum",
     });
 
     await channelThreadPost("file-post", {
@@ -227,7 +255,7 @@ describe("channel storage and thread channels", () => {
     fs.writeFileSync(bodyFile, "file body\n");
     await createChannel("precedence-post", {
       by: "main",
-      type: "threads",
+      type: "forum",
     });
 
     await channelThreadPost("precedence-post", {
@@ -253,7 +281,7 @@ describe("channel storage and thread channels", () => {
   it("posts thread event text from stdin", async () => {
     await createChannel("stdin-post", {
       by: "main",
-      type: "threads",
+      type: "forum",
     });
     const stdin = new PassThrough();
     Object.defineProperty(process, "stdin", {
@@ -285,7 +313,7 @@ describe("channel storage and thread channels", () => {
   it("defaults context and title author to main when --as is omitted", async () => {
     await createChannel("defaults", {
       by: "main",
-      type: "threads",
+      type: "forum",
     });
     await channelThreadPost("defaults", {
       as: "main",
@@ -321,6 +349,199 @@ describe("channel storage and thread channels", () => {
     expect(vi.mocked(console.log).mock.calls[0]?.[0]).toBe(
       "raw  channel note",
     );
+  });
+
+  it("records turn_finished when a worker emits a terminal event", async () => {
+    await createChannel("turns", { by: "main" });
+    const tracker = new TurnTracker();
+    tracker.begin(2);
+    const shutdown = {
+      markTerminalEmitted: vi.fn(),
+    };
+    const child = {
+      stdin: { write: vi.fn() },
+    };
+
+    await applyParseResult(
+      "turns",
+      "worker",
+      { events: [{ kind: "done", payload: { duration_ms: 10 } }] },
+      child as never,
+      shutdown as never,
+      tracker,
+    );
+
+    const events = await readChannelEvents("turns", projectKey(projectDir));
+    expect(events.slice(-2)).toMatchObject([
+      { kind: "done", by: "worker", duration_ms: 10 },
+      {
+        kind: "turn_finished",
+        by: "worker",
+        worker: "worker",
+        inputSeq: 2,
+        turnId: "msg:2",
+        outcome: "done",
+      },
+    ]);
+  });
+
+  it("marks the active turn aborted before an interrupt turn starts", async () => {
+    await createChannel("interrupt-turns", { by: "main" });
+    await channelSend("interrupt-turns", {
+      as: "main",
+      text: "slow work",
+      to: "worker",
+    });
+    const tracker = new TurnTracker();
+    tracker.begin(2);
+    fs.writeFileSync(
+      workerFile("interrupt-turns", "worker", "inbox-cursor"),
+      "2",
+    );
+    const abort = new AbortController();
+    const stdinWrite = vi.fn();
+    const child = {
+      stdin: { write: stdinWrite },
+    };
+    const adapter = {
+      provider: "claude",
+      buildArgs: vi.fn(),
+      createCtx: vi.fn(),
+      isReady: vi.fn(() => true),
+      parseLine: vi.fn(() => ({ events: [] })),
+      encodeUserMessage: vi.fn((text: string) => JSON.stringify({ text })),
+      encodeInterruptMessage: vi.fn((text: string) =>
+        JSON.stringify({ interrupt: text }),
+      ),
+    };
+
+    const watcher = runInboxWatcher({
+      channelName: "interrupt-turns",
+      workerName: "worker",
+      adapter: adapter as never,
+      ctx: undefined,
+      child: child as never,
+      signal: abort.signal,
+      turnTracker: tracker,
+    });
+
+    await channelInterrupt("interrupt-turns", {
+      as: "main",
+      text: "stop",
+      to: "worker",
+    });
+    await vi.waitUntil(() => stdinWrite.mock.calls.length > 0, {
+      timeout: 1000,
+    });
+    abort.abort();
+    await watcher;
+
+    const events = await readChannelEvents(
+      "interrupt-turns",
+      projectKey(projectDir),
+    );
+    expect(events.slice(-4)).toMatchObject([
+      {
+        kind: "interrupt_requested",
+        by: "main",
+        worker: "worker",
+        reason: "user",
+      },
+      {
+        kind: "turn_finished",
+        worker: "worker",
+        inputSeq: 2,
+        turnId: "msg:2",
+        outcome: "aborted",
+      },
+      {
+        kind: "interrupted",
+        worker: "worker",
+        turnId: "msg:2",
+        method: "stdin",
+        outcome: "interrupted",
+      },
+      {
+        kind: "turn_started",
+        worker: "worker",
+        inputSeq: 3,
+        turnId: "msg:3",
+      },
+    ]);
+    expect(stdinWrite).toHaveBeenCalledWith(
+      JSON.stringify({ interrupt: "stop" }),
+    );
+  });
+
+  it("queues normal messages until the active turn finishes", async () => {
+    await createChannel("queued-turns", { by: "main" });
+    await channelSend("queued-turns", {
+      as: "main",
+      text: "first",
+      to: "worker",
+    });
+    const tracker = new TurnTracker();
+    tracker.begin(2);
+    fs.writeFileSync(workerFile("queued-turns", "worker", "inbox-cursor"), "2");
+    const abort = new AbortController();
+    const stdinWrite = vi.fn();
+    const child = {
+      stdin: { write: stdinWrite },
+    };
+    const adapter = {
+      provider: "claude",
+      buildArgs: vi.fn(),
+      createCtx: vi.fn(),
+      isReady: vi.fn(() => true),
+      parseLine: vi.fn(() => ({ events: [] })),
+      encodeUserMessage: vi.fn((text: string) => JSON.stringify({ text })),
+      encodeInterruptMessage: vi.fn((text: string) =>
+        JSON.stringify({ interrupt: text }),
+      ),
+    };
+    const shutdown = {
+      markTerminalEmitted: vi.fn(),
+    };
+
+    const watcher = runInboxWatcher({
+      channelName: "queued-turns",
+      workerName: "worker",
+      adapter: adapter as never,
+      ctx: undefined,
+      child: child as never,
+      signal: abort.signal,
+      turnTracker: tracker,
+    });
+
+    await channelSend("queued-turns", {
+      as: "main",
+      text: "second",
+      to: "worker",
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(stdinWrite).not.toHaveBeenCalled();
+
+    await applyParseResult(
+      "queued-turns",
+      "worker",
+      { events: [{ kind: "done", payload: {} }] },
+      child as never,
+      shutdown as never,
+      tracker,
+    );
+    await vi.waitUntil(() => stdinWrite.mock.calls.length > 0, {
+      timeout: 1000,
+    });
+    abort.abort();
+    await watcher;
+
+    const events = await readChannelEvents("queued-turns", projectKey(projectDir));
+    expect(events.slice(-3)).toMatchObject([
+      { kind: "done", by: "worker" },
+      { kind: "turn_finished", inputSeq: 2, turnId: "msg:2" },
+      { kind: "turn_started", inputSeq: 3, turnId: "msg:3" },
+    ]);
+    expect(stdinWrite).toHaveBeenCalledWith(JSON.stringify({ text: "second" }));
   });
 });
 

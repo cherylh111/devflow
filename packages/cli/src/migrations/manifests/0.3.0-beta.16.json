@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "No migration required. Update mechanism now only updates platforms that have existing directories."
 }
+

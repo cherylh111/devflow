@@ -1,6 +1,6 @@
 {
   "name": "@enpd/devflow-core",
-  "version": "0.6.0-beta.14",
+  "version": "0.6.0-beta.21",
   "description": "DevFlow core SDK — channel and task domain primitives consumed by the DevFlow CLI and downstream Node services",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,6 +16,11 @@
       "types": "./dist/channel/index.d.ts",
       "import": "./dist/channel/index.js",
       "default": "./dist/channel/index.js"
+    },
+    "./mem": {
+      "types": "./dist/mem/index.d.ts",
+      "import": "./dist/mem/index.js",
+      "default": "./dist/mem/index.js"
     },
     "./task": {
       "types": "./dist/task/index.d.ts",
@@ -54,7 +59,7 @@
     "events"
   ],
   "author": "ENPD",
-  "private": true,
+  "license": "AGPL-3.0-only",
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@types/node": "^20.17.10",
@@ -65,5 +70,9 @@
   },
   "engines": {
     "node": ">=18.17.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enpd/DevFlow.git"
   }
 }

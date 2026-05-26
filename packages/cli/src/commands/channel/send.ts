@@ -1,4 +1,5 @@
 import {
+  parseDeliveryMode,
   sendMessage as coreSendMessage,
   type ChannelScope,
 } from "@enpd/devflow-core/channel";
@@ -12,9 +13,8 @@ export interface SendOptions {
   stdin?: boolean;
   textFile?: string;
   scope?: string;
-  kind?: string; // legacy alias for tag
-  tag?: string;
   to?: string; // CSV
+  deliveryMode?: string;
 }
 
 export async function channelSend(
@@ -27,17 +27,17 @@ export async function channelSend(
       "No text provided (use <text> arg, --stdin, or --text-file)",
     emptyMessage: "Empty message",
   });
-  const tag = opts.tag ?? opts.kind;
   const to = parseCsv(opts.to);
   const scope: ChannelScope | undefined = parseChannelScope(opts.scope);
+  const deliveryMode = parseDeliveryMode(opts.deliveryMode);
 
   const event = await coreSendMessage({
     channel: channelName,
     by: opts.as,
     text: text as string,
     ...(scope !== undefined ? { scope } : {}),
-    ...(tag !== undefined ? { tag } : {}),
     ...(to !== undefined ? { to: to.length === 1 ? to[0] : to } : {}),
+    ...(deliveryMode !== undefined ? { deliveryMode } : {}),
     origin: "cli",
   });
   console.log(JSON.stringify(event));

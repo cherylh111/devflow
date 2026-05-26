@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to sync. Projects with independent git sub-repos can now add `git: true` to package config to see their status in session context."
 }
+

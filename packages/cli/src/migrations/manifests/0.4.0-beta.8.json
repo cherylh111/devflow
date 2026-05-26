@@ -32,3 +32,4 @@
   ],
   "notes": "Run `devflow update` to sync. Codex hooks require `features.codex_hooks = true` in ~/.codex/config.toml."
 }
+

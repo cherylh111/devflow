@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Hotfix for 0.3.4 migration error. Run devflow update to apply Kilo workflows migration."
 }
+

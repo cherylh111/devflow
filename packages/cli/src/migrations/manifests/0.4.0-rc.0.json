@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "RC install: `npm install -g @enpd/devflow@rc`. Please run `devflow update` on an existing project and report any regressions. Session-start hooks have been significantly restructured — if you customized them locally, re-check after update. Windows users with statusline garbling should also update."
 }
+

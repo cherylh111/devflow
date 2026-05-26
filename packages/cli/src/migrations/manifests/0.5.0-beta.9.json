@@ -46,3 +46,4 @@
   ],
   "notes": "Code cleanup + additive features; no user task.json mutations. Python readers (`task.py`, `get_context.py`) treat missing canonical fields as null, so legacy tasks keep working. Newly-created bootstrap / migration tasks from this version onward produce the canonical shape. Qoder users who had the two session-boundary skills installed will see them auto-removed (pristine) or prompted for confirm (modified); the new `.qoder/commands/*.md` are written by the standard configure step on `devflow update`."
 }
+

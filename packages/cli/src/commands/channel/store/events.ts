@@ -27,6 +27,7 @@ import { eventsPath, channelDir, lockPath } from "./paths.js";
 export {
   CHANNEL_EVENT_KINDS,
   parseChannelKind,
+  parseChannelKinds,
   isCreateEvent,
   isThreadEvent,
   isContextEvent,
@@ -47,6 +48,7 @@ export type {
   DoneChannelEvent,
   ErrorChannelEvent,
   ProgressChannelEvent,
+  SupervisorWarningChannelEvent,
 } from "@enpd/devflow-core/channel";
 
 export async function ensureChannelDir(
@@ -132,7 +134,7 @@ export async function readChannelEvents(
 
 /**
  * Read projected channel metadata from disk. Delegates to the core
- * reducer so list / messages / threads commands share projection
+ * reducer so list / messages / forum commands share projection
  * semantics with downstream consumers.
  */
 export async function readChannelMetadata(

@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Beta patch on top of 0.6.0-beta.7. Run `devflow update` to refresh workflow, hook, skill, agent, and platform templates. No migration required."
 }
+

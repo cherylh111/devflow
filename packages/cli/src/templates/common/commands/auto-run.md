@@ -29,7 +29,7 @@ Before starting the first task, summarize the queue you found:
 - `in_progress` tasks you intend to resume
 - any skipped tasks and why
 
-Ask once for approval to auto-run that queue. After approval, do not ask for another `/devflow:continue` between phases. Keep the existing Phase 3.4 commit-plan confirmation unless the user explicitly approved a concrete commit plan in advance.
+Ask once for approval to auto-run that queue. After approval, do not ask for another `{{CMD_REF:continue}}` between phases. Keep the existing Phase 3.4 commit-plan confirmation unless the user explicitly approved a concrete commit plan in advance.
 
 Treat a task as ready only when:
 

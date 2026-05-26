@@ -30,7 +30,6 @@ export interface MessagesOptions {
   from?: string;
   to?: string;
   noProgress?: boolean;
-  tag?: string;
   scope?: string;
   thread?: string;
   action?: string;
@@ -63,7 +62,7 @@ export async function channelMessages(
   const metadata = await readChannelMetadata(channelName, ref.project);
   if (metadata.type === "chat" && (threadFilter || actionFilter)) {
     throw new Error(
-      `Channel '${channelName}' is type 'chat'. --thread/--action require a thread channel.`,
+      `Channel '${channelName}' is type 'chat'. --thread/--action require a forum channel.`,
     );
   }
 
@@ -71,7 +70,6 @@ export async function channelMessages(
     kind: kindFilter,
     from: fromList,
     to: opts.to,
-    tag: opts.tag,
     thread: threadFilter,
     action: actionFilter,
     includeProgress: !opts.noProgress,
@@ -85,16 +83,15 @@ export async function channelMessages(
   const view = opts.last ? filtered.slice(-opts.last) : filtered;
   const threadBoardView =
     !opts.raw &&
-    metadata.type === "threads" &&
+    metadata.type === "forum" &&
     !threadFilter &&
     !kindFilter &&
     !actionFilter &&
     !opts.from &&
-    !opts.to &&
-    !opts.tag;
+    !opts.to;
   if (threadBoardView) {
     console.log(
-      "Thread channel: showing threads. Use --thread <key> for timeline, --raw for event log.",
+      "Forum channel: showing threads. Use --thread <key> for timeline, --raw for event log.",
     );
     printThreadBoard(view);
   } else {
@@ -166,13 +163,11 @@ function printEvent(ev: ChannelEvent, raw: boolean): void {
     }
     case "message": {
       const text = (ev.text ?? "").replace(/\n/g, "\n         ");
-      const tag = ev.tag;
       const to = ev.to;
       const toStr = to
         ? `  to=${colorTo(Array.isArray(to) ? to.join(",") : to)}`
         : "";
-      const tagStr = tag ? `  ${chalk.yellow(`<${tag}>`)}` : "";
-      printLine(`${kindTag("message")} by=${by}${toStr}${tagStr}`, ts);
+      printLine(`${kindTag("message")} by=${by}${toStr}`, ts);
       console.log(`         ${text}`);
       break;
     }
@@ -203,6 +198,22 @@ function printEvent(ev: ChannelEvent, raw: boolean): void {
       const detail = ev.detail ?? {};
       const summary = summarizeProgress(detail);
       printLine(`${kindTag("progress")} by=${by}  ${summary}`, ts);
+      break;
+    }
+    case "supervisor_warning": {
+      const worker = typeof ev.worker === "string" ? ev.worker : "?";
+      const reason = typeof ev.reason === "string" ? ev.reason : "?";
+      const remaining =
+        typeof ev.remaining_ms === "number" ? ev.remaining_ms : undefined;
+      const timeout =
+        typeof ev.timeout_ms === "number" ? ev.timeout_ms : undefined;
+      const remainingStr =
+        remaining !== undefined ? `  remaining=${remaining}ms` : "";
+      const timeoutStr = timeout !== undefined ? `  timeout=${timeout}ms` : "";
+      printLine(
+        `${kindTag("supervisor_warning")} by=${by}  worker=${colorTo(worker)} reason=${reason}${remainingStr}${timeoutStr}`,
+        ts,
+      );
       break;
     }
     default: {
@@ -277,6 +288,8 @@ function kindTag(k: string): string {
       return chalk.gray(padded);
     case "create":
       return chalk.blueBright(padded);
+    case "supervisor_warning":
+      return chalk.yellow(padded);
     default:
       return padded;
   }

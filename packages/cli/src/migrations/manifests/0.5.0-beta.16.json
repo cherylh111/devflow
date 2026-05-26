@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to receive the compatibility fixes. Legacy `.devflow/.template-hashes.json` files are regenerated under schema v2, `task.py archive` accepts task names or task paths, and existing Claude Code statusLine files/settings are preserved. No manual migration is required."
 }
+

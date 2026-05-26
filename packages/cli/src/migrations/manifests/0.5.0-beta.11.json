@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Existing projects: run `devflow update` to pick up the two patched hook files. Hashes match pristine installs; locally-modified copies land on the standard confirm prompt. If you're on Python 3.9 and saw the `Python ≥ 3.10` warning during past `devflow init` runs, the warning is gone — no action needed."
 }
+

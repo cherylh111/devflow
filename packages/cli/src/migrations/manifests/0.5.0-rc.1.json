@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "RC install: `npm install -g @enpd/devflow@rc`. Projects on 0.5 (beta or rc.0) run `devflow update`. Projects upgrading from 0.4.x run `devflow update --migrate`; the 0.5 migration chain begins at 0.5.0-beta.0. rc.1 adds no new migration entries."
 }
+

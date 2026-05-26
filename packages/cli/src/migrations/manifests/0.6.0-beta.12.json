@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to pull in thread channel commands and project/global scope support. No migration required because existing channel paths and project files remain valid."
 }
+

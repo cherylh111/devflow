@@ -1917,8 +1917,7 @@ function resolveTaskOption(
 
 function resolveCurrentTask(cwd: string): string | undefined {
   const runtimeDir = path.join(cwd, PATHS.WORKFLOW, ".runtime", "sessions");
-  const explicitKey =
-    process.env.DEVFLOW_CONTEXT_ID ?? process.env.TRELLIS_CONTEXT_ID;
+  const explicitKey = process.env.DEVFLOW_CONTEXT_ID;
   if (explicitKey) {
     const task = readSessionTask(path.join(runtimeDir, `${safeKey(explicitKey)}.json`));
     if (task) return taskName(task);

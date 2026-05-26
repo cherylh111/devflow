@@ -961,6 +961,24 @@ export async function downloadWithStrategy(
 }
 
 /**
+ * Copy a registry file while keeping binary files raw and normalizing text
+ * checkouts to LF so Windows git settings do not leak into installed templates.
+ */
+async function copyRegistryFile(src: string, dest: string): Promise<void> {
+  const data = await fs.promises.readFile(src);
+  if (data.includes(0)) {
+    await fs.promises.writeFile(dest, data);
+    return;
+  }
+
+  await fs.promises.writeFile(
+    dest,
+    data.toString("utf-8").replace(/\r\n/g, "\n"),
+    "utf-8",
+  );
+}
+
+/**
  * Copy only files that don't exist in the destination
  */
 async function copyMissing(src: string, dest: string): Promise<void> {
@@ -980,7 +998,7 @@ async function copyMissing(src: string, dest: string): Promise<void> {
       await copyMissing(srcPath, destPath);
     } else if (!fs.existsSync(destPath)) {
       // Only copy if file doesn't exist
-      await fs.promises.copyFile(srcPath, destPath);
+      await copyRegistryFile(srcPath, destPath);
     }
   }
 }
@@ -998,7 +1016,7 @@ async function copyAll(src: string, dest: string): Promise<void> {
     if (entry.isDirectory()) {
       await copyAll(srcPath, destPath);
     } else {
-      await fs.promises.copyFile(srcPath, destPath);
+      await copyRegistryFile(srcPath, destPath);
     }
   }
 }

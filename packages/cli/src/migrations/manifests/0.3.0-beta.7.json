@@ -9,3 +9,4 @@
   "migrations": [],
   "notes": "This is a compatibility fix release. No file migrations required. Windows users using `python` instead of `python3` should manually update their `.claude/settings.json` file."
 }
+

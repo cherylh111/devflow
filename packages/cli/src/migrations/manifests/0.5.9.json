@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Patch on top of 0.5.8. Run `devflow update` (no `--migrate` needed). Existing Codex projects keep working: if you previously uncommented `dispatch_mode: sub-agent`, that opt-in still routes to the legacy dispatch flow; if the line is commented (the default), behavior switches to inline."
 }
+

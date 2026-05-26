@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "No migration required. Existing projects can adopt Codex via re-init/update workflows; no file rename/delete migration is needed."
 }
+

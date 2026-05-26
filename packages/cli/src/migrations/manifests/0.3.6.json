@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run devflow update to sync updated hook scripts and command templates. Critical: fixes PreToolUse context injection for CC v2.1.63+."
 }
+

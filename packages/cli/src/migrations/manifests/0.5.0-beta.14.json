@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure content refresh. Existing tasks, jsonl files, and `.current-task` are preserved. After `devflow update`, fresh sessions across Claude Code / Codex / Copilot / OpenCode will prepend a one-line Chinese confirmation of SessionStart context on the first assistant reply, and the main thread will no longer be nudged to hand-edit code when a task is READY. Windows statusline stops crashing on Copilot/Codex typed stdout. No action needed beyond `devflow update`."
 }
+

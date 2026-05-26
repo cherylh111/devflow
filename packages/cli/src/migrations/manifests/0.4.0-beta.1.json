@@ -24,7 +24,7 @@
       "type": "safe-file-delete",
       "from": ".claude/commands/devflow/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b"]
     },
     {
       "type": "safe-file-delete",
@@ -48,7 +48,7 @@
       "type": "safe-file-delete",
       "from": ".cursor/commands/devflow-check-backend.md",
       "description": "Replaced by devflow-check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b"]
     },
     {
       "type": "safe-file-delete",
@@ -72,7 +72,7 @@
       "type": "safe-file-delete",
       "from": ".iflow/commands/devflow/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b"]
     },
     {
       "type": "safe-file-delete",
@@ -96,7 +96,7 @@
       "type": "safe-file-delete",
       "from": ".opencode/commands/devflow/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b"]
     },
     {
       "type": "safe-file-delete",
@@ -120,7 +120,7 @@
       "type": "safe-file-delete",
       "from": ".kilocode/workflows/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b"]
     },
     {
       "type": "safe-file-delete",

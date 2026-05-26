@@ -31,3 +31,4 @@
   ],
   "notes": "Key fix: When user creates a task on branch A, base_branch is now automatically set to A. Worktree creates feature branch based on A, and PR will target A."
 }
+

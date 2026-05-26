@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure CLI-side bug fix — no project file migrations. Run `devflow update` to sync to the new CLI behavior."
 }
+

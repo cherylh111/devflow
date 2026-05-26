@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to refresh hash-tracked workflow templates. No migration required."
 }
+

@@ -547,8 +547,26 @@ export function applyConfigSectionsAdded(
  * Returns true if upgrade is needed. Does NOT perform the upgrade —
  * caller should run configurePlatform("codex") after backup/confirm.
  */
-function needsCodexUpgrade(_cwd: string): boolean {
-  return false;
+function needsCodexUpgrade(cwd: string): boolean {
+  if (fs.existsSync(path.join(cwd, ".codex"))) {
+    return false;
+  }
+
+  // Codex-only marker: legacy Codex installs always tracked the
+  // command-as-skill files `devflow-continue/SKILL.md` and
+  // `devflow-finish-work/SKILL.md` under `.agents/skills/`. Other platforms
+  // that share `.agents/skills/` (e.g. Gemini CLI 0.40+ via the workspace
+  // alias — issue #224) only write the 5 workflow skills (brainstorm,
+  // before-dev, check, break-loop, update-spec) and never these two
+  // command files, so their presence in the hash file is a reliable signal
+  // that the project was originally configured with Codex before `.codex/`
+  // existed as a separate config dir.
+  const hashes = loadHashes(cwd);
+  const keys = Object.keys(hashes);
+  return (
+    keys.some((key) => key === ".agents/skills/devflow-continue/SKILL.md") ||
+    keys.some((key) => key === ".agents/skills/devflow-finish-work/SKILL.md")
+  );
 }
 
 function preserveExistingClaudeStatusLine(
@@ -1773,7 +1791,7 @@ export async function update(options: UpdateOptions): Promise<void> {
   // markers under .agents/skills/ survive into the upgrade flow.
   {
     const configuredPlatforms = new Set<AITool>(getConfiguredPlatforms(cwd));
-    if (codexUpgradeNeeded) configuredPlatforms.add("codex" as AITool);
+    if (codexUpgradeNeeded) configuredPlatforms.add("codex");
     const prune = pruneOrphanManifestKeys(
       cwd,
       [...configuredPlatforms],
@@ -1809,7 +1827,7 @@ export async function update(options: UpdateOptions): Promise<void> {
   // Collect templates (used for both migration classification and change analysis)
   const templates = collectTemplateFiles(
     cwd,
-    codexUpgradeNeeded ? new Set<AITool>(["codex" as AITool]) : undefined,
+    codexUpgradeNeeded ? new Set<AITool>(["codex"]) : undefined,
     breakingBypass,
   );
 

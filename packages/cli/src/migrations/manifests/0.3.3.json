@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to sync updated scripts and templates. Node.js >=18.17.0 is now required."
 }
+

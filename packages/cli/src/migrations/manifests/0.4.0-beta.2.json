@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to sync. If you ran `devflow init` on a monorepo with scoped packages (e.g. @scope/name), you may need to manually rename existing `.devflow/spec/@scope/name/` directories to `.devflow/spec/name/` and update the keys in `.devflow/config.yaml`."
 }
+

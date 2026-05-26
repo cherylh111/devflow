@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Run `devflow update` to pull in the fixed `.devflow/scripts/common/task_store.py` + `safe_commit.py`. No migration required — script signatures changed but file paths did not."
 }
+

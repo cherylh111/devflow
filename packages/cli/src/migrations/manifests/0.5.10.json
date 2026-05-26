@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Patch on top of 0.5.9. Run `devflow update` (no `--migrate` needed). All three fixes auto-apply on next session."
 }
+

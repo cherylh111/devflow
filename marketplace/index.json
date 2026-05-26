@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "devflow-spec-bootstarp",
+      "type": "skill",
+      "name": "DevFlow Spec Bootstarp",
+      "description": "Platform-neutral workflow for bootstrapping project-specific DevFlow coding specs",
+      "path": "skills/devflow-spec-bootstarp",
+      "tags": ["devflow", "spec", "bootstrap", "codebase-analysis"]
+    },
+    {
+      "id": "native",
+      "type": "workflow",
+      "name": "Native DevFlow Workflow",
+      "description": "Default DevFlow Plan / Execute / Finish workflow with native sub-agent and inline platform branches",
+      "path": "workflows/native/workflow.md",
+      "tags": ["workflow", "native", "default"]
+    },
+    {
+      "id": "tdd",
+      "type": "workflow",
+      "name": "TDD Workflow",
+      "description": "DevFlow workflow variant that drives Phase 2 with one red / green / refactor behavior slice at a time",
+      "path": "workflows/tdd/workflow.md",
+      "tags": ["workflow", "tdd", "testing"]
+    },
+    {
+      "id": "channel-driven-subagent-dispatch",
+      "type": "workflow",
+      "name": "Channel-Driven Sub-Agent Dispatch",
+      "description": "DevFlow workflow variant where the main session coordinates implement/check workers through devflow channel",
+      "path": "workflows/channel-driven-subagent-dispatch/workflow.md",
+      "tags": ["workflow", "channel", "sub-agent", "dogfood"]
+    }
+  ]
+}

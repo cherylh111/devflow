@@ -223,8 +223,6 @@ export function resolvePlaceholdersNeutral(
 
 /** Skill description registry — maps template name to auto-trigger description. */
 const SKILL_DESCRIPTIONS: Record<string, string> = {
-  "auto-run":
-    "Run the trusted-team fast path over ready DevFlow tasks. Processes implementation, checks, knowledge review, commit, finish-work, and the next ready task without requiring a manual continue command between phases.",
   start:
     "Initializes an AI development session by reading workflow guides, developer identity, git status, active tasks, and project guidelines from .devflow/. Classifies incoming tasks and routes to brainstorm, direct edit, or task workflow. Use when beginning a new coding session, resuming work, starting a new task, or re-establishing project context.",
   continue:
@@ -235,14 +233,16 @@ const SKILL_DESCRIPTIONS: Record<string, string> = {
     "Discovers and injects project-specific coding guidelines from .devflow/spec/ before implementation begins. Reads spec indexes, pre-development checklists, and shared thinking guides for the target package. Use when starting a new coding task, before writing any code, switching to a different package, or needing to refresh project conventions and standards.",
   brainstorm:
     "Guides collaborative requirements discovery before implementation. Creates task directory, seeds PRD, asks high-value questions one at a time, researches technical choices, and converges on MVP scope. Use when requirements are unclear, there are multiple valid approaches, or the user describes a new feature or complex task.",
+  learn:
+    "Capture reusable project knowledge discovered during a task. Use when an implementation, debug session, review, or discussion produces a lesson, caveat, recipe, decision, or searchable reference that should survive context compaction.",
   check:
     "Comprehensive quality verification: spec compliance, lint, type-check, tests, cross-layer data flow, code reuse, and consistency checks. Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions.",
   "break-loop":
     "Deep bug analysis to break the fix-forget-repeat cycle. Analyzes root cause category, why fixes failed, prevention mechanisms, and captures knowledge into specs. Use after fixing a bug to prevent the same class of bugs.",
   "update-spec":
     "Captures executable contracts and coding conventions into .devflow/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions.",
-  learn:
-    "Captures and queries lightweight reusable learnings in .devflow/spec/guides/learnings.md through the DevFlow knowledge CLI. Use when something should be searchable later but is not yet a mandatory coding convention.",
+  "auto-run":
+    "Run the approved ready-task queue through the normal DevFlow workflow without requiring manual phase commands between steps. Use only after the user approves the queue and stop on unresolved decisions, failed checks, rejected commit plans, or user stop requests.",
 };
 
 /**
@@ -269,8 +269,7 @@ export function wrapWithSkillFrontmatter(
  * SKILL_DESCRIPTIONS, which is long prose aimed at the skill matcher.
  */
 const COMMAND_DESCRIPTIONS: Record<string, string> = {
-  "auto-run":
-    "Process ready tasks end-to-end without manual continue commands.",
+  "auto-run": "Run approved ready tasks through the DevFlow workflow queue.",
   start: "Initialize a DevFlow development session.",
   continue: "Resume work on the current task at the correct phase.",
   "finish-work":

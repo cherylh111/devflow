@@ -1,10 +1,15 @@
 /**
  * Path constants for DevFlow workflow structure
+ *
+ * Change these values to rename directories across the entire project.
+ * All paths should be relative to the project root.
  */
 
 // Directory names (can be renamed)
 export const DIR_NAMES = {
+  /** Root workflow directory */
   WORKFLOW: ".devflow",
+  /** Workspace directory (under .devflow/) - developer work areas */
   WORKSPACE: "workspace",
   /** Tasks directory (under .devflow/) - unified task storage */
   TASKS: "tasks",

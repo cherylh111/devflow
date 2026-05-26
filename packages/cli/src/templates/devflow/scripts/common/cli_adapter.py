@@ -664,27 +664,136 @@ def detect_platform(project_root: Path) -> Platform:
 
     Detection order:
     1. DEVFLOW_PLATFORM environment variable (if set)
-    2. .codebuddy directory exists → codebuddy
-    3. .qoder directory exists → qoder
-    4. Default → claude
+    2. .opencode directory exists → opencode
+    3. .iflow directory exists → iflow
+    4. .cursor directory exists (without .claude) → cursor
+    5. .codex exists and no other platform dirs → codex
+    6. .kilocode directory exists → kilo
+    7. .kiro/skills exists and no other platform dirs → kiro
+    8. .gemini directory exists → gemini
+    9. .agent/workflows exists and no other platform dirs → antigravity
+    10. .windsurf/workflows exists and no other platform dirs → windsurf
+    11. .codebuddy directory exists → codebuddy
+    12. .qoder directory exists → qoder
+    13. .pi directory exists → pi
+    14. Default → claude
 
     Args:
         project_root: Project root directory
 
     Returns:
-        Detected platform ('claude', 'qoder', 'codebuddy', or default 'claude')
+        Detected platform ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'windsurf', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', or default 'claude')
     """
     import os
 
+    # Check environment variable first
     env_platform = os.environ.get("DEVFLOW_PLATFORM", "").lower()
-    if env_platform in ("claude", "qoder", "codebuddy"):
+    if env_platform in (
+        "claude",
+        "opencode",
+        "cursor",
+        "iflow",
+        "codex",
+        "kilo",
+        "kiro",
+        "gemini",
+        "antigravity",
+        "windsurf",
+        "qoder",
+        "codebuddy",
+        "copilot",
+        "droid",
+        "pi",
+    ):
         return env_platform  # type: ignore
 
+    # Check for .opencode directory (OpenCode-specific)
+    if (project_root / ".opencode").is_dir():
+        return "opencode"
+
+    # Check for .iflow directory (iFlow-specific)
+    if (project_root / ".iflow").is_dir():
+        return "iflow"
+
+    # Check for .cursor directory (Cursor-specific)
+    # Only detect as cursor if .claude doesn't exist (to avoid confusion)
+    if (project_root / ".cursor").is_dir() and not (project_root / ".claude").is_dir():
+        return "cursor"
+
+    # Check for .gemini directory (Gemini CLI-specific)
+    if (project_root / ".gemini").is_dir():
+        return "gemini"
+
+    # Check for .codex directory (Codex-specific)
+    # .agents/skills/ alone does NOT trigger codex detection (it's a shared standard)
+    if (project_root / ".codex").is_dir() and not _has_other_platform_dir(
+        project_root, {".codex", ".agents"}
+    ):
+        return "codex"
+
+    # Check for .kilocode directory (Kilo-specific)
+    if (project_root / ".kilocode").is_dir():
+        return "kilo"
+
+    # Check for Kiro skills directory only when no other platform config exists
+    if (project_root / ".kiro" / "skills").is_dir() and not _has_other_platform_dir(
+        project_root, {".kiro"}
+    ):
+        return "kiro"
+
+    # Check for Antigravity workflow directory only when no other platform config exists
+    if (
+        project_root / ".agent" / "workflows"
+    ).is_dir() and not _has_other_platform_dir(
+        project_root, {".agent", ".gemini"}
+    ):
+        return "antigravity"
+
+    # Check for Windsurf workflow directory only when no other platform config exists
+    if (
+        project_root / ".windsurf" / "workflows"
+    ).is_dir() and not _has_other_platform_dir(
+        project_root, {".windsurf"}
+    ):
+        return "windsurf"
+
+    # Check for .codebuddy directory (CodeBuddy-specific)
     if (project_root / ".codebuddy").is_dir():
         return "codebuddy"
 
+    # Check for .qoder directory (Qoder-specific)
     if (project_root / ".qoder").is_dir():
         return "qoder"
+
+    # Check for .github/copilot directory (GitHub Copilot-specific)
+    if (project_root / ".github" / "copilot").is_dir():
+        return "copilot"
+
+    # Check for .factory directory (Factory Droid-specific)
+    if (project_root / ".factory").is_dir():
+        return "droid"
+
+    # Check for .pi directory (Pi Agent-specific)
+    if (project_root / ".pi").is_dir():
+        return "pi"
+
+    # Fallback: checkout only has the Codex shared-skills layer
+    # (.agents/skills/devflow-* dirs) and no explicit platform config dir.
+    # Happens on fresh clones where .codex/ is gitignored/absent but the
+    # shared skills were committed to git. Must guard against the case
+    # where .claude/ or any other platform dir also exists — .agents/skills/
+    # can legitimately coexist with any platform as a shared consumption
+    # layer for Amp/Cline/Warp/etc.
+    agents_skills = project_root / ".agents" / "skills"
+    if agents_skills.is_dir() and not _has_other_platform_dir(
+        project_root, set()
+    ):
+        try:
+            for entry in agents_skills.iterdir():
+                if entry.is_dir() and entry.name.startswith("devflow-"):
+                    return "codex"
+        except OSError:
+            pass
 
     return "claude"
 

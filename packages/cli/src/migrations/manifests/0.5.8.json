@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure prompt-layer trim. No Python or TypeScript edits. `devflow update` refreshes AGENTS.md / workflow.md / brainstorm skill content."
 }
+

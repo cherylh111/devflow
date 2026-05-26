@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Patch on top of 0.5.3. Run `devflow update` (no `--migrate` needed). Affects every platform whose per-turn workflow-state breadcrumb can reach sub-agent turns (Codex confirmed; risk applies more broadly)."
 }
+

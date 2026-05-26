@@ -173,3 +173,4 @@
   ],
   "notes": "This release includes: (1) Command namespace migration - Claude Code uses subdirectory (.claude/commands/devflow/), Cursor uses filename prefix (.cursor/commands/devflow-*); (2) Bug fix for incorrect task directory paths in agent docs - these files will be updated via normal template sync"
 }
+

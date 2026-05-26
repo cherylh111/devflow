@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Beta release on top of 0.6.0-beta.9. Run `devflow update` after installing `@enpd/devflow@beta`. No project-file migration required."
 }
+

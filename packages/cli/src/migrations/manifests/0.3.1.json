@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "No migration required. Template-level changes only — run `devflow update` to sync. The settings.json changes (clear/compact matchers) will be applied automatically if the file hasn't been user-modified."
 }
+

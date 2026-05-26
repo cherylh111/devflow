@@ -220,3 +220,4 @@
   ],
   "notes": "This is a breaking rename for sub-agent invocation. The migration is automatic for unmodified agent files (hash-matched via .devflow/.template-hashes.json). If you customized an agent, you'll see the usual `Modified by you` confirm prompt with diff — pick `[1] Overwrite` to adopt the new name, or `[3] Skip` if you've built your own workflow on the old names (in which case you must update `workflow.md`, any skill prompts, and hook constants yourself).\n\n`update.skip` is BYPASSED for this release (breaking + recommendMigrate both true, invoked with `--migrate`) to prevent a half-migrated state where workflow.md points to `devflow-implement` but your `.claude/agents/` still has `implement.md`.\n\nAction required: run `devflow update --migrate`."
 }
+

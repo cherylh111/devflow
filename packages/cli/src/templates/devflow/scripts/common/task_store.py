@@ -53,6 +53,7 @@ from .task_utils import (
     resolve_task_dir,
     run_task_hooks,
 )
+from .trace import record_task_archived
 
 
 # =============================================================================
@@ -81,6 +82,30 @@ def ensure_tasks_dir(repo_root: Path) -> Path:
         archive_dir.mkdir(parents=True)
 
     return tasks_dir
+
+
+def _find_archived_task_by_dir_name(tasks_dir: Path, dir_name: str) -> Path | None:
+    """Find an archived task directory with the exact active-task dir name."""
+    archive_dir = tasks_dir / DIR_ARCHIVE
+    if not archive_dir.is_dir():
+        return None
+
+    for month_dir in sorted(archive_dir.iterdir()):
+        if not month_dir.is_dir():
+            continue
+        candidate = month_dir / dir_name
+        if candidate.is_dir():
+            return candidate
+
+    return None
+
+
+def _repo_relative_path(path: Path, repo_root: Path) -> str:
+    """Format a path relative to the repo root when possible."""
+    try:
+        return path.relative_to(repo_root).as_posix()
+    except ValueError:
+        return str(path)
 
 
 # =============================================================================
@@ -218,6 +243,13 @@ def cmd_create(args: argparse.Namespace) -> int:
     dir_name = f"{date_prefix}-{slug}"
     task_dir = tasks_dir / dir_name
     task_json_path = task_dir / FILE_TASK_JSON
+
+    archived_task_dir = _find_archived_task_by_dir_name(tasks_dir, dir_name)
+    if archived_task_dir:
+        print(colored(f"Error: Task already archived: {dir_name}", Colors.RED), file=sys.stderr)
+        print(f"Archived at: {_repo_relative_path(archived_task_dir, repo_root)}", file=sys.stderr)
+        print("Use a new slug if you intend to create a new task.", file=sys.stderr)
+        return 1
 
     if task_dir.exists():
         print(colored(f"Warning: Task directory already exists: {dir_name}", Colors.YELLOW), file=sys.stderr)
@@ -408,10 +440,20 @@ def cmd_archive(args: argparse.Namespace) -> int:
         archive_dest = Path(result["archived_to"])
         year_month = archive_dest.parent.name
         print(colored(f"Archived: {dir_name} -> archive/{year_month}/", Colors.GREEN), file=sys.stderr)
+        record_task_archived(repo_root, task_dir, archive_dest)
 
         # Auto-commit unless --no-commit
         if not getattr(args, "no_commit", False):
-            _auto_commit_archive(dir_name, repo_root, modified_children)
+            if not _auto_commit_archive(dir_name, repo_root, modified_children):
+                print(
+                    colored(
+                        "Archive moved on disk, but git auto-commit did not complete. "
+                        "Resolve `git status` before continuing.",
+                        Colors.RED,
+                    ),
+                    file=sys.stderr,
+                )
+                return 1
 
         # Return the archive path
         print(f"{DIR_WORKFLOW}/{DIR_TASKS}/{DIR_ARCHIVE}/{year_month}/{dir_name}")
@@ -428,7 +470,7 @@ def _auto_commit_archive(
     task_name: str,
     repo_root: Path,
     modified_children: list[str] | None = None,
-) -> None:
+) -> bool:
     """Stage DevFlow-owned task paths and commit after archive.
 
     Scoped narrowly to the archived task's source + destination paths
@@ -450,14 +492,21 @@ def _auto_commit_archive(
             "[OK] session_auto_commit: false — skipping git stage/commit.",
             file=sys.stderr,
         )
-        return
+        return True
+
+    source_rel = f"{DIR_WORKFLOW}/{DIR_TASKS}/{task_name}"
+    rc, tracked_out, _ = run_git(
+        ["ls-files", "--", source_rel],
+        cwd=repo_root,
+    )
+    source_was_tracked = rc == 0 and bool(tracked_out.strip())
 
     paths = safe_archive_paths_to_add(
         repo_root, task_name=task_name, modified_children=modified_children
     )
     if not paths:
         print("[OK] No task changes to commit.", file=sys.stderr)
-        return
+        return True
 
     success, _, err = safe_git_add(paths, repo_root)
     if not success:
@@ -468,7 +517,7 @@ def _auto_commit_archive(
                 f"[WARN] git add failed: {err.strip() if err else 'unknown error'}",
                 file=sys.stderr,
             )
-        return
+        return not source_was_tracked
 
     # Belt-and-suspenders for the phantom-delete bug: `safe_git_add` uses
     # `git add` (no -A) which only stages additions/modifications. The
@@ -479,7 +528,6 @@ def _auto_commit_archive(
     #
     # `--ignore-unmatch` makes this a no-op when the task was never tracked
     # (e.g. archiving a task that lived only in working tree).
-    source_rel = f"{DIR_WORKFLOW}/{DIR_TASKS}/{task_name}"
     run_git(
         ["rm", "-r", "--cached", "--ignore-unmatch", "--", source_rel],
         cwd=repo_root,
@@ -491,14 +539,16 @@ def _auto_commit_archive(
     )
     if rc == 0:
         print("[OK] No task changes to commit.", file=sys.stderr)
-        return
+        return True
 
     commit_msg = f"chore(task): archive {task_name}"
     rc, _, err = run_git(["commit", "-m", commit_msg], cwd=repo_root)
     if rc == 0:
         print(f"[OK] Auto-committed: {commit_msg}", file=sys.stderr)
+        return True
     else:
         print(f"[WARN] Auto-commit failed: {err.strip()}", file=sys.stderr)
+        return not source_was_tracked
 
 
 # =============================================================================

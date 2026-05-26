@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Hotfix on top of 0.5.0. Run `devflow update` (no `--migrate` needed)."
 }
+

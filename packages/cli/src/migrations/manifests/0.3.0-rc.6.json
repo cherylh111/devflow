@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "No migration required. New platform templates only — existing projects unaffected. Run `devflow init --kilo`, `--kiro`, `--gemini`, or `--antigravity` to add new platform support."
 }
+

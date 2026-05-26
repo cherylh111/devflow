@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Hotfix on top of 0.5.1. Run `devflow update` (no `--migrate` needed). Affects every Python <=3.11 user on a hook-capable platform; Python 3.12+ users were unaffected."
 }
+

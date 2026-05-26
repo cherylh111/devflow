@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Beta users should replace `devflow channel create --type thread` with `devflow channel create --type threads`. Run `devflow update` to pull in the core SDK-backed channel commands. No file migration is required."
 }
+

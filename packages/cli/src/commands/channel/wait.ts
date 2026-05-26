@@ -1,4 +1,4 @@
-import { parseChannelKind } from "./store/events.js";
+import { parseChannelKinds } from "./store/events.js";
 import { resolveExistingChannelRef } from "./store/paths.js";
 import {
   normalizeThreadKey,
@@ -13,7 +13,6 @@ export interface WaitOptions {
   timeoutMs?: number;
   from?: string;
   kind?: string;
-  tag?: string;
   to?: string;
   scope?: string;
   thread?: string;
@@ -41,8 +40,7 @@ export async function channelWait(
   const filter: WatchFilter = {
     self: opts.as,
     from: fromList,
-    kind: parseChannelKind(opts.kind),
-    tag: opts.tag,
+    kind: parseChannelKinds(opts.kind),
     to: opts.to ?? opts.as, // default: broadcasts to me + explicit-to-me
     thread: opts.thread ? normalizeThreadKey(opts.thread) : undefined,
     action: opts.action ? parseThreadAction(opts.action) : undefined,

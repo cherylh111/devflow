@@ -30,12 +30,6 @@ Execute these steps:
    cat .devflow/spec/guides/index.md
    ```
 
-7. **Query lightweight learnings only when relevant**:
-   ```bash
-   devflow knowledge search "<task keyword>" --type learning --limit 5
-   ```
-   Use this for non-obvious gotchas related to the task. Do not blindly load all of `learnings.md` into context.
-
-8. Understand the coding standards and patterns you need to follow, then proceed with your development plan.
+7. Understand the coding standards and patterns you need to follow, then proceed with your development plan.
 
 This step is **mandatory** before writing any code.

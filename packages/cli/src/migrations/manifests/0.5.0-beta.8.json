@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "If you're on any beta < 0.5.0-beta.7 with opencode configured, upgrading auto-updates the 3 plugin files + agents + lib + package.json to current templates (hash-matched). If you customized `.claude/settings.json`, you'll get the standard 'Modified by you' confirm prompt — pick `[1] Overwrite` to adopt the new env block, or `[3] Skip` and manually add `\"env\": { \"CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR\": \"1\" }` to your settings to get the Windows hook-path fix."
 }
+

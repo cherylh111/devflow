@@ -93,6 +93,7 @@ describe("registry internal consistency", () => {
 // =============================================================================
 
 describe("UserPromptSubmit hook wiring", () => {
+  /** Map from template config path to (parser, event name) */
   const PLATFORM_HOOK_CONFIGS = [
     {
       platform: "claude",
@@ -107,6 +108,29 @@ describe("UserPromptSubmit hook wiring", () => {
     {
       platform: "codebuddy",
       path: "codebuddy/settings.json",
+      event: "UserPromptSubmit",
+    },
+    {
+      platform: "droid",
+      path: "droid/settings.json",
+      event: "UserPromptSubmit",
+    },
+    {
+      // Gemini CLI 0.40+ renamed the per-turn event from `UserPromptSubmit`
+      // (Claude Code naming we initially copied) to `BeforeAgent`. The
+      // schema validator rejects the legacy name — see issue #224.
+      platform: "gemini",
+      path: "gemini/settings.json",
+      event: "BeforeAgent",
+    },
+    {
+      platform: "copilot",
+      path: "copilot/hooks.json",
+      event: "userPromptSubmitted",
+    },
+    {
+      platform: "codex",
+      path: "codex/hooks.json",
       event: "UserPromptSubmit",
     },
   ] as const;
@@ -132,6 +156,29 @@ describe("UserPromptSubmit hook wiring", () => {
       expect(raw).toContain("inject-workflow-state.py");
     });
   }
+
+  it("kiro agent JSONs do NOT wire UserPromptSubmit (downgrade per Codex R3 #4)", async () => {
+    const fs = await import("node:fs");
+    const { dirname, join } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const __filename = fileURLToPath(import.meta.url);
+    const kiroAgentsDir = join(
+      dirname(__filename),
+      "..",
+      "src",
+      "templates",
+      "kiro",
+      "agents",
+    );
+    for (const entry of fs.readdirSync(kiroAgentsDir)) {
+      if (!entry.endsWith(".json")) continue;
+      const content = fs.readFileSync(join(kiroAgentsDir, entry), "utf-8");
+      expect(
+        content,
+        `kiro/agents/${entry} should not wire inject-workflow-state.py`,
+      ).not.toContain("inject-workflow-state.py");
+    }
+  });
 });
 
 // Roundtrip and derived-helper tests are in configurators/index.test.ts

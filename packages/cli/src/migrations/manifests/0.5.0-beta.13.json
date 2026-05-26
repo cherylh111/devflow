@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Pure content refresh. Existing tasks and jsonl files keep working untouched. After `devflow update`, `task.py start <existing-task-in-planning>` will now write `in_progress` on the first invocation — no action needed from you. Codex users who manually edited their `.codex/agents/devflow-*.toml` will see the Required-Context preamble added on update; `devflow update` prompts per-file when hashes drift."
 }
+

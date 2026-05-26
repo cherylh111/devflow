@@ -736,7 +736,7 @@ describe("update() integration", () => {
   });
 
   // Original template content for check-backend.md (deleted in 0.4.0-beta.1).
-  // Hash: 4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3
+  // Hash: 72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b
   const ORIGINAL_CHECK_BACKEND_CONTENT = [
     "Check if the code you just wrote follows the backend development guidelines.",
     "",
@@ -754,12 +754,12 @@ describe("update() integration", () => {
     "",
   ].join("\n");
 
-  it.skip("#20 safe-file-delete respects update.skip for deprecated files", async () => {
+  it("#20 safe-file-delete respects update.skip for deprecated files", async () => {
     await setupProject();
 
     // Sanity: content hash must match the manifest's allowed_hashes
     expect(computeHash(ORIGINAL_CHECK_BACKEND_CONTENT)).toBe(
-      "4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3",
+      "72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b",
     );
 
     // Create a deprecated file with original content (hash matches allowed_hashes)
@@ -786,12 +786,12 @@ describe("update() integration", () => {
     );
   });
 
-  it.skip("#21 safe-file-delete deletes file when hash matches allowed_hashes", async () => {
+  it("#21 safe-file-delete deletes file when hash matches allowed_hashes", async () => {
     await setupProject();
 
     // Sanity: content hash must match the manifest's allowed_hashes
     expect(computeHash(ORIGINAL_CHECK_BACKEND_CONTENT)).toBe(
-      "4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3",
+      "72f360cc1a53afaa9af1da8909951b1ccf5fca5db0119b9ddc0307d798f55c8b",
     );
 
     // Create deprecated file with original content (hash matches allowed_hashes)
@@ -988,7 +988,7 @@ describe("update() integration", () => {
     expect(fs.existsSync(newPath + ".backup")).toBe(false);
   });
 
-  it.skip("#27 backup skips managed node_modules dependency trees", async () => {
+  it("#27 backup skips managed node_modules dependency trees", async () => {
     await setupProject();
 
     const opencodeRoot = path.join(tmpDir, ".opencode");

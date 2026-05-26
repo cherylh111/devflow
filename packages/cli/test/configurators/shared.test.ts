@@ -2,9 +2,12 @@ import { describe, expect, it, afterEach } from "vitest";
 import {
   getPythonCommandForPlatform,
   replacePythonCommandLiterals,
+  resolveAllAsSkillsNeutral,
   resolvePlaceholders,
   resolvePlaceholdersNeutral,
+  resolveSkillsNeutral,
 } from "../../src/configurators/shared.js";
+import { AI_TOOLS } from "../../src/types/ai-tools.js";
 import type { TemplateContext } from "../../src/types/ai-tools.js";
 
 // ---------------------------------------------------------------------------
@@ -506,4 +509,61 @@ describe("resolvePlaceholdersNeutral", () => {
 });
 
 // ---------------------------------------------------------------------------
-// resolveSkillsNeutral / resolveAllAsSkillsNeutral — removed (Codex/Gemini platforms removed)
+// resolveSkillsNeutral / resolveAllAsSkillsNeutral — cross-platform parity
+// for `.agents/skills/` writes
+// ---------------------------------------------------------------------------
+
+describe("resolveSkillsNeutral / resolveAllAsSkillsNeutral", () => {
+  it("resolveSkillsNeutral produces byte-identical output for Codex and Gemini", () => {
+    const codexSkills = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
+    const geminiSkills = resolveSkillsNeutral(AI_TOOLS.gemini.templateContext);
+    expect(codexSkills.length).toBe(geminiSkills.length);
+    for (let i = 0; i < codexSkills.length; i++) {
+      expect(codexSkills[i].name).toBe(geminiSkills[i].name);
+      expect(codexSkills[i].content).toBe(geminiSkills[i].content);
+    }
+  });
+
+  it("resolveSkillsNeutral renders CMD_REF without platform-specific prefix", () => {
+    // The neutral output must not contain platform-prefixed tokens for any
+    // command that CMD_REF references in the shared skills (Codex `$name`,
+    // Claude `/devflow:name`, Cursor `/devflow-name`).
+    const neutral = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
+    const cmdRefNames = [
+      "start",
+      "brainstorm",
+      "check",
+      "break-loop",
+      "update-spec",
+      "finish-work",
+    ];
+    for (const skill of neutral) {
+      for (const name of cmdRefNames) {
+        expect(
+          skill.content,
+          `${skill.name} leaks Codex prefix for ${name}`,
+        ).not.toContain(`$${name}`);
+        expect(
+          skill.content,
+          `${skill.name} leaks Claude prefix for ${name}`,
+        ).not.toContain(`/devflow:${name}`);
+        expect(
+          skill.content,
+          `${skill.name} leaks Cursor prefix for ${name}`,
+        ).not.toContain(`/devflow-${name}`);
+      }
+    }
+  });
+
+  it("resolveAllAsSkillsNeutral keeps the 5 shared skills byte-identical to resolveSkillsNeutral", () => {
+    const all = resolveAllAsSkillsNeutral(AI_TOOLS.codex.templateContext);
+    const fiveOnly = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
+    const sharedNames = new Set(fiveOnly.map((s) => s.name));
+    const allShared = all.filter((s) => sharedNames.has(s.name));
+    expect(allShared.length).toBe(fiveOnly.length);
+    for (const five of fiveOnly) {
+      const match = allShared.find((s) => s.name === five.name);
+      expect(match?.content).toBe(five.content);
+    }
+  });
+});

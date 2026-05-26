@@ -7,3 +7,4 @@
   "migrations": [],
   "notes": "Patch on top of 0.5.4. Run `devflow update` (no `--migrate` needed). Codex users get a new `.agents/skills/devflow-start/SKILL.md` and a `hooks.json` without `SessionStart` wiring; other platforms unchanged."
 }
+

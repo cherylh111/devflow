@@ -1,6 +1,6 @@
 {
   "name": "@enpd/devflow",
-  "version": "0.6.0-beta.14",
+  "version": "0.6.0-beta.21",
   "description": "AI capabilities grow like ivy — DevFlow provides the structure to guide them along a disciplined path",
   "type": "module",
   "main": "./dist/index.js",
@@ -40,7 +40,9 @@
   "keywords": [
     "ai",
     "workflow",
+    "cursor",
     "claude",
+    "iflow",
     "cli",
     "developer-tools",
     "agent",
@@ -48,7 +50,7 @@
     "devflow"
   ],
   "author": "ENPD",
-  "private": true,
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "@enpd/devflow-core": "workspace:*",
     "chalk": "^5.3.0",
@@ -77,6 +79,12 @@
   },
   "files": [
     "dist",
-    "bin"
-  ]
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enpd/DevFlow.git"
+  }
 }

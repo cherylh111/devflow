@@ -38,6 +38,7 @@ from pathlib import Path
 from .git import run_git
 from .paths import (
     DIR_ARCHIVE,
+    DIR_SPEC,
     DIR_TASKS,
     DIR_WORKFLOW,
     DIR_WORKSPACE,
@@ -56,6 +57,9 @@ DEVFLOW_IGNORED_SUBPATHS = (
     ".devflow/.runtime/",
     ".devflow/.cache/",
 )
+
+TRACE_PATH = f"{DIR_WORKFLOW}/agent-traces/trace.jsonl"
+SESSION_INSIGHT_PATH = f"{DIR_WORKFLOW}/{DIR_SPEC}/wiki/session-insight"
 
 
 def safe_devflow_paths_to_add(repo_root: Path) -> list[str]:
@@ -108,6 +112,14 @@ def safe_devflow_paths_to_add(repo_root: Path) -> list[str]:
         if archive_dir.is_dir():
             paths.append(f"{DIR_WORKFLOW}/{DIR_TASKS}/{DIR_ARCHIVE}")
 
+    trace_file = repo_root / TRACE_PATH
+    if trace_file.is_file():
+        paths.append(TRACE_PATH)
+
+    insight_dir = repo_root / SESSION_INSIGHT_PATH
+    if insight_dir.is_dir():
+        paths.append(SESSION_INSIGHT_PATH)
+
     return paths
 
 
@@ -154,6 +166,9 @@ def safe_archive_paths_to_add(
             )
         for child_name in modified_children or []:
             paths.append(f"{DIR_WORKFLOW}/{DIR_TASKS}/{child_name}")
+        trace_file = repo_root / TRACE_PATH
+        if trace_file.is_file():
+            paths.append(TRACE_PATH)
         return paths
 
     # Legacy wide scope (no task_name): preserve old behavior so callers
