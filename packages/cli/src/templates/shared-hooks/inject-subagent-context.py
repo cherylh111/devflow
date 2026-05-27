@@ -65,6 +65,40 @@ AGENTS_REQUIRE_TASK = (AGENT_IMPLEMENT, AGENT_CHECK)
 AGENTS_ALL = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_RESEARCH)
 
 
+def _read_language(repo_root: str) -> str:
+    env_lang = os.environ.get("DEVFLOW_LANG", "").strip().lower()
+    if env_lang:
+        return "zh" if env_lang in {"zh", "cn", "zh-cn", "chinese", "han"} else "en"
+
+    scripts_dir = Path(repo_root) / DIR_WORKFLOW / "scripts"
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from common.devflow_config import get_language  # type: ignore[import-not-found]
+
+        return "zh" if get_language(Path(repo_root)) == "zh" else "en"
+    except Exception:
+        pass
+
+    config_path = Path(repo_root) / DIR_WORKFLOW / "config.yaml"
+    try:
+        config = config_path.read_text(encoding="utf-8")
+    except OSError:
+        return "en"
+    match = re.search(r"^\s*language\s*:\s*['\"]?([^'\"\s#]+)", config, re.MULTILINE)
+    if not match:
+        return "en"
+    return "zh" if match.group(1).strip().lower() in {"zh", "cn", "zh-cn", "chinese", "han"} else "en"
+
+
+def _is_zh(repo_root: str) -> bool:
+    return _read_language(repo_root) == "zh"
+
+
+def _tr(repo_root: str, en: str, zh: str) -> str:
+    return zh if _is_zh(repo_root) else en
+
+
 def find_repo_root(start_path: str) -> str | None:
     """
     Find git repo root from start_path upwards
@@ -329,20 +363,23 @@ def get_implement_context(repo_root: str, task_dir: str) -> str:
     # 2. Requirements document
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
     if prd_content:
-        context_parts.append(f"=== {task_dir}/prd.md (Requirements) ===\n{prd_content}")
+        label = _tr(repo_root, "Requirements", "需求")
+        context_parts.append(f"=== {task_dir}/prd.md ({label}) ===\n{prd_content}")
 
     # 3. Technical design for complex tasks
     design_content = read_file_content(repo_root, f"{task_dir}/design.md")
     if design_content:
+        label = _tr(repo_root, "Technical Design", "技术设计")
         context_parts.append(
-            f"=== {task_dir}/design.md (Technical Design) ===\n{design_content}"
+            f"=== {task_dir}/design.md ({label}) ===\n{design_content}"
         )
 
     # 4. Execution plan for complex tasks
     implement_plan_content = read_file_content(repo_root, f"{task_dir}/implement.md")
     if implement_plan_content:
+        label = _tr(repo_root, "Execution Plan", "执行计划")
         context_parts.append(
-            f"=== {task_dir}/implement.md (Execution Plan) ===\n{implement_plan_content}"
+            f"=== {task_dir}/implement.md ({label}) ===\n{implement_plan_content}"
         )
 
     return "\n\n".join(context_parts)
@@ -359,18 +396,21 @@ def get_check_context(repo_root: str, task_dir: str) -> str:
 
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
     if prd_content:
-        context_parts.append(f"=== {task_dir}/prd.md (Requirements) ===\n{prd_content}")
+        label = _tr(repo_root, "Requirements", "需求")
+        context_parts.append(f"=== {task_dir}/prd.md ({label}) ===\n{prd_content}")
 
     design_content = read_file_content(repo_root, f"{task_dir}/design.md")
     if design_content:
+        label = _tr(repo_root, "Technical Design", "技术设计")
         context_parts.append(
-            f"=== {task_dir}/design.md (Technical Design) ===\n{design_content}"
+            f"=== {task_dir}/design.md ({label}) ===\n{design_content}"
         )
 
     implement_plan_content = read_file_content(repo_root, f"{task_dir}/implement.md")
     if implement_plan_content:
+        label = _tr(repo_root, "Execution Plan", "执行计划")
         context_parts.append(
-            f"=== {task_dir}/implement.md (Execution Plan) ===\n{implement_plan_content}"
+            f"=== {task_dir}/implement.md ({label}) ===\n{implement_plan_content}"
         )
 
     return "\n\n".join(context_parts)
@@ -385,8 +425,41 @@ def get_finish_context(repo_root: str, task_dir: str) -> str:
 
 
 
-def build_implement_prompt(original_prompt: str, context: str) -> str:
+def build_implement_prompt(repo_root: str, original_prompt: str, context: str) -> str:
     """Build complete prompt for Implement"""
+    if _is_zh(repo_root):
+        return f"""<!-- devflow-hook-injected -->
+# Implement Agent 任务
+
+你是 Multi-Agent Pipeline 中的 Implement Agent。
+
+## 你的上下文
+
+你需要的信息已经准备好：
+
+{context}
+
+---
+
+## 你的任务
+
+{original_prompt}
+
+---
+
+## 工作流
+
+1. **理解 specs** - 上方已经注入所有开发 specs，先理解它们
+2. **理解任务 artifacts** - 阅读需求、存在时的技术设计和执行计划
+3. **实现功能** - 按 specs 和任务 artifacts 实现
+4. **自检** - 按 check specs 确认代码质量
+
+## 重要约束
+
+- 不要执行 git commit，只能修改代码
+- 遵循上方注入的所有开发 specs
+- 完成后报告修改/创建的文件列表"""
+
     return f"""<!-- devflow-hook-injected -->
 # Implement Agent Task
 
@@ -420,8 +493,41 @@ All the information you need has been prepared for you:
 - Report list of modified/created files when done"""
 
 
-def build_check_prompt(original_prompt: str, context: str) -> str:
+def build_check_prompt(repo_root: str, original_prompt: str, context: str) -> str:
     """Build complete prompt for Check"""
+    if _is_zh(repo_root):
+        return f"""<!-- devflow-hook-injected -->
+# Check Agent 任务
+
+你是 Multi-Agent Pipeline 中的 Check Agent（代码与跨层检查）。
+
+## 你的上下文
+
+你需要的 check specs 和 dev specs：
+
+{context}
+
+---
+
+## 你的任务
+
+{original_prompt}
+
+---
+
+## 工作流
+
+1. **获取变更** - 运行 `git diff --name-only` 和 `git diff` 查看代码变更
+2. **对照 specs 检查** - 逐项对照上方 specs 检查
+3. **自行修复** - 直接修复问题，不要只报告
+4. **运行验证** - 运行项目 lint 和 typecheck 命令
+
+## 重要约束
+
+- 自行修复问题，不要只报告
+- 必须执行 check specs 中的完整检查清单
+- 特别关注影响半径分析（L1-L5）"""
+
     return f"""<!-- devflow-hook-injected -->
 # Check Agent Task
 
@@ -455,8 +561,48 @@ All check specs and dev specs you need:
 - Pay special attention to impact radius analysis (L1-L5)"""
 
 
-def build_finish_prompt(original_prompt: str, context: str) -> str:
+def build_finish_prompt(repo_root: str, original_prompt: str, context: str) -> str:
     """Build complete prompt for Finish (final check before PR)"""
+    if _is_zh(repo_root):
+        return f"""<!-- devflow-hook-injected -->
+# Finish Agent 任务
+
+你正在创建 PR 前执行最终检查。
+
+## 你的上下文
+
+Finish 检查清单和需求：
+
+{context}
+
+---
+
+## 你的任务
+
+{original_prompt}
+
+---
+
+## 工作流
+
+1. **审查变更** - 运行 `git diff --name-only` 查看所有变更文件
+2. **验证任务 artifacts** - 检查 prd.md 中的需求，以及存在时的 design.md / implement.md
+3. **同步 spec** - 分析变更是否引入新模式、契约或约定
+   - 如果发现新模式/约定：读取目标 spec 文件 -> 更新它 -> 必要时更新 index.md
+   - 如果是基础设施/跨层变更：遵循 update-spec.md 中的 7 节强制模板
+   - 如果只是纯代码修复且没有新模式：跳过此步骤
+4. **运行最终检查** - 执行 lint 和 typecheck
+5. **确认就绪** - 确认代码已准备好创建 PR
+
+## 重要约束
+
+- 发现 spec 缺口时可以更新 spec 文件（以 update-spec.md 为指南）
+- 编辑前必须先读取目标 spec 文件（避免重复已有内容）
+- 不要为琐碎变更更新 specs（错别字、格式、显然的修复）
+- 如果发现严重代码问题，清晰报告（修 specs，不修代码）
+- 验证 prd.md 中所有验收标准均已满足
+- 存在 design.md 和 implement.md 时，验证其中约束"""
+
     return f"""<!-- devflow-hook-injected -->
 # Finish Agent Task
 
@@ -525,7 +671,22 @@ def get_research_context(repo_root: str, task_dir: str | None) -> str:
 
     spec_tree = "\n".join(tree_lines)
 
-    project_structure = f"""## Project Spec Directory Structure
+    if _is_zh(repo_root):
+        project_structure = f"""## 项目 Spec 目录结构
+
+```
+{spec_tree}
+```
+
+要获取结构化 package 信息，运行：`python3 ./{DIR_WORKFLOW}/scripts/get_context.py --mode packages`
+
+## 搜索提示
+
+- Spec 文件：`{spec_path}/**/*.md`
+- 代码搜索：使用 Glob 和 Grep 工具
+- 技术方案：使用 mcp__exa__web_search_exa 或 mcp__exa__get_code_context_exa"""
+    else:
+        project_structure = f"""## Project Spec Directory Structure
 
 ```
 {spec_tree}
@@ -544,8 +705,66 @@ To get structured package info, run: `python3 ./{DIR_WORKFLOW}/scripts/get_conte
     return "\n\n".join(context_parts)
 
 
-def build_research_prompt(original_prompt: str, context: str) -> str:
+def build_research_prompt(repo_root: str, original_prompt: str, context: str) -> str:
     """Build complete prompt for Research"""
+    if _is_zh(repo_root):
+        return f"""# Research Agent 任务
+
+你是 Multi-Agent Pipeline 中的 Research Agent（搜索研究）。
+
+## 核心原则
+
+**你只做一件事：查找并解释信息。**
+
+你是文档整理者，不是评审者。
+
+## 项目信息
+
+{context}
+
+---
+
+## 你的任务
+
+{original_prompt}
+
+---
+
+## 工作流
+
+1. **理解查询** - 判断搜索类型（内部/外部）和范围
+2. **规划搜索** - 为复杂查询列出搜索步骤
+3. **执行搜索** - 并行执行多个独立搜索
+4. **整理结果** - 输出结构化报告
+
+## 搜索工具
+
+| Tool | Purpose |
+|------|---------|
+| Glob | 按文件名模式搜索 |
+| Grep | 按内容搜索 |
+| Read | 读取文件内容 |
+| mcp__exa__web_search_exa | 外部 web 搜索 |
+| mcp__exa__get_code_context_exa | 外部代码/文档搜索 |
+
+## 严格边界
+
+**只允许**：描述存在什么、在哪里、如何工作
+
+**禁止**（除非明确要求）：
+- 建议改进
+- 批评实现
+- 推荐重构
+- 修改任何文件
+
+## 报告格式
+
+提供结构化搜索结果，包括：
+- 找到的文件列表（带路径）
+- 代码模式分析（如适用）
+- 相关 spec 文档
+- 外部参考（如有）"""
+
     return f"""# Research Agent Task
 
 You are the Research Agent in the Multi-Agent Pipeline (search researcher).
@@ -761,21 +980,21 @@ def main():
     if subagent_type == AGENT_IMPLEMENT:
         assert task_dir is not None  # validated above
         context = get_implement_context(repo_root, task_dir)
-        new_prompt = build_implement_prompt(original_prompt, context)
+        new_prompt = build_implement_prompt(repo_root, original_prompt, context)
     elif subagent_type == AGENT_CHECK:
         assert task_dir is not None  # validated above
         if is_finish_phase:
             # Finish phase: use finish context (lighter, focused on final verification)
             context = get_finish_context(repo_root, task_dir)
-            new_prompt = build_finish_prompt(original_prompt, context)
+            new_prompt = build_finish_prompt(repo_root, original_prompt, context)
         else:
             # Regular check phase: use check context (full specs for self-fix loop)
             context = get_check_context(repo_root, task_dir)
-            new_prompt = build_check_prompt(original_prompt, context)
+            new_prompt = build_check_prompt(repo_root, original_prompt, context)
     elif subagent_type == AGENT_RESEARCH:
         # Research can work without task directory
         context = get_research_context(repo_root, task_dir)
-        new_prompt = build_research_prompt(original_prompt, context)
+        new_prompt = build_research_prompt(repo_root, original_prompt, context)
     else:
         sys.exit(0)
 

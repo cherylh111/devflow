@@ -1,12 +1,15 @@
 import { describe, expect, it, afterEach } from "vitest";
 import {
+  buildPullBasedPrelude,
   getPythonCommandForPlatform,
   replacePythonCommandLiterals,
   resolveAllAsSkillsNeutral,
   resolvePlaceholders,
   resolvePlaceholdersNeutral,
   resolveSkillsNeutral,
+  wrapWithSkillFrontmatter,
 } from "../../src/configurators/shared.js";
+import { setTemplateLanguage } from "../../src/templates/language.js";
 import { AI_TOOLS } from "../../src/types/ai-tools.js";
 import type { TemplateContext } from "../../src/types/ai-tools.js";
 
@@ -145,6 +148,41 @@ describe("getPythonCommandForPlatform", () => {
   it("returns python3 on macOS and Linux", () => {
     expect(getPythonCommandForPlatform("darwin")).toBe("python3");
     expect(getPythonCommandForPlatform("linux")).toBe("python3");
+  });
+});
+
+describe("localized skill wrappers and pull-based preludes", () => {
+  afterEach(() => {
+    setTemplateLanguage("en");
+  });
+
+  it("keeps English skill frontmatter and pull-based prelude as defaults", () => {
+    const skill = wrapWithSkillFrontmatter("devflow-before-dev", "Body");
+    expect(skill).toContain(
+      "Discovers and injects project-specific coding guidelines",
+    );
+    expect(skill).not.toContain("在实现前发现并注入");
+
+    const prelude = buildPullBasedPrelude("implement");
+    expect(prelude).toContain("Required: Load DevFlow Context First");
+    expect(prelude).toContain("Read the task's `prd.md`");
+    expect(prelude).not.toContain("必须先加载 DevFlow 上下文");
+  });
+
+  it("localizes skill frontmatter and pull-based prelude when language is zh", () => {
+    setTemplateLanguage("zh");
+
+    const skill = wrapWithSkillFrontmatter("devflow-before-dev", "Body");
+    expect(skill).toContain("在实现前发现并注入");
+    expect(skill).not.toContain(
+      "Discovers and injects project-specific coding guidelines",
+    );
+
+    const prelude = buildPullBasedPrelude("check");
+    expect(prelude).toContain("必须先加载 DevFlow 上下文");
+    expect(prelude).toContain("读取任务的 `prd.md`（需求）");
+    expect(prelude).not.toContain("Required: Load DevFlow Context First");
+    expect(prelude).not.toContain("Read the task's `prd.md`");
   });
 });
 

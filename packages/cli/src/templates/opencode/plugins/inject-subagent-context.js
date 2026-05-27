@@ -19,6 +19,29 @@ const AGENTS_REQUIRE_TASK = ["implement", "check"]
 // breadcrumb so multi-window users can disambiguate which task is targeted.
 const ACTIVE_TASK_HINT_RE = /^\s*Active task:\s*(\S+)\s*$/m
 
+function normalizeLanguage(value) {
+  const normalized = String(value || "").trim().toLowerCase()
+  if (!normalized) return null
+  return ["zh", "cn", "zh-cn", "chinese", "han"].includes(normalized) ? "zh" : "en"
+}
+
+function readLanguage(ctx) {
+  const envLang = normalizeLanguage(process.env.DEVFLOW_LANG)
+  if (envLang) return envLang
+
+  const config = ctx.readProjectFile(".devflow/config.yaml")
+  const lang = config?.match(/^\s*language\s*:\s*['"]?([^'"\s#]+)/m)?.[1]
+  return normalizeLanguage(lang) || "en"
+}
+
+function isZh(ctx) {
+  return readLanguage(ctx) === "zh"
+}
+
+function tr(ctx, en, zh) {
+  return isZh(ctx) ? zh : en
+}
+
 function extractActiveTaskHint(prompt) {
   if (typeof prompt !== "string" || !prompt) return null
   const match = prompt.match(ACTIVE_TASK_HINT_RE)
@@ -43,17 +66,17 @@ function getImplementContext(ctx, taskDir) {
 
   const prd = ctx.readFile(join(taskDirFull, "prd.md"))
   if (prd) {
-    parts.push(`=== ${taskDir}/prd.md (Requirements) ===\n${prd}`)
+    parts.push(`=== ${taskDir}/prd.md (${tr(ctx, "Requirements", "需求")}) ===\n${prd}`)
   }
 
   const design = ctx.readFile(join(taskDirFull, "design.md"))
   if (design) {
-    parts.push(`=== ${taskDir}/design.md (Technical Design) ===\n${design}`)
+    parts.push(`=== ${taskDir}/design.md (${tr(ctx, "Technical Design", "技术设计")}) ===\n${design}`)
   }
 
   const implementPlan = ctx.readFile(join(taskDirFull, "implement.md"))
   if (implementPlan) {
-    parts.push(`=== ${taskDir}/implement.md (Execution Plan) ===\n${implementPlan}`)
+    parts.push(`=== ${taskDir}/implement.md (${tr(ctx, "Execution Plan", "执行计划")}) ===\n${implementPlan}`)
   }
 
   return parts.join("\n\n")
@@ -75,17 +98,17 @@ function getCheckContext(ctx, taskDir) {
 
   const prd = ctx.readFile(join(taskDirFull, "prd.md"))
   if (prd) {
-    parts.push(`=== ${taskDir}/prd.md (Requirements) ===\n${prd}`)
+    parts.push(`=== ${taskDir}/prd.md (${tr(ctx, "Requirements", "需求")}) ===\n${prd}`)
   }
 
   const design = ctx.readFile(join(taskDirFull, "design.md"))
   if (design) {
-    parts.push(`=== ${taskDir}/design.md (Technical Design) ===\n${design}`)
+    parts.push(`=== ${taskDir}/design.md (${tr(ctx, "Technical Design", "技术设计")}) ===\n${design}`)
   }
 
   const implementPlan = ctx.readFile(join(taskDirFull, "implement.md"))
   if (implementPlan) {
-    parts.push(`=== ${taskDir}/implement.md (Execution Plan) ===\n${implementPlan}`)
+    parts.push(`=== ${taskDir}/implement.md (${tr(ctx, "Execution Plan", "执行计划")}) ===\n${implementPlan}`)
   }
 
   return parts.join("\n\n")
@@ -110,7 +133,8 @@ function getResearchContext(ctx) {
   const specPath = ".devflow/spec"
   const specFull = join(ctx.directory, specPath)
 
-  const structureLines = [`## Project Spec Directory Structure\n\n\`\`\`\n${specPath}/`]
+  const structureTitle = tr(ctx, "Project Spec Directory Structure", "项目 Spec 目录结构")
+  const structureLines = [`## ${structureTitle}\n\n\`\`\`\n${specPath}/`]
   if (existsSync(specFull)) {
     try {
       const entries = readdirSync(specFull, { withFileTypes: true })
@@ -143,14 +167,25 @@ function getResearchContext(ctx) {
   }
   structureLines.push("```")
 
-  parts.push(structureLines.join("\n") + `
+  const tips = isZh(ctx)
+    ? `
+
+## 搜索提示
+
+- Spec 文件：\`.devflow/spec/**/*.md\`
+- 已知问题：\`.devflow/big-question/\`
+- 代码搜索：使用 Glob 和 Grep 工具
+- 技术方案：使用 mcp__exa__web_search_exa 或 mcp__exa__get_code_context_exa`
+    : `
 
 ## Search Tips
 
 - Spec files: \`.devflow/spec/**/*.md\`
 - Known issues: \`.devflow/big-question/\`
 - Code search: Use Glob and Grep tools
-- Tech solutions: Use mcp__exa__web_search_exa or mcp__exa__get_code_context_exa`)
+- Tech solutions: Use mcp__exa__web_search_exa or mcp__exa__get_code_context_exa`
+
+  parts.push(structureLines.join("\n") + tips)
 
   return parts.join("\n\n")
 }
@@ -158,7 +193,142 @@ function getResearchContext(ctx) {
 /**
  * Build enhanced prompt with context
  */
-function buildPrompt(agentType, originalPrompt, context, isFinish = false) {
+function buildPrompt(ctx, agentType, originalPrompt, context, isFinish = false) {
+  if (isZh(ctx)) {
+    const templates = {
+      implement: `<!-- devflow-hook-injected -->
+# Implement Agent 任务
+
+你是 Multi-Agent Pipeline 中的 Implement Agent。
+
+## 你的上下文
+
+${context}
+
+---
+
+## 你的任务
+
+${originalPrompt}
+
+---
+
+## 工作流
+
+1. **理解 specs** - 上方已经注入所有开发 specs
+2. **理解任务 artifacts** - 阅读需求、存在时的技术设计和执行计划
+3. **实现功能** - 按 specs 和任务 artifacts 实现
+4. **自检** - 确认代码质量
+
+## 重要约束
+
+- 不要执行 git commit
+- 遵循上方注入的所有开发 specs
+- 完成后报告修改/创建的文件列表`,
+
+      check: isFinish ? `<!-- devflow-hook-injected -->
+# Finish Agent 任务
+
+你正在创建 PR 前执行最终检查。
+
+## 你的上下文
+
+${context}
+
+---
+
+## 你的任务
+
+${originalPrompt}
+
+---
+
+## 工作流
+
+1. **审查变更** - 运行 \`git diff --name-only\` 查看所有变更文件
+2. **验证任务 artifacts** - 检查 prd.md，以及存在时的 design.md / implement.md
+3. **同步 spec** - 分析变更是否引入新模式、契约或约定
+   - 如果发现新模式/约定：读取目标 spec 文件 -> 更新它 -> 必要时更新 index.md
+   - 如果是基础设施/跨层变更：遵循 update-spec.md 中的 7 节强制模板
+   - 如果只是纯代码修复且没有新模式：跳过此步骤
+4. **运行最终检查** - 执行 lint 和 typecheck
+5. **确认就绪** - 确认代码已准备好创建 PR
+
+## 重要约束
+
+- 发现 spec 缺口时可以更新 spec 文件（以 update-spec.md 为指南）
+- 编辑前必须先读取目标 spec 文件（避免重复已有内容）
+- 不要为琐碎变更更新 specs（错别字、格式、显然的修复）
+- 如果发现严重代码问题，清晰报告（修 specs，不修代码）
+- 验证 prd.md 中所有验收标准均已满足
+- 存在 design.md 和 implement.md 时，验证其中约束` :
+        `<!-- devflow-hook-injected -->
+# Check Agent 任务
+
+你是 Multi-Agent Pipeline 中的 Check Agent。
+
+## 你的上下文
+
+${context}
+
+---
+
+## 你的任务
+
+${originalPrompt}
+
+---
+
+## 工作流
+
+1. **获取变更** - 运行 \`git diff --name-only\` 和 \`git diff\`
+2. **对照 specs 检查** - 逐项检查
+3. **自行修复** - 直接修复问题，不要只报告
+4. **运行验证** - 运行 lint 和 typecheck
+
+## 重要约束
+
+- 自行修复问题，不要只报告
+- 必须执行完整检查清单`,
+
+      research: `<!-- devflow-hook-injected -->
+# Research Agent 任务
+
+你是 Multi-Agent Pipeline 中的 Research Agent。
+
+## 核心原则
+
+**你只做一件事：查找并解释信息。**
+
+## 项目信息
+
+${context}
+
+---
+
+## 你的任务
+
+${originalPrompt}
+
+---
+
+## 工作流
+
+1. **理解查询** - 判断搜索类型和范围
+2. **规划搜索** - 列出搜索步骤
+3. **执行搜索** - 并行运行多个搜索
+4. **整理结果** - 输出结构化报告
+
+## 严格边界
+
+**只允许**：描述存在什么、在哪里、如何工作
+
+**禁止**：建议改进、批评实现、修改文件`
+    }
+
+    return templates[agentType] || originalPrompt
+  }
+
   const templates = {
     implement: `<!-- devflow-hook-injected -->
 # Implement Agent Task
@@ -497,7 +667,7 @@ export default async ({ directory, platform: hostPlatform = process.platform, en
             return
           }
 
-          const newPrompt = buildPrompt(subagentType, originalPrompt, context, isFinish)
+          const newPrompt = buildPrompt(ctx, subagentType, originalPrompt, context, isFinish)
 
           // Mutate args in-place — whole-object replacement does NOT work for the task tool
           // because the runtime holds a local reference to the same args object.

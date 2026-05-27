@@ -6,6 +6,10 @@
  */
 
 import type { TemplateContext } from "../types/ai-tools.js";
+import {
+  getTemplateLanguage,
+  type TemplateLanguage,
+} from "../templates/language.js";
 
 /**
  * Module-level resolved Python command, set by the init flow after probing.
@@ -222,27 +226,53 @@ export function resolvePlaceholdersNeutral(
 // ---------------------------------------------------------------------------
 
 /** Skill description registry — maps template name to auto-trigger description. */
-const SKILL_DESCRIPTIONS: Record<string, string> = {
-  start:
-    "Initializes an AI development session by reading workflow guides, developer identity, git status, active tasks, and project guidelines from .devflow/. Classifies incoming tasks and routes to brainstorm, direct edit, or task workflow. Use when beginning a new coding session, resuming work, starting a new task, or re-establishing project context.",
-  continue:
-    "Resume work on the current task. Loads the workflow Phase Index, figures out which phase/step to pick up at, then pulls the step-level detail via get_context.py --mode phase. Use when coming back to an in-progress task and you need to know what to do next.",
-  "finish-work":
-    "Wrap up the current session: verify quality gate passed, remind user to commit, archive completed tasks, and record session progress to the developer journal. Use when done coding and ready to end the session.",
-  "before-dev":
-    "Discovers and injects project-specific coding guidelines from .devflow/spec/ before implementation begins. Reads spec indexes, pre-development checklists, and shared thinking guides for the target package. Use when starting a new coding task, before writing any code, switching to a different package, or needing to refresh project conventions and standards.",
-  brainstorm:
-    "Guides collaborative requirements discovery before implementation. Creates task directory, seeds PRD, asks high-value questions one at a time, researches technical choices, and converges on MVP scope. Use when requirements are unclear, there are multiple valid approaches, or the user describes a new feature or complex task.",
-  learn:
-    "Capture reusable project knowledge discovered during a task. Use when an implementation, debug session, review, or discussion produces a lesson, caveat, recipe, decision, or searchable reference that should survive context compaction.",
-  check:
-    "Comprehensive quality verification: spec compliance, lint, type-check, tests, cross-layer data flow, code reuse, and consistency checks. Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions.",
-  "break-loop":
-    "Deep bug analysis to break the fix-forget-repeat cycle. Analyzes root cause category, why fixes failed, prevention mechanisms, and captures knowledge into specs. Use after fixing a bug to prevent the same class of bugs.",
-  "update-spec":
-    "Captures executable contracts and coding conventions into .devflow/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions.",
-  "auto-run":
-    "Run the approved ready-task queue through the normal DevFlow workflow without requiring manual phase commands between steps. Use only after the user approves the queue and stop on unresolved decisions, failed checks, rejected commit plans, or user stop requests.",
+type LocalizedText = Record<TemplateLanguage, string>;
+
+function localizedTemplateText(text: LocalizedText): string {
+  return text[getTemplateLanguage()];
+}
+
+const SKILL_DESCRIPTIONS: Record<string, LocalizedText> = {
+  start: {
+    en: "Initializes an AI development session by reading workflow guides, developer identity, git status, active tasks, and project guidelines from .devflow/. Classifies incoming tasks and routes to brainstorm, direct edit, or task workflow. Use when beginning a new coding session, resuming work, starting a new task, or re-establishing project context.",
+    zh: "初始化 AI 开发会话：读取工作流指南、开发者身份、git 状态、活跃任务和 .devflow/ 项目规范。用于开始新开发会话、恢复工作、启动任务或重新建立项目上下文。",
+  },
+  continue: {
+    en: "Resume work on the current task. Loads the workflow Phase Index, figures out which phase/step to pick up at, then pulls the step-level detail via get_context.py --mode phase. Use when coming back to an in-progress task and you need to know what to do next.",
+    zh: "恢复当前任务。加载工作流 Phase Index，判断应从哪个阶段/步骤继续，并通过 get_context.py --mode phase 获取步骤细节。用于回到进行中的任务并确定下一步。",
+  },
+  "finish-work": {
+    en: "Wrap up the current session: verify quality gate passed, remind user to commit, archive completed tasks, and record session progress to the developer journal. Use when done coding and ready to end the session.",
+    zh: "收尾当前会话：确认质量门已通过，提醒提交，归档已完成任务，并把会话进展记录到开发者日志。用于编码完成并准备结束会话时。",
+  },
+  "before-dev": {
+    en: "Discovers and injects project-specific coding guidelines from .devflow/spec/ before implementation begins. Reads spec indexes, pre-development checklists, and shared thinking guides for the target package. Use when starting a new coding task, before writing any code, switching to a different package, or needing to refresh project conventions and standards.",
+    zh: "在实现前发现并注入 .devflow/spec/ 中的项目编码规范。读取目标包的 spec 索引、开发前检查清单和共享思考指南。用于开始新编码任务、写代码前、切换包或刷新项目约定时。",
+  },
+  brainstorm: {
+    en: "Guides collaborative requirements discovery before implementation. Creates task directory, seeds PRD, asks high-value questions one at a time, researches technical choices, and converges on MVP scope. Use when requirements are unclear, there are multiple valid approaches, or the user describes a new feature or complex task.",
+    zh: "在实现前引导协作式需求澄清。创建任务目录，初始化 PRD，逐个提出高价值问题，研究技术选择，并收敛 MVP 范围。用于需求不清、存在多种方案，或用户描述新功能/复杂任务时。",
+  },
+  learn: {
+    en: "Capture reusable project knowledge discovered during a task. Use when an implementation, debug session, review, or discussion produces a lesson, caveat, recipe, decision, or searchable reference that should survive context compaction.",
+    zh: "捕获任务中发现的可复用项目知识。用于实现、调试、评审或讨论产生应在上下文压缩后保留的经验、注意事项、步骤、决策或可搜索参考时。",
+  },
+  check: {
+    en: "Comprehensive quality verification: spec compliance, lint, type-check, tests, cross-layer data flow, code reuse, and consistency checks. Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions.",
+    zh: "综合质量验证：检查 spec 合规、lint、类型检查、测试、跨层数据流、代码复用和一致性。用于代码写完需要验证、提交前，或长会话中防止上下文漂移时。",
+  },
+  "break-loop": {
+    en: "Deep bug analysis to break the fix-forget-repeat cycle. Analyzes root cause category, why fixes failed, prevention mechanisms, and captures knowledge into specs. Use after fixing a bug to prevent the same class of bugs.",
+    zh: "深入分析 bug，打破修了又忘、反复出现的循环。分析根因类型、修复为何失败、防复发机制，并把知识沉淀到 spec。用于修复 bug 后防止同类问题再次发生。",
+  },
+  "update-spec": {
+    en: "Captures executable contracts and coding conventions into .devflow/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions.",
+    zh: "把可执行契约和编码约定沉淀到 .devflow/spec/ 文档。用于从调试、实现或讨论中学到需要保留给后续会话的重要内容时。",
+  },
+  "auto-run": {
+    en: "Run the approved ready-task queue through the normal DevFlow workflow without requiring manual phase commands between steps. Use only after the user approves the queue and stop on unresolved decisions, failed checks, rejected commit plans, or user stop requests.",
+    zh: "按正常 DevFlow 工作流运行已批准的就绪任务队列，不要求用户在阶段之间手动输入命令。仅在用户批准队列后使用；遇到未解决决策、检查失败、提交计划被拒或用户要求停止时停下。",
+  },
 };
 
 /**
@@ -255,7 +285,10 @@ export function wrapWithSkillFrontmatter(
 ): string {
   // Look up description by base name (without devflow- prefix)
   const baseName = name.replace(/^devflow-/, "");
-  const description = SKILL_DESCRIPTIONS[baseName];
+  const localizedDescription = SKILL_DESCRIPTIONS[baseName];
+  const description = localizedDescription
+    ? localizedTemplateText(localizedDescription)
+    : undefined;
   if (!description) {
     throw new Error(
       `Missing skill description for "${baseName}". Add it to SKILL_DESCRIPTIONS in shared.ts.`,
@@ -268,12 +301,23 @@ export function wrapWithSkillFrontmatter(
  * One-line blurbs shown in a `/` command palette — kept separate from
  * SKILL_DESCRIPTIONS, which is long prose aimed at the skill matcher.
  */
-const COMMAND_DESCRIPTIONS: Record<string, string> = {
-  "auto-run": "Run approved ready tasks through the DevFlow workflow queue.",
-  start: "Initialize a DevFlow development session.",
-  continue: "Resume work on the current task at the correct phase.",
-  "finish-work":
-    "Wrap up the current session: quality gate, commit reminder, archive, journal.",
+const COMMAND_DESCRIPTIONS: Record<string, LocalizedText> = {
+  "auto-run": {
+    en: "Run approved ready tasks through the DevFlow workflow queue.",
+    zh: "按 DevFlow 工作流队列运行已批准的就绪任务。",
+  },
+  start: {
+    en: "Initialize a DevFlow development session.",
+    zh: "初始化 DevFlow 开发会话。",
+  },
+  continue: {
+    en: "Resume work on the current task at the correct phase.",
+    zh: "在正确阶段恢复当前任务。",
+  },
+  "finish-work": {
+    en: "Wrap up the current session: quality gate, commit reminder, archive, journal.",
+    zh: "收尾当前会话：质量门、提交提醒、归档和日志。",
+  },
 };
 
 /** Wrap resolved command content with YAML frontmatter (name + description). */
@@ -282,7 +326,10 @@ export function wrapWithCommandFrontmatter(
   content: string,
 ): string {
   const baseName = name.replace(/^devflow-/, "");
-  const description = COMMAND_DESCRIPTIONS[baseName];
+  const localizedDescription = COMMAND_DESCRIPTIONS[baseName];
+  const description = localizedDescription
+    ? localizedTemplateText(localizedDescription)
+    : undefined;
   if (!description) {
     throw new Error(
       `Missing command description for "${baseName}". Add it to COMMAND_DESCRIPTIONS in shared.ts.`,
@@ -567,6 +614,37 @@ export function buildPullBasedPrelude(agentType: SubAgentType): string {
   // context buckets keyed by role (not by platform-visible agent name).
   const jsonl = agentType === "check" ? "check.jsonl" : "implement.jsonl";
 
+  if (getTemplateLanguage() === "zh") {
+    return replacePythonCommandLiterals(`## 必须先加载 DevFlow 上下文
+
+此平台不会通过 hook 自动注入任务上下文。开始任何工作前，你必须自行加载上下文。
+
+### 步骤 1：找到当前任务路径
+
+按下面顺序尝试，拿到任务路径后立即停止：
+
+1. **查看主 agent 发给你的分发提示**。如果第一行是 \`Active task: <path>\`（例如 \`Active task: .devflow/tasks/04-17-foo\`），就使用该路径。class-2 平台要求主 agent 必须包含这一行。
+2. **运行** \`python3 ./.devflow/scripts/task.py current --source\`，并读取 \`Current task:\` 行。
+3. **如果两者都失败**（提示里没有 \`Active task:\` 行，且 \`task.py current\` 没有返回任务），询问用户要处理哪个任务；不要猜测。
+
+### 步骤 2：从解析出的路径加载任务上下文
+
+1. 读取 \`<task-path>/${jsonl}\`，这是与当前 agent 相关的 spec / research / knowledge 条目 JSONL 列表。
+2. 对 JSONL 中每一条记录：
+   - 如果包含 \`"file"\`，读取该文件路径或 markdown 目录。这些是你必须遵循的 spec 和 research notes。
+   - 如果包含 \`"knowledge"\`、\`"wiki"\` 或 \`{"type":"knowledge","id":"..."}\`，运行 \`python3 ./.devflow/scripts/knowledge.py load <id>\`，并把加载出的条目视为必需上下文。
+   - **跳过没有上下文字段的行**（例如 \`task.py create\` 后 curator 尚未运行时留下的 \`{"_example": "..."}\` seed 行）。
+3. 读取任务的 \`prd.md\`（需求），然后读取存在时的 \`design.md\`（技术设计），再读取存在时的 \`implement.md\`（执行计划）。
+
+如果 \`${jsonl}\` 没有 curated 条目（只有 seed 行或文件缺失），退回到：读取任务 artifacts，使用 \`python3 ./.devflow/scripts/get_context.py --mode packages\` 列出可用 specs，并自行选择匹配任务领域的 specs。不要因为缺少 jsonl 阻塞，轻量任务可以只有 PRD，复杂任务也可能包含 \`design.md\` 和 \`implement.md\`。
+
+如果解析出的任务路径没有 \`prd.md\`，询问用户要做什么；不要在缺少上下文的情况下继续。
+
+---
+
+`);
+  }
+
   return replacePythonCommandLiterals(`## Required: Load DevFlow Context First
 
 This platform does NOT auto-inject task context via hook. Before doing anything else, you MUST load context yourself.
@@ -602,7 +680,10 @@ export function injectPullBasedPreludeMarkdown(
   content: string,
   agentType: SubAgentType,
 ): string {
-  if (content.includes("## Required: Load DevFlow Context First")) {
+  if (
+    content.includes("## Required: Load DevFlow Context First") ||
+    content.includes("## 必须先加载 DevFlow 上下文")
+  ) {
     return content;
   }
   const prelude = buildPullBasedPrelude(agentType);
@@ -622,7 +703,10 @@ export function injectPullBasedPreludeToml(
   content: string,
   agentType: SubAgentType,
 ): string {
-  if (content.includes("## Required: Load DevFlow Context First")) {
+  if (
+    content.includes("## Required: Load DevFlow Context First") ||
+    content.includes("## 必须先加载 DevFlow 上下文")
+  ) {
     return content;
   }
   const prelude = buildPullBasedPrelude(agentType);
