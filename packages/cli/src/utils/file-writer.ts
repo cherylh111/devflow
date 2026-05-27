@@ -3,6 +3,7 @@ import path from "node:path";
 import chalk from "chalk";
 import inquirer from "inquirer";
 
+import { localized } from "./language-config.js";
 import { toPosix } from "./posix.js";
 
 export type WriteMode = "ask" | "force" | "skip" | "append";
@@ -151,13 +152,27 @@ export async function writeFile(
     if (options?.executable) {
       fs.chmodSync(filePath, "755");
     }
-    console.log(chalk.yellow(`  ↻ Overwritten: ${displayPath}`));
+    console.log(
+      chalk.yellow(
+        localized(
+          `  ↻ Overwritten: ${displayPath}`,
+          `  ↻ 已覆盖：${displayPath}`,
+        ),
+      ),
+    );
     recordWrite(filePath);
     return true;
   }
 
   if (mode === "skip") {
-    console.log(chalk.gray(`  ○ Skipped: ${displayPath} (already exists)`));
+    console.log(
+      chalk.gray(
+        localized(
+          `  ○ Skipped: ${displayPath} (already exists)`,
+          `  ○ 已跳过：${displayPath}（已存在）`,
+        ),
+      ),
+    );
     // Skipped: devflow did NOT write this file — caller should not track it
     // in the manifest. This is the AGENTS.md skip-existing case.
     return false;
@@ -165,7 +180,11 @@ export async function writeFile(
 
   if (mode === "append") {
     appendToFile(filePath, content, options);
-    console.log(chalk.blue(`  + Appended: ${displayPath}`));
+    console.log(
+      chalk.blue(
+        localized(`  + Appended: ${displayPath}`, `  + 已追加：${displayPath}`),
+      ),
+    );
     // Append: devflow added devflow content to a user-owned file. Tracking
     // is risky here (uninstall would unlink the whole file), so we do NOT
     // record appended files. Users on `--append` get a fresh manifest miss
@@ -178,20 +197,48 @@ export async function writeFile(
     {
       type: "list",
       name: "action",
-      message: `File "${displayPath}" already exists. What would you like to do?`,
+      message: localized(
+        `File "${displayPath}" already exists. What would you like to do?`,
+        `文件 "${displayPath}" 已存在。要怎么处理？`,
+      ),
       choices: [
-        { name: "Skip (keep existing)", value: "skip" },
-        { name: "Overwrite", value: "overwrite" },
-        { name: "Append to end", value: "append" },
-        { name: "Skip all remaining conflicts", value: "skip-all" },
-        { name: "Overwrite all remaining conflicts", value: "overwrite-all" },
-        { name: "Append all remaining conflicts", value: "append-all" },
+        {
+          name: localized("Skip (keep existing)", "跳过（保留现有文件）"),
+          value: "skip",
+        },
+        { name: localized("Overwrite", "覆盖"), value: "overwrite" },
+        { name: localized("Append to end", "追加到末尾"), value: "append" },
+        {
+          name: localized(
+            "Skip all remaining conflicts",
+            "跳过后续所有冲突",
+          ),
+          value: "skip-all",
+        },
+        {
+          name: localized(
+            "Overwrite all remaining conflicts",
+            "覆盖后续所有冲突",
+          ),
+          value: "overwrite-all",
+        },
+        {
+          name: localized(
+            "Append all remaining conflicts",
+            "追加后续所有冲突",
+          ),
+          value: "append-all",
+        },
       ],
     },
   ]);
 
   if (action === "skip") {
-    console.log(chalk.gray(`  ○ Skipped: ${displayPath}`));
+    console.log(
+      chalk.gray(
+        localized(`  ○ Skipped: ${displayPath}`, `  ○ 已跳过：${displayPath}`),
+      ),
+    );
     return false;
   }
 
@@ -200,20 +247,35 @@ export async function writeFile(
     if (options?.executable) {
       fs.chmodSync(filePath, "755");
     }
-    console.log(chalk.yellow(`  ↻ Overwritten: ${displayPath}`));
+    console.log(
+      chalk.yellow(
+        localized(
+          `  ↻ Overwritten: ${displayPath}`,
+          `  ↻ 已覆盖：${displayPath}`,
+        ),
+      ),
+    );
     recordWrite(filePath);
     return true;
   }
 
   if (action === "append") {
     appendToFile(filePath, content, options);
-    console.log(chalk.blue(`  + Appended: ${displayPath}`));
+    console.log(
+      chalk.blue(
+        localized(`  + Appended: ${displayPath}`, `  + 已追加：${displayPath}`),
+      ),
+    );
     return true;
   }
 
   if (action === "skip-all") {
     globalWriteMode = "skip";
-    console.log(chalk.gray(`  ○ Skipped: ${displayPath}`));
+    console.log(
+      chalk.gray(
+        localized(`  ○ Skipped: ${displayPath}`, `  ○ 已跳过：${displayPath}`),
+      ),
+    );
     return false;
   }
 
@@ -223,7 +285,14 @@ export async function writeFile(
     if (options?.executable) {
       fs.chmodSync(filePath, "755");
     }
-    console.log(chalk.yellow(`  ↻ Overwritten: ${displayPath}`));
+    console.log(
+      chalk.yellow(
+        localized(
+          `  ↻ Overwritten: ${displayPath}`,
+          `  ↻ 已覆盖：${displayPath}`,
+        ),
+      ),
+    );
     recordWrite(filePath);
     return true;
   }
@@ -231,7 +300,11 @@ export async function writeFile(
   if (action === "append-all") {
     globalWriteMode = "append";
     appendToFile(filePath, content, options);
-    console.log(chalk.blue(`  + Appended: ${displayPath}`));
+    console.log(
+      chalk.blue(
+        localized(`  + Appended: ${displayPath}`, `  + 已追加：${displayPath}`),
+      ),
+    );
     return true;
   }
 

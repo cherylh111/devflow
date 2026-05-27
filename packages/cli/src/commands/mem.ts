@@ -45,6 +45,7 @@ import {
   splitShellArgs,
   buildBrainstormWindows,
 } from "@enpd/devflow-core/mem";
+import { localized } from "../utils/language-config.js";
 import type {
   DialogueTurn,
   MemFilter,
@@ -150,19 +151,23 @@ export function buildFilter(flags: Argv["flags"]): MemFilter {
   const platformRaw =
     typeof flags.platform === "string" ? flags.platform : "all";
   if (!VALID_PLATFORMS.includes(platformRaw))
-    die(`unknown platform: ${platformRaw}`);
+    die(localized(`unknown platform: ${platformRaw}`, `未知平台：${platformRaw}`));
   const platform = platformRaw as MemSourceFilter;
 
   const sinceRaw = flags.since;
   const since = typeof sinceRaw === "string" ? new Date(sinceRaw) : undefined;
-  if (since && Number.isNaN(+since)) die(`bad --since: ${String(sinceRaw)}`);
+  if (since && Number.isNaN(+since)) {
+    die(localized(`bad --since: ${String(sinceRaw)}`, `无效 --since：${String(sinceRaw)}`));
+  }
 
   const untilRaw = flags.until;
   const until =
     typeof untilRaw === "string"
       ? new Date(`${untilRaw}T23:59:59.999Z`)
       : undefined;
-  if (until && Number.isNaN(+until)) die(`bad --until: ${String(untilRaw)}`);
+  if (until && Number.isNaN(+until)) {
+    die(localized(`bad --until: ${String(untilRaw)}`, `无效 --until：${String(untilRaw)}`));
+  }
 
   const cwd = flags.global
     ? undefined
@@ -188,14 +193,16 @@ function parseOptionalNumberFlag(
   fallback: number,
 ): number {
   if (raw === undefined || raw === false) return fallback;
-  if (typeof raw !== "string") die(`${name} requires a number`);
+  if (typeof raw !== "string") {
+    die(localized(`${name} requires a number`, `${name} 需要数字`));
+  }
   const value = Number(raw);
-  if (!Number.isFinite(value)) die(`bad ${name}: ${raw}`);
+  if (!Number.isFinite(value)) die(localized(`bad ${name}: ${raw}`, `无效 ${name}：${raw}`));
   return value;
 }
 
 function die(msg: string): never {
-  console.error(`error: ${msg}`);
+  console.error(localized(`error: ${msg}`, `错误：${msg}`));
   process.exit(2);
 }
 
@@ -244,13 +251,13 @@ export function shortDate(iso?: string): string {
 }
 
 export function shortPath(p?: string): string {
-  if (!p) return "(no cwd)";
+  if (!p) return localized("(no cwd)", "（无 cwd）");
   return p.replace(HOME, "~");
 }
 
 function printSessions(rows: readonly MemSessionInfo[]): void {
   if (rows.length === 0) {
-    console.log("(no sessions)");
+    console.log(localized("(no sessions)", "（无会话）"));
     return;
   }
   for (const s of rows) {
@@ -277,17 +284,17 @@ function cmdList(argv: Argv): void {
     return;
   }
   console.log(
-    `scope: ${f.cwd ? `project=${shortPath(f.cwd)}` : "global"}  platform=${f.platform}` +
+    `${localized("scope", "范围")}: ${f.cwd ? `project=${shortPath(f.cwd)}` : localized("global", "全局")}  platform=${f.platform}` +
       (f.since ? `  since=${f.since.toISOString().slice(0, 10)}` : "") +
       (f.until ? `  until=${f.until.toISOString().slice(0, 10)}` : ""),
   );
   printSessions(rows);
-  console.log(`\n${rows.length} session(s)`);
+  console.log(localized(`\n${rows.length} session(s)`, `\n${rows.length} 个会话`));
 }
 
 function cmdSearch(argv: Argv): void {
   const kw = argv.positional[0];
-  if (!kw) die("usage: search <keyword>");
+  if (!kw) die(localized("usage: search <keyword>", "用法：search <keyword>"));
   const f = buildFilter(argv.flags);
   maybeWarnOpencode(f);
   const includeChildren = argv.flags["include-children"] === true;
@@ -318,11 +325,11 @@ function cmdSearch(argv: Argv): void {
     return;
   }
   console.log(
-    `scope: ${f.cwd ? `project=${shortPath(f.cwd)}` : "global"}  keyword="${kw}"  platform=${f.platform}` +
+    `${localized("scope", "范围")}: ${f.cwd ? `project=${shortPath(f.cwd)}` : localized("global", "全局")}  ${localized("keyword", "关键词")}="${kw}"  platform=${f.platform}` +
       (includeChildren ? `  include-children=on` : ""),
   );
   if (top.length === 0) {
-    console.log("(no matches)");
+    console.log(localized("(no matches)", "（无匹配）"));
     return;
   }
   for (const m of top) {
@@ -343,7 +350,10 @@ function cmdSearch(argv: Argv): void {
     }
   }
   console.log(
-    `\n${top.length} session(s)${result.totalMatches > top.length ? ` (of ${result.totalMatches})` : ""}`,
+    localized(
+      `\n${top.length} session(s)${result.totalMatches > top.length ? ` (of ${result.totalMatches})` : ""}`,
+      `\n${top.length} 个会话${result.totalMatches > top.length ? `（共 ${result.totalMatches} 个）` : ""}`,
+    ),
   );
 }
 
@@ -362,12 +372,12 @@ function cmdProjects(argv: Argv): void {
     return;
   }
   console.log(
-    `active projects` +
+    localized("active projects", "活跃项目") +
       (f.since ? `  since=${f.since.toISOString().slice(0, 10)}` : "") +
       (f.until ? `  until=${f.until.toISOString().slice(0, 10)}` : ""),
   );
   if (top.length === 0) {
-    console.log("(none)");
+    console.log(localized("(none)", "（无）"));
     return;
   }
   for (const r of top) {
@@ -380,7 +390,10 @@ function cmdProjects(argv: Argv): void {
     );
   }
   console.log(
-    `\n${top.length} project(s)${rows.length > top.length ? ` (of ${rows.length})` : ""}`,
+    localized(
+      `\n${top.length} project(s)${rows.length > top.length ? ` (of ${rows.length})` : ""}`,
+      `\n${top.length} 个项目${rows.length > top.length ? `（共 ${rows.length} 个）` : ""}`,
+    ),
   );
 }
 
@@ -390,14 +403,19 @@ function cmdContext(argv: Argv): void {
   // context, token-budgeted for AI consumption. Without --grep: first N turns.
   const id = argv.positional[0];
   if (!id)
-    die("usage: context <session-id> [--grep KW] [--turns N] [--around M]");
+    die(
+      localized(
+        "usage: context <session-id> [--grep KW] [--turns N] [--around M]",
+        "用法：context <session-id> [--grep KW] [--turns N] [--around M]",
+      ),
+    );
   const f = buildFilter(argv.flags);
   maybeWarnOpencode(f);
 
   const grepRaw = argv.flags.grep;
   const grep = typeof grepRaw === "string" ? grepRaw : undefined;
   if (grep?.split(/\s+/).filter(Boolean).length === 0)
-    die("--grep requires non-empty value");
+    die(localized("--grep requires non-empty value", "--grep 需要非空值"));
   const nTurns = parseOptionalNumberFlag(argv.flags.turns, "--turns", 3);
   const around = parseOptionalNumberFlag(argv.flags.around, "--around", 1);
   const maxChars = parseOptionalNumberFlag(
@@ -420,7 +438,7 @@ function cmdContext(argv: Argv): void {
     });
   } catch (error) {
     if (error instanceof MemSessionNotFoundError)
-      die(`session not found: ${id}`);
+      die(localized(`session not found: ${id}`, `未找到会话：${id}`));
     throw error;
   }
   const s = result.session;
@@ -483,12 +501,17 @@ function cmdContext(argv: Argv): void {
 function parsePhaseFlag(raw: unknown): MemPhase {
   if (raw === undefined || raw === false) return "all";
   if (raw === "brainstorm" || raw === "implement" || raw === "all") return raw;
-  die(`unknown --phase: ${String(raw)} (expected brainstorm|implement|all)`);
+  die(
+    localized(
+      `unknown --phase: ${String(raw)} (expected brainstorm|implement|all)`,
+      `未知 --phase：${String(raw)}（应为 brainstorm|implement|all）`,
+    ),
+  );
 }
 
 function cmdExtract(argv: Argv): void {
   const id = argv.positional[0];
-  if (!id) die("usage: extract <session-id>");
+  if (!id) die(localized("usage: extract <session-id>", "用法：extract <session-id>"));
   const f = buildFilter(argv.flags);
   maybeWarnOpencode(f);
 
@@ -501,11 +524,13 @@ function cmdExtract(argv: Argv): void {
     result = extractMemDialogue({ sessionId: id, filter: f, phase, grep });
   } catch (error) {
     if (error instanceof MemSessionNotFoundError)
-      die(`session not found: ${id}`);
+      die(localized(`session not found: ${id}`, `未找到会话：${id}`));
     throw error;
   }
 
-  for (const w of result.warnings) console.error(`warning: ${w.message}`);
+  for (const w of result.warnings) {
+    console.error(localized(`warning: ${w.message}`, `警告：${w.message}`));
+  }
 
   const s = result.session;
   if (argv.flags.json) {
@@ -547,6 +572,44 @@ function cmdExtract(argv: Argv): void {
 }
 
 function cmdHelp(): void {
+  if (localized("en", "zh") === "zh") {
+    console.log(`devflow mem - 列出/搜索 Claude/Codex/OpenCode 会话
+
+命令：
+  list                          列出会话（未指定命令时的默认命令）
+  search <keyword>              查找内容匹配关键词的会话
+  context <session-id>          深入查看：返回命中回合及其上下文
+                                （通常配合 search 使用；用 --grep KW 锚定关键词）
+  extract <session-id>          导出清理后的对话（用 --grep KW 过滤回合）
+  projects                      列出活跃项目 cwd 和会话数量，用于发现 search 的 --cwd
+
+参数：
+  --platform claude|codex|opencode|all   默认 all
+  --since YYYY-MM-DD                     起始日期（包含）
+  --until YYYY-MM-DD                     截止日期（包含）
+  --global                               包含所有项目（默认限制在当前 cwd）
+  --cwd <path>                           覆盖项目 cwd
+  --limit N                              输出上限（默认 50）
+  --grep KW                              extract/context：按关键词过滤回合（多词为 AND）
+  --phase brainstorm|implement|all       extract：按 DevFlow brainstorm 窗口切片
+                                         （默认 all；brainstorm = [task.py create, task.py start)；
+                                         支持 Claude/Codex；OpenCode 会警告并返回全部）
+  --turns N                              context：返回命中回合数（默认 3）
+  --around N                             context：每个命中周围的上下文回合数（默认 1）
+  --max-chars N                          context：总字符预算（默认 6000，约 1500 token）
+  --include-children                     search/context：将 OpenCode 子 agent 会话合并到父会话
+  --json                                 输出 JSON
+  --help, -h                             显示此帮助
+
+示例：
+  devflow mem list
+  devflow mem list --global --platform claude --since 2026-04-01
+  devflow mem search "session insight" --global
+  devflow mem extract 5842592d --grep memory
+  devflow mem extract 5842592d --phase brainstorm
+`);
+    return;
+  }
   console.log(`devflow mem — list/search Claude/Codex/OpenCode sessions
 
 commands:

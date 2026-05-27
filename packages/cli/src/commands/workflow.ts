@@ -39,6 +39,7 @@ import {
   type ResolvedWorkflowTemplate,
   type WorkflowTemplateListing,
 } from "../utils/workflow-resolver.js";
+import { localized } from "../utils/language-config.js";
 
 export interface WorkflowCommandOptions {
   template?: string;
@@ -57,12 +58,19 @@ function isInteractive(): boolean {
 }
 
 function printListing(templates: WorkflowTemplateListing[]): void {
-  console.log(chalk.cyan("\nAvailable workflow templates:\n"));
+  console.log(
+    chalk.cyan(
+      localized(
+        "\nAvailable workflow templates:\n",
+        "\n可用的工作流模板：\n",
+      ),
+    ),
+  );
   for (const t of templates) {
     const tag =
       t.source === "bundled"
-        ? chalk.gray(" (bundled)")
-        : chalk.gray(" (marketplace)");
+        ? chalk.gray(localized(" (bundled)", "（内置）"))
+        : chalk.gray(localized(" (marketplace)", "（marketplace）"));
     console.log(`  ${chalk.green(t.id)}${tag} — ${t.name}`);
     if (t.description) {
       console.log(chalk.gray(`    ${t.description}`));
@@ -108,9 +116,9 @@ async function chooseTemplateInteractively(
     {
       type: "list",
       name: "id",
-      message: "Select a workflow template:",
+      message: localized("Select a workflow template:", "选择一个工作流模板："),
       choices: templates.map((t) => ({
-        name: `${t.id} — ${t.name}${t.source === "bundled" ? " (bundled)" : ""}`,
+        name: `${t.id} — ${t.name}${t.source === "bundled" ? localized(" (bundled)", "（内置）") : ""}`,
         value: t.id,
       })),
     },
@@ -126,14 +134,29 @@ async function confirmOverwriteInteractively(): Promise<
       type: "list",
       name: "action",
       message:
-        "Your .devflow/workflow.md has local edits. What do you want to do?",
+        localized(
+          "Your .devflow/workflow.md has local edits. What do you want to do?",
+          "你的 .devflow/workflow.md 有本地修改。要怎么处理？",
+        ),
       choices: [
-        { name: "Overwrite (replace local edits)", value: "overwrite" },
         {
-          name: "Write to .devflow/workflow.md.new and keep current",
+          name: localized(
+            "Overwrite (replace local edits)",
+            "覆盖（替换本地修改）",
+          ),
+          value: "overwrite",
+        },
+        {
+          name: localized(
+            "Write to .devflow/workflow.md.new and keep current",
+            "写入 .devflow/workflow.md.new 并保留当前文件",
+          ),
           value: "create-new",
         },
-        { name: "Skip (no changes)", value: "skip" },
+        {
+          name: localized("Skip (no changes)", "跳过（不修改）"),
+          value: "skip",
+        },
       ],
     },
   ]);
@@ -174,7 +197,10 @@ async function writeWorkflow(
     fs.writeFileSync(newPath, finalContent, "utf-8");
     console.log(
       chalk.cyan(
-        `  + Wrote ${path.relative(cwd, newPath)} (workflow.md unchanged)`,
+        localized(
+          `  + Wrote ${path.relative(cwd, newPath)} (workflow.md unchanged)`,
+          `  + 已写入 ${path.relative(cwd, newPath)}（workflow.md 未改变）`,
+        ),
       ),
     );
     return;
@@ -185,7 +211,10 @@ async function writeWorkflow(
   if (classification.kind === "identical") {
     console.log(
       chalk.gray(
-        `  ○ ${PATHS.WORKFLOW_GUIDE_FILE} already matches "${template.id}" — refreshing hash entry`,
+        localized(
+          `  ○ ${PATHS.WORKFLOW_GUIDE_FILE} already matches "${template.id}" — refreshing hash entry`,
+          `  ○ ${PATHS.WORKFLOW_GUIDE_FILE} 已经匹配 "${template.id}"，正在刷新 hash 记录`,
+        ),
       ),
     );
     applyHashContract(cwd, template.id);
@@ -196,12 +225,15 @@ async function writeWorkflow(
     const explicitTemplate = Boolean(options.template);
     if (explicitTemplate || !isInteractive()) {
       throw new WorkflowCommandError(
-        `${PATHS.WORKFLOW_GUIDE_FILE} has local edits. Re-run with --force to overwrite or --create-new to write ${PATHS.WORKFLOW_GUIDE_FILE}.new.`,
+        localized(
+          `${PATHS.WORKFLOW_GUIDE_FILE} has local edits. Re-run with --force to overwrite or --create-new to write ${PATHS.WORKFLOW_GUIDE_FILE}.new.`,
+          `${PATHS.WORKFLOW_GUIDE_FILE} 有本地修改。请重新运行并加上 --force 覆盖，或加上 --create-new 写入 ${PATHS.WORKFLOW_GUIDE_FILE}.new。`,
+        ),
       );
     }
     const action = await confirmOverwriteInteractively();
     if (action === "skip") {
-      console.log(chalk.gray("  ○ Skipped"));
+      console.log(chalk.gray(localized("  ○ Skipped", "  ○ 已跳过")));
       return;
     }
     if (action === "create-new") {
@@ -209,7 +241,10 @@ async function writeWorkflow(
       fs.writeFileSync(newPath, finalContent, "utf-8");
       console.log(
         chalk.cyan(
-          `  + Wrote ${path.relative(cwd, newPath)} (workflow.md unchanged)`,
+          localized(
+            `  + Wrote ${path.relative(cwd, newPath)} (workflow.md unchanged)`,
+            `  + 已写入 ${path.relative(cwd, newPath)}（workflow.md 未改变）`,
+          ),
         ),
       );
       return;
@@ -220,7 +255,10 @@ async function writeWorkflow(
   fs.writeFileSync(filePath, finalContent, "utf-8");
   console.log(
     chalk.green(
-      `  ✓ Replaced ${PATHS.WORKFLOW_GUIDE_FILE} with "${template.id}"`,
+      localized(
+        `  ✓ Replaced ${PATHS.WORKFLOW_GUIDE_FILE} with "${template.id}"`,
+        `  ✓ 已将 ${PATHS.WORKFLOW_GUIDE_FILE} 替换为 "${template.id}"`,
+      ),
     ),
   );
   applyHashContract(cwd, template.id);
@@ -243,7 +281,10 @@ export async function runWorkflowCommand(
   const cwd = process.cwd();
   if (!fs.existsSync(path.join(cwd, DIR_NAMES.WORKFLOW))) {
     throw new WorkflowCommandError(
-      "No .devflow/ directory found. Run `devflow init` first.",
+      localized(
+        "No .devflow/ directory found. Run `devflow init` first.",
+        "未找到 .devflow/ 目录。请先运行 `devflow init`。",
+      ),
     );
   }
 
@@ -264,7 +305,10 @@ export async function runWorkflowCommand(
   if (!templateId) {
     if (!isInteractive()) {
       throw new WorkflowCommandError(
-        "No --template specified and stdin is not a TTY. Pass --template <id> or run interactively.",
+        localized(
+          "No --template specified and stdin is not a TTY. Pass --template <id> or run interactively.",
+          "未指定 --template，且 stdin 不是 TTY。请传入 --template <id> 或在交互模式下运行。",
+        ),
       );
     }
     const { templates, errorMessage } = await listWorkflowTemplates({
@@ -275,7 +319,12 @@ export async function runWorkflowCommand(
     }
     const picked = await chooseTemplateInteractively(templates);
     if (!picked) {
-      throw new WorkflowCommandError("No workflow template available.");
+      throw new WorkflowCommandError(
+        localized(
+          "No workflow template available.",
+          "没有可用的工作流模板。",
+        ),
+      );
     }
     templateId = picked;
   }

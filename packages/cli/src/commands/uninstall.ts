@@ -43,6 +43,7 @@ import {
   scrubCodexConfigToml,
   type ScrubResult,
 } from "../utils/uninstall-scrubbers.js";
+import { localized } from "../utils/language-config.js";
 
 export interface UninstallOptions {
   yes?: boolean;
@@ -83,7 +84,10 @@ function buildStructuredFileSpecs(): Map<string, StructuredFileSpec> {
     ).map(
       (p): StructuredFileSpec => ({
         posixPath: p,
-        reason: "Strip devflow hooks; preserve user fields",
+        reason: localized(
+          "Strip devflow hooks; preserve user fields",
+          "移除 devflow hooks，保留用户字段",
+        ),
         scrub: (content, deletedPaths) =>
           scrubHooksJson(content, deletedPaths, "nested"),
       }),
@@ -92,25 +96,36 @@ function buildStructuredFileSpecs(): Map<string, StructuredFileSpec> {
     ...([".cursor/hooks.json", ".github/copilot/hooks.json"] as const).map(
       (p): StructuredFileSpec => ({
         posixPath: p,
-        reason: "Strip devflow hooks; preserve user fields",
+        reason: localized(
+          "Strip devflow hooks; preserve user fields",
+          "移除 devflow hooks，保留用户字段",
+        ),
         scrub: (content, deletedPaths) =>
           scrubHooksJson(content, deletedPaths, "flat"),
       }),
     ),
     {
       posixPath: ".opencode/package.json",
-      reason: "Remove @opencode-ai/plugin dep; preserve other deps",
+      reason: localized(
+        "Remove @opencode-ai/plugin dep; preserve other deps",
+        "移除 @opencode-ai/plugin 依赖，保留其他依赖",
+      ),
       scrub: (content) => scrubOpencodePackageJson(content),
     },
     {
       posixPath: ".pi/settings.json",
-      reason:
+      reason: localized(
         "Strip devflow extension/skills/prompts entries; preserve user fields",
+        "移除 devflow extension/skills/prompts 条目，保留用户字段",
+      ),
       scrub: (content) => scrubPiSettings(content),
     },
     {
       posixPath: ".codex/config.toml",
-      reason: "Remove devflow project_doc_fallback_filenames and notes",
+      reason: localized(
+        "Remove devflow project_doc_fallback_filenames and notes",
+        "移除 devflow project_doc_fallback_filenames 和 notes",
+      ),
       scrub: (content) => scrubCodexConfigToml(content),
     },
   ];
@@ -207,14 +222,23 @@ function buildPlan(cwd: string, hashes: Record<string, string>): UninstallPlan {
 function renderPlan(cwd: string, plan: UninstallPlan): void {
   const devflowDir = path.join(cwd, DIR_NAMES.WORKFLOW);
 
-  console.log(chalk.bold("\nDevFlow uninstall plan\n"));
+  console.log(
+    chalk.bold(
+      localized("\nDevFlow uninstall plan\n", "\nDevFlow 卸载计划\n"),
+    ),
+  );
 
   const deletePaths = plan.deletions
     .filter((d) => !d.missing)
     .map((d) => d.posixPath);
 
   console.log(
-    chalk.red.bold(`Will be deleted (${deletePaths.length + 1} entries):`),
+    chalk.red.bold(
+      localized(
+        `Will be deleted (${deletePaths.length + 1} entries):`,
+        `将删除（${deletePaths.length + 1} 项）：`,
+      ),
+    ),
   );
   for (const p of deletePaths) {
     console.log(`  ${chalk.red("-")} ${p}`);
@@ -222,7 +246,10 @@ function renderPlan(cwd: string, plan: UninstallPlan): void {
   if (plan.removeDevFlowDir && fs.existsSync(devflowDir)) {
     console.log(
       `  ${chalk.red("-")} ${DIR_NAMES.WORKFLOW}/  ${chalk.gray(
-        "(entire directory, including tasks/runtime/config)",
+        localized(
+          "(entire directory, including tasks/runtime/config)",
+          "（整个目录，包括 tasks/runtime/config）",
+        ),
       )}`,
     );
   }
@@ -231,7 +258,10 @@ function renderPlan(cwd: string, plan: UninstallPlan): void {
     console.log();
     console.log(
       chalk.yellow.bold(
-        `Will be modified (${plan.modifications.length} files):`,
+        localized(
+          `Will be modified (${plan.modifications.length} files):`,
+          `将修改（${plan.modifications.length} 个文件）：`,
+        ),
       ),
     );
     for (const m of plan.modifications) {
@@ -246,7 +276,10 @@ function renderPlan(cwd: string, plan: UninstallPlan): void {
     console.log();
     console.log(
       chalk.gray(
-        `(${skipped.length} manifest entries already missing on disk — skipped.)`,
+        localized(
+          `(${skipped.length} manifest entries already missing on disk — skipped.)`,
+          `（${skipped.length} 个 manifest 条目在磁盘上已不存在，已跳过。）`,
+        ),
       ),
     );
   }
@@ -265,7 +298,7 @@ async function promptContinue(): Promise<boolean> {
     {
       type: "confirm",
       name: "proceed",
-      message: "Continue?",
+      message: localized("Continue?", "继续？"),
       default: true,
     },
   ]);
@@ -386,7 +419,10 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   if (!fs.existsSync(devflowDir)) {
     console.log(
       chalk.gray(
-        "DevFlow is not installed in this project (no .devflow/ directory found).",
+        localized(
+          "DevFlow is not installed in this project (no .devflow/ directory found).",
+          "当前项目未安装 DevFlow（未找到 .devflow/ 目录）。",
+        ),
       ),
     );
     return;
@@ -398,8 +434,12 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   if (Object.keys(hashes).length === 0) {
     console.error(
       chalk.red(
-        "DevFlow directory found but manifest is missing — cannot determine which platform files to remove. " +
-          "You can manually delete .devflow/ if needed.",
+        localized(
+          "DevFlow directory found but manifest is missing — cannot determine which platform files to remove. " +
+            "You can manually delete .devflow/ if needed.",
+          "已找到 DevFlow 目录，但缺少 manifest，无法判断要移除哪些平台文件。" +
+            "如有需要，你可以手动删除 .devflow/。",
+        ),
       ),
     );
     process.exit(1);
@@ -427,7 +467,10 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
     // without giving them an actionable signal.
     console.log(
       chalk.gray(
-        `   Pruned ${pruned.length} orphan manifest entries (user-owned files devflow did not write).`,
+        localized(
+          `   Pruned ${pruned.length} orphan manifest entries (user-owned files devflow did not write).`,
+          `   已清理 ${pruned.length} 个孤立 manifest 条目（这些是用户自有文件，不是 devflow 写入的）。`,
+        ),
       ),
     );
   }
@@ -436,7 +479,14 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   renderPlan(cwd, plan);
 
   if (options.dryRun) {
-    console.log(chalk.gray("Dry run — no files were modified."));
+    console.log(
+      chalk.gray(
+        localized(
+          "Dry run — no files were modified.",
+          "预览模式，未修改任何文件。",
+        ),
+      ),
+    );
     return;
   }
 
@@ -448,8 +498,11 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
     if (!process.stdin.isTTY) {
       console.error(
         chalk.red(
-          "Refusing to prompt for confirmation in a non-interactive shell. " +
-            "Pass --yes/-y to confirm or --dry-run to preview.",
+          localized(
+            "Refusing to prompt for confirmation in a non-interactive shell. " +
+              "Pass --yes/-y to confirm or --dry-run to preview.",
+            "非交互式 shell 中拒绝弹出确认提示。请传入 --yes/-y 确认，或传入 --dry-run 预览。",
+          ),
         ),
       );
       // Try to release the readline ref if anything else opened stdin.
@@ -459,7 +512,14 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
 
     const ok = await promptContinue();
     if (!ok) {
-      console.log(chalk.yellow("Uninstall cancelled. No files modified."));
+      console.log(
+        chalk.yellow(
+          localized(
+            "Uninstall cancelled. No files modified.",
+            "已取消卸载。未修改任何文件。",
+          ),
+        ),
+      );
       return;
     }
   }
@@ -469,9 +529,14 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   console.log();
   console.log(
     chalk.green(
-      `Uninstalled devflow: ${summary.deletedFiles} files deleted, ` +
-        `${summary.modifiedFiles} files modified, ` +
-        `${summary.deletedDirs} directories removed.`,
+      localized(
+        `Uninstalled devflow: ${summary.deletedFiles} files deleted, ` +
+          `${summary.modifiedFiles} files modified, ` +
+          `${summary.deletedDirs} directories removed.`,
+        `已卸载 devflow：删除 ${summary.deletedFiles} 个文件，` +
+          `修改 ${summary.modifiedFiles} 个文件，` +
+          `移除 ${summary.deletedDirs} 个目录。`,
+      ),
     ),
   );
 }

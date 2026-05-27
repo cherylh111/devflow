@@ -785,10 +785,12 @@ function collectMissingAgentsMdHash(
  * Print change summary
  */
 function printChangeSummary(changes: ChangeAnalysis): void {
-  console.log("\nScanning for changes...\n");
+  console.log(localized("\nScanning for changes...\n", "\n正在扫描变更...\n"));
 
   if (changes.newFiles.length > 0) {
-    console.log(chalk.green("  New files (will add):"));
+    console.log(
+      chalk.green(localized("  New files (will add):", "  新文件（将添加）：")),
+    );
     for (const file of changes.newFiles) {
       console.log(chalk.green(`    + ${file.relativePath}`));
     }
@@ -796,7 +798,14 @@ function printChangeSummary(changes: ChangeAnalysis): void {
   }
 
   if (changes.autoUpdateFiles.length > 0) {
-    console.log(chalk.cyan("  Template updated (will auto-update):"));
+    console.log(
+      chalk.cyan(
+        localized(
+          "  Template updated (will auto-update):",
+          "  模板已更新（将自动更新）：",
+        ),
+      ),
+    );
     for (const file of changes.autoUpdateFiles) {
       console.log(chalk.cyan(`    ↑ ${file.relativePath}`));
     }
@@ -804,20 +813,36 @@ function printChangeSummary(changes: ChangeAnalysis): void {
   }
 
   if (changes.unchangedFiles.length > 0) {
-    console.log(chalk.gray("  Unchanged files (will skip):"));
+    console.log(
+      chalk.gray(
+        localized("  Unchanged files (will skip):", "  未变化文件（将跳过）："),
+      ),
+    );
     for (const file of changes.unchangedFiles.slice(0, 5)) {
       console.log(chalk.gray(`    ○ ${file.relativePath}`));
     }
     if (changes.unchangedFiles.length > 5) {
       console.log(
-        chalk.gray(`    ... and ${changes.unchangedFiles.length - 5} more`),
+        chalk.gray(
+          localized(
+            `    ... and ${changes.unchangedFiles.length - 5} more`,
+            `    ... 还有 ${changes.unchangedFiles.length - 5} 个`,
+          ),
+        ),
       );
     }
     console.log("");
   }
 
   if (changes.changedFiles.length > 0) {
-    console.log(chalk.yellow("  Modified by you (need your decision):"));
+    console.log(
+      chalk.yellow(
+        localized(
+          "  Modified by you (need your decision):",
+          "  你已修改的文件（需要你决定）：",
+        ),
+      ),
+    );
     for (const file of changes.changedFiles) {
       console.log(chalk.yellow(`    ? ${file.relativePath}`));
     }
@@ -825,7 +850,11 @@ function printChangeSummary(changes: ChangeAnalysis): void {
   }
 
   if (changes.userDeletedFiles.length > 0) {
-    console.log(chalk.gray("  Deleted by you (preserved):"));
+    console.log(
+      chalk.gray(
+        localized("  Deleted by you (preserved):", "  你已删除的文件（保持删除）："),
+      ),
+    );
     for (const file of changes.userDeletedFiles) {
       console.log(chalk.gray(`    \u2715 ${file.relativePath}`));
     }
@@ -839,7 +868,9 @@ function printChangeSummary(changes: ChangeAnalysis): void {
   });
 
   if (existingProtectedPaths.length > 0) {
-    console.log(chalk.gray("  User data (preserved):"));
+    console.log(
+      chalk.gray(localized("  User data (preserved):", "  用户数据（保留）：")),
+    );
     for (const protectedPath of existingProtectedPaths) {
       console.log(chalk.gray(`    ○ ${protectedPath}/`));
     }
@@ -876,20 +907,47 @@ async function promptConflictResolution(
     {
       type: "list",
       name: "action",
-      message: `${file.relativePath} has changes.`,
+      message: localized(
+        `${file.relativePath} has changes.`,
+        `${file.relativePath} 有变更。`,
+      ),
       choices: [
         {
-          name: "[1] Overwrite - Replace with new version",
+          name: localized(
+            "[1] Overwrite - Replace with new version",
+            "[1] 覆盖 - 替换为新版本",
+          ),
           value: "overwrite",
         },
-        { name: "[2] Skip - Keep your current version", value: "skip" },
         {
-          name: "[3] Create copy - Save new version as .new",
+          name: localized(
+            "[2] Skip - Keep your current version",
+            "[2] 跳过 - 保留当前版本",
+          ),
+          value: "skip",
+        },
+        {
+          name: localized(
+            "[3] Create copy - Save new version as .new",
+            "[3] 创建副本 - 将新版本保存为 .new",
+          ),
           value: "create-new",
         },
-        { name: "[a] Apply Overwrite to all", value: "overwrite-all" },
-        { name: "[s] Apply Skip to all", value: "skip-all" },
-        { name: "[n] Apply Create copy to all", value: "create-new-all" },
+        {
+          name: localized("[a] Apply Overwrite to all", "[a] 全部覆盖"),
+          value: "overwrite-all",
+        },
+        {
+          name: localized("[s] Apply Skip to all", "[s] 全部跳过"),
+          value: "skip-all",
+        },
+        {
+          name: localized(
+            "[n] Apply Create copy to all",
+            "[n] 全部创建副本",
+          ),
+          value: "create-new-all",
+        },
       ],
       default: "skip",
     },
@@ -1723,12 +1781,34 @@ export async function update(options: UpdateOptions): Promise<void> {
     : 0;
 
   // Display versions with context
-  console.log(`Project version: ${chalk.white(projectVersion)}`);
-  console.log(`CLI version:     ${chalk.white(cliVersion)}`);
+  console.log(
+    localized(
+      `Project version: ${chalk.white(projectVersion)}`,
+      `项目版本：${chalk.white(projectVersion)}`,
+    ),
+  );
+  console.log(
+    localized(
+      `CLI version:     ${chalk.white(cliVersion)}`,
+      `CLI 版本： ${chalk.white(cliVersion)}`,
+    ),
+  );
   if (latestNpmVersion) {
-    console.log(`Latest on npm:   ${chalk.white(latestNpmVersion)}`);
+    console.log(
+      localized(
+        `Latest on npm:   ${chalk.white(latestNpmVersion)}`,
+        `npm 最新版：${chalk.white(latestNpmVersion)}`,
+      ),
+    );
   } else {
-    console.log(chalk.gray("Latest on npm:   (unable to fetch)"));
+    console.log(
+      chalk.gray(
+        localized(
+          "Latest on npm:   (unable to fetch)",
+          "npm 最新版：（无法获取）",
+        ),
+      ),
+    );
   }
   console.log("");
 
@@ -1736,33 +1816,65 @@ export async function update(options: UpdateOptions): Promise<void> {
   if (cliVsNpm < 0 && latestNpmVersion) {
     console.log(
       chalk.yellow(
-        `⚠️  Your CLI (${cliVersion}) is behind npm (${latestNpmVersion}).`,
+        localized(
+          `⚠️  Your CLI (${cliVersion}) is behind npm (${latestNpmVersion}).`,
+          `⚠️  你的 CLI (${cliVersion}) 落后于 npm (${latestNpmVersion})。`,
+        ),
       ),
     );
-    console.log(chalk.yellow(`   Run: devflow upgrade\n`));
+    console.log(
+      chalk.yellow(
+        localized(`   Run: devflow upgrade\n`, `   运行：devflow upgrade\n`),
+      ),
+    );
   }
 
   // Check for downgrade situation
   if (cliVsProject < 0) {
     console.log(
       chalk.red(
-        `❌ Cannot update: CLI version (${cliVersion}) < project version (${projectVersion})`,
+        localized(
+          `❌ Cannot update: CLI version (${cliVersion}) < project version (${projectVersion})`,
+          `❌ 无法更新：CLI 版本 (${cliVersion}) < 项目版本 (${projectVersion})`,
+        ),
       ),
     );
-    console.log(chalk.red(`   This would DOWNGRADE your project!\n`));
+    console.log(
+      chalk.red(
+        localized(
+          `   This would DOWNGRADE your project!\n`,
+          `   这会降级你的项目！\n`,
+        ),
+      ),
+    );
 
     if (!options.allowDowngrade) {
-      console.log(chalk.gray("Solutions:"));
-      console.log(chalk.gray(`  1. Update your CLI: devflow upgrade`));
+      console.log(chalk.gray(localized("Solutions:", "解决办法：")));
       console.log(
-        chalk.gray(`  2. Force downgrade: devflow update --allow-downgrade\n`),
+        chalk.gray(
+          localized(
+            `  1. Update your CLI: devflow upgrade`,
+            `  1. 更新你的 CLI：devflow upgrade`,
+          ),
+        ),
+      );
+      console.log(
+        chalk.gray(
+          localized(
+            `  2. Force downgrade: devflow update --allow-downgrade\n`,
+            `  2. 强制降级：devflow update --allow-downgrade\n`,
+          ),
+        ),
       );
       return;
     }
 
     console.log(
       chalk.yellow(
-        "⚠️  --allow-downgrade flag set. Proceeding with downgrade...\n",
+        localized(
+          "⚠️  --allow-downgrade flag set. Proceeding with downgrade...\n",
+          "⚠️  已设置 --allow-downgrade。将继续降级...\n",
+        ),
       ),
     );
   }
@@ -1778,12 +1890,27 @@ export async function update(options: UpdateOptions): Promise<void> {
   if (isUnknownVersion) {
     console.log(
       chalk.yellow(
-        "⚠️  No version file found. Skipping migrations — run devflow init to fix.",
+        localized(
+          "⚠️  No version file found. Skipping migrations — run devflow init to fix.",
+          "⚠️  未找到版本文件。将跳过迁移；请运行 devflow init 修复。",
+        ),
       ),
     );
-    console.log(chalk.gray("   Template updates will still be applied."));
     console.log(
-      chalk.gray("   Safe file cleanup will still run (hash-verified).\n"),
+      chalk.gray(
+        localized(
+          "   Template updates will still be applied.",
+          "   仍会应用模板更新。",
+        ),
+      ),
+    );
+    console.log(
+      chalk.gray(
+        localized(
+          "   Safe file cleanup will still run (hash-verified).\n",
+          "   仍会执行安全文件清理（已通过 hash 校验）。\n",
+        ),
+      ),
     );
   }
 
@@ -1817,7 +1944,10 @@ export async function update(options: UpdateOptions): Promise<void> {
     if (prune.pruned.length > 0) {
       console.log(
         chalk.gray(
-          `   Pruned ${prune.pruned.length} orphan manifest entries from .template-hashes.json`,
+          localized(
+            `   Pruned ${prune.pruned.length} orphan manifest entries from .template-hashes.json`,
+            `   已从 .template-hashes.json 清理 ${prune.pruned.length} 个孤立 manifest 条目`,
+          ),
         ),
       );
       hashes = prune.hashes;
@@ -1892,7 +2022,12 @@ export async function update(options: UpdateOptions): Promise<void> {
   // Add orphaned migrations to pending (they need to be applied)
   if (orphanedMigrations.length > 0) {
     console.log(
-      chalk.yellow("⚠️  Detected incomplete migrations from previous updates:"),
+      chalk.yellow(
+        localized(
+          "⚠️  Detected incomplete migrations from previous updates:",
+          "⚠️  检测到之前更新遗留的未完成迁移：",
+        ),
+      ),
     );
     for (const item of orphanedMigrations) {
       console.log(chalk.yellow(`    ${item.from} → ${item.to}`));
@@ -1907,7 +2042,9 @@ export async function update(options: UpdateOptions): Promise<void> {
   let classifiedMigrations: ClassifiedMigrations | null = null;
 
   if (hasMigrations) {
-    console.log(chalk.cyan("Analyzing migrations...\n"));
+    console.log(
+      chalk.cyan(localized("Analyzing migrations...\n", "正在分析迁移...\n")),
+    );
 
     classifiedMigrations = classifyMigrations(
       pendingMigrations,
@@ -1994,15 +2131,28 @@ export async function update(options: UpdateOptions): Promise<void> {
 
   // First-time hash tracking hint
   if (isFirstHashTracking && changes.changedFiles.length > 0) {
-    console.log(chalk.cyan("ℹ️  First update with hash tracking enabled."));
     console.log(
-      chalk.gray(
-        "   Changed files shown above may not be actual user modifications.",
+      chalk.cyan(
+        localized(
+          "ℹ️  First update with hash tracking enabled.",
+          "ℹ️  首次启用 hash 跟踪的更新。",
+        ),
       ),
     );
     console.log(
       chalk.gray(
-        "   After this update, hash tracking will accurately detect changes.\n",
+        localized(
+          "   Changed files shown above may not be actual user modifications.",
+          "   上面显示的变更文件不一定都是用户实际修改。",
+        ),
+      ),
+    );
+    console.log(
+      chalk.gray(
+        localized(
+          "   After this update, hash tracking will accurately detect changes.\n",
+          "   本次更新后，hash 跟踪会准确检测变更。\n",
+        ),
       ),
     );
   }
@@ -2031,20 +2181,28 @@ export async function update(options: UpdateOptions): Promise<void> {
     }
 
     if (isSameVersion) {
-      console.log(chalk.green("✓ Already up to date!"));
+      console.log(
+        chalk.green(localized("✓ Already up to date!", "✓ 已是最新状态！")),
+      );
     } else {
       // Version changed but no file changes needed — still update the version stamp
       updateVersionFile(cwd);
       if (isUpgrade) {
         console.log(
           chalk.green(
-            `✓ No file changes needed for ${projectVersion} → ${cliVersion}`,
+            localized(
+              `✓ No file changes needed for ${projectVersion} → ${cliVersion}`,
+              `✓ ${projectVersion} → ${cliVersion} 不需要文件变更`,
+            ),
           ),
         );
       } else if (isDowngrade) {
         console.log(
           chalk.green(
-            `✓ No file changes needed for ${projectVersion} → ${cliVersion} (downgrade)`,
+            localized(
+              `✓ No file changes needed for ${projectVersion} → ${cliVersion} (downgrade)`,
+              `✓ ${projectVersion} → ${cliVersion} 不需要文件变更（降级）`,
+            ),
           ),
         );
       }
@@ -2055,11 +2213,21 @@ export async function update(options: UpdateOptions): Promise<void> {
   // Show what this operation will do
   if (isUpgrade) {
     console.log(
-      chalk.green(`This will UPGRADE: ${projectVersion} → ${cliVersion}\n`),
+      chalk.green(
+        localized(
+          `This will UPGRADE: ${projectVersion} → ${cliVersion}\n`,
+          `将升级：${projectVersion} → ${cliVersion}\n`,
+        ),
+      ),
     );
   } else if (isDowngrade) {
     console.log(
-      chalk.red(`⚠️  This will DOWNGRADE: ${projectVersion} → ${cliVersion}\n`),
+      chalk.red(
+        localized(
+          `⚠️  This will DOWNGRADE: ${projectVersion} → ${cliVersion}\n`,
+          `⚠️  将降级：${projectVersion} → ${cliVersion}\n`,
+        ),
+      ),
     );
   }
 
@@ -2069,8 +2237,15 @@ export async function update(options: UpdateOptions): Promise<void> {
     if (preConfirmMetadata.breaking) {
       console.log(chalk.cyan("═".repeat(60)));
       console.log(
-        chalk.bgRed.white.bold(" ⚠️  BREAKING CHANGES ") +
-          chalk.red.bold(" Review the changes above carefully!"),
+        chalk.bgRed.white.bold(
+          localized(" ⚠️  BREAKING CHANGES ", " ⚠️  破坏性变更 "),
+        ) +
+          chalk.red.bold(
+            localized(
+              " Review the changes above carefully!",
+              " 请仔细检查上面的变更！",
+            ),
+          ),
       );
       if (preConfirmMetadata.changelog.length > 0) {
         console.log("");
@@ -2079,8 +2254,15 @@ export async function update(options: UpdateOptions): Promise<void> {
       if (preConfirmMetadata.recommendMigrate && !options.migrate) {
         console.log("");
         console.log(
-          chalk.bgGreen.black.bold(" 💡 RECOMMENDED ") +
-            chalk.green.bold(" Run with --migrate to complete the migration"),
+          chalk.bgGreen.black.bold(
+            localized(" 💡 RECOMMENDED ", " 💡 建议 "),
+          ) +
+            chalk.green.bold(
+              localized(
+                " Run with --migrate to complete the migration",
+                " 使用 --migrate 完成迁移",
+              ),
+            ),
         );
       }
       // Notice when update.skip is bypassed so user isn't surprised when
@@ -2098,14 +2280,22 @@ export async function update(options: UpdateOptions): Promise<void> {
         if (willBypass.length > 0) {
           console.log("");
           console.log(
-            chalk.bgYellow.black.bold(" ⚠ update.skip BYPASSED ") +
+            chalk.bgYellow.black.bold(
+              localized(" ⚠ update.skip BYPASSED ", " ⚠ 已绕过 update.skip "),
+            ) +
               chalk.yellow.bold(
-                ` Breaking release — ${willBypass.length.toString()} file(s) under your update.skip paths will be cleaned up.`,
+                localized(
+                  ` Breaking release — ${willBypass.length.toString()} file(s) under your update.skip paths will be cleaned up.`,
+                  ` 破坏性版本：update.skip 路径下 ${willBypass.length.toString()} 个文件将被清理。`,
+                ),
               ),
           );
           console.log(
             chalk.gray(
-              "  Hash-verified: only files matching known DevFlow templates are deleted. Your local customizations (hash mismatch) are still preserved.",
+              localized(
+                "  Hash-verified: only files matching known DevFlow templates are deleted. Your local customizations (hash mismatch) are still preserved.",
+                "  已通过 hash 校验：只删除匹配已知 DevFlow 模板的文件。你的本地自定义内容（hash 不匹配）仍会保留。",
+              ),
             ),
           );
         }
@@ -2117,7 +2307,11 @@ export async function update(options: UpdateOptions): Promise<void> {
 
   // Dry run mode
   if (options.dryRun) {
-    console.log(chalk.gray("[Dry run] No changes made."));
+    console.log(
+      chalk.gray(
+        localized("[Dry run] No changes made.", "[预览模式] 未做任何修改。"),
+      ),
+    );
     return;
   }
 
@@ -2128,13 +2322,13 @@ export async function update(options: UpdateOptions): Promise<void> {
       {
         type: "confirm",
         name: "proceed",
-        message: "Proceed?",
+        message: localized("Proceed?", "继续？"),
         default: true,
       },
     ]);
 
     if (!proceed) {
-      console.log(chalk.yellow("Update cancelled."));
+      console.log(chalk.yellow(localized("Update cancelled.", "已取消更新。")));
       return;
     }
   }
@@ -2144,7 +2338,12 @@ export async function update(options: UpdateOptions): Promise<void> {
 
   if (backupDir) {
     console.log(
-      chalk.gray(`\nBackup created: ${path.relative(cwd, backupDir)}/`),
+      chalk.gray(
+        localized(
+          `\nBackup created: ${path.relative(cwd, backupDir)}/`,
+          `\n已创建备份：${path.relative(cwd, backupDir)}/`,
+        ),
+      ),
     );
   }
 
@@ -2182,7 +2381,12 @@ export async function update(options: UpdateOptions): Promise<void> {
       }
       if (journalRenamed > 0) {
         console.log(
-          chalk.cyan(`Renamed ${journalRenamed} traces file(s) to journal`),
+          chalk.cyan(
+            localized(
+              `Renamed ${journalRenamed} traces file(s) to journal`,
+              `已将 ${journalRenamed} 个 traces 文件重命名为 journal`,
+            ),
+          ),
         );
       }
     }
@@ -2194,7 +2398,12 @@ export async function update(options: UpdateOptions): Promise<void> {
     safeDeleted = executeSafeFileDeletes(safeFileDeletes, cwd);
     if (safeDeleted > 0) {
       console.log(
-        chalk.cyan(`\nCleaned up ${safeDeleted} deprecated command file(s)`),
+        chalk.cyan(
+          localized(
+            `\nCleaned up ${safeDeleted} deprecated command file(s)`,
+            `\n已清理 ${safeDeleted} 个废弃命令文件`,
+          ),
+        ),
       );
     }
   }
@@ -2208,7 +2417,9 @@ export async function update(options: UpdateOptions): Promise<void> {
 
   // Add new files
   if (changes.newFiles.length > 0) {
-    console.log(chalk.blue("\nAdding new files..."));
+    console.log(
+      chalk.blue(localized("\nAdding new files...", "\n正在添加新文件...")),
+    );
     for (const file of changes.newFiles) {
       const dir = path.dirname(file.path);
       fs.mkdirSync(dir, { recursive: true });
@@ -2229,7 +2440,14 @@ export async function update(options: UpdateOptions): Promise<void> {
 
   // Auto-update files (template updated, user didn't modify)
   if (changes.autoUpdateFiles.length > 0) {
-    console.log(chalk.blue("\nAuto-updating template files..."));
+    console.log(
+      chalk.blue(
+        localized(
+          "\nAuto-updating template files...",
+          "\n正在自动更新模板文件...",
+        ),
+      ),
+    );
     for (const file of changes.autoUpdateFiles) {
       fs.writeFileSync(file.path, file.newContent);
 
@@ -2248,7 +2466,14 @@ export async function update(options: UpdateOptions): Promise<void> {
 
   // Handle changed files
   if (changes.changedFiles.length > 0) {
-    console.log(chalk.blue("\n--- Resolving conflicts ---\n"));
+    console.log(
+      chalk.blue(
+        localized(
+          "\n--- Resolving conflicts ---\n",
+          "\n--- 正在处理冲突 ---\n",
+        ),
+      ),
+    );
 
     const applyToAll: { action: ConflictAction | null } = { action: null };
 
@@ -2263,15 +2488,36 @@ export async function update(options: UpdateOptions): Promise<void> {
         ) {
           fs.chmodSync(file.path, "755");
         }
-        console.log(chalk.yellow(`  ✓ Overwritten: ${file.relativePath}`));
+        console.log(
+          chalk.yellow(
+            localized(
+              `  ✓ Overwritten: ${file.relativePath}`,
+              `  ✓ 已覆盖：${file.relativePath}`,
+            ),
+          ),
+        );
         updated++;
       } else if (action === "create-new") {
         const newPath = file.path + ".new";
         fs.writeFileSync(newPath, file.newContent);
-        console.log(chalk.blue(`  ✓ Created: ${file.relativePath}.new`));
+        console.log(
+          chalk.blue(
+            localized(
+              `  ✓ Created: ${file.relativePath}.new`,
+              `  ✓ 已创建：${file.relativePath}.new`,
+            ),
+          ),
+        );
         createdNew++;
       } else {
-        console.log(chalk.gray(`  ○ Skipped: ${file.relativePath}`));
+        console.log(
+          chalk.gray(
+            localized(
+              `  ○ Skipped: ${file.relativePath}`,
+              `  ○ 已跳过：${file.relativePath}`,
+            ),
+          ),
+        );
         skipped++;
       }
     }
@@ -2323,43 +2569,81 @@ export async function update(options: UpdateOptions): Promise<void> {
   }
 
   // Print summary
-  console.log(chalk.cyan("\n--- Summary ---\n"));
+  console.log(chalk.cyan(localized("\n--- Summary ---\n", "\n--- 摘要 ---\n")));
   if (added > 0) {
-    console.log(`  Added: ${added} file(s)`);
+    console.log(
+      localized(`  Added: ${added} file(s)`, `  已添加：${added} 个文件`),
+    );
   }
   if (autoUpdated > 0) {
-    console.log(`  Auto-updated: ${autoUpdated} file(s)`);
+    console.log(
+      localized(
+        `  Auto-updated: ${autoUpdated} file(s)`,
+        `  已自动更新：${autoUpdated} 个文件`,
+      ),
+    );
   }
   if (updated > 0) {
-    console.log(`  Updated: ${updated} file(s)`);
+    console.log(
+      localized(`  Updated: ${updated} file(s)`, `  已更新：${updated} 个文件`),
+    );
   }
   if (skipped > 0) {
-    console.log(`  Skipped: ${skipped} file(s)`);
+    console.log(
+      localized(`  Skipped: ${skipped} file(s)`, `  已跳过：${skipped} 个文件`),
+    );
   }
   if (createdNew > 0) {
-    console.log(`  Created .new copies: ${createdNew} file(s)`);
+    console.log(
+      localized(
+        `  Created .new copies: ${createdNew} file(s)`,
+        `  已创建 .new 副本：${createdNew} 个文件`,
+      ),
+    );
   }
   if (safeDeleted > 0) {
-    console.log(`  Cleaned up: ${safeDeleted} deprecated file(s)`);
+    console.log(
+      localized(
+        `  Cleaned up: ${safeDeleted} deprecated file(s)`,
+        `  已清理：${safeDeleted} 个废弃文件`,
+      ),
+    );
   }
   if (configSectionsAppended > 0) {
-    console.log(`  Config sections added: ${configSectionsAppended}`);
+    console.log(
+      localized(
+        `  Config sections added: ${configSectionsAppended}`,
+        `  已添加配置段：${configSectionsAppended}`,
+      ),
+    );
   }
   if (backupDir) {
-    console.log(`  Backup: ${path.relative(cwd, backupDir)}/`);
+    console.log(
+      localized(
+        `  Backup: ${path.relative(cwd, backupDir)}/`,
+        `  备份：${path.relative(cwd, backupDir)}/`,
+      ),
+    );
   }
 
   const actionWord = isDowngrade ? "Downgrade" : "Update";
+  const actionWordZh = isDowngrade ? "降级" : "更新";
   console.log(
     chalk.green(
-      `\n✅ ${actionWord} complete! (${projectVersion} → ${cliVersion})`,
+      localized(
+        `\n✅ ${actionWord} complete! (${projectVersion} → ${cliVersion})`,
+        `\n✅ ${actionWordZh}完成！(${projectVersion} → ${cliVersion})`,
+      ),
     ),
   );
 
   if (createdNew > 0) {
     console.log(
       chalk.gray(
-        "\nTip: Review .new files and merge changes manually if needed.",
+        localized(
+          "\nTip: Review .new files and merge changes manually if needed.",
+          "\n提示：请检查 .new 文件，并按需手动合并变更。",
+        ),
       ),
     );
   }

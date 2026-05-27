@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 
 import { PATHS } from "../../constants/paths.js";
+import { localized } from "../../utils/language-config.js";
 import { parseKeywordCsv } from "./spec-entry.js";
 import {
   buildKnowledgeGraph,
@@ -272,11 +273,22 @@ const KNOWHOW_PREFIX_BY_TYPE: Record<string, string> = {
   document: "doc",
 };
 
+function localHelp(command: Command): Command {
+  return command.helpOption(
+    "-h, --help",
+    localized("display help for command", "显示命令帮助"),
+  );
+}
+
 export function registerKnowledgeCommand(program: Command): void {
-  const knowledge = program
-    .command("knowledge")
+  const knowledge = localHelp(program.command("knowledge"))
     .alias("wiki")
-    .description("Capture, list, search, and inspect local DevFlow knowledge");
+    .description(
+      localized(
+        "Capture, list, search, and inspect local DevFlow knowledge",
+        "采集、列出、搜索和查看本地 DevFlow 知识",
+      ),
+    );
 
   registerLearnCommand(knowledge);
   registerSpecsCommand(knowledge);
@@ -284,20 +296,31 @@ export function registerKnowledgeCommand(program: Command): void {
 
   program
     .command("learn <insight...>")
-    .description("Capture a reusable learning into .devflow/spec/guides/learnings.md")
-    .option("--category <name>", "Learning category")
-    .option("--keywords <csv>", "Comma-separated keywords")
-    .option("--source <name>", "Source label")
-    .option("--task [ref]", "Attach a task ref; use --task current to resolve active task")
-    .option("--package <name>", "Related package")
-    .option("--layer <name>", "Related layer")
-    .option("--confidence <value>", "Confidence label")
-    .option("--limit <n>", "List/search row limit", "20")
-    .option("--json", "Output JSON")
+    .helpOption("-h, --help", localized("display help for command", "显示命令帮助"))
+    .description(
+      localized(
+        "Capture a reusable learning into .devflow/spec/guides/learnings.md",
+        "将可复用经验记录到 .devflow/spec/guides/learnings.md",
+      ),
+    )
+    .option("--category <name>", localized("Learning category", "经验分类"))
+    .option("--keywords <csv>", localized("Comma-separated keywords", "逗号分隔的关键词"))
+    .option("--source <name>", localized("Source label", "来源标签"))
+    .option("--task [ref]", localized("Attach a task ref; use --task current to resolve active task", "关联任务引用；使用 --task current 解析当前任务"))
+    .option("--package <name>", localized("Related package", "相关包"))
+    .option("--layer <name>", localized("Related layer", "相关层"))
+    .option("--confidence <value>", localized("Confidence label", "置信度标签"))
+    .option("--limit <n>", localized("List/search row limit", "列表/搜索行数上限"), "20")
+    .option("--json", localized("Output JSON", "输出 JSON"))
     .action(runLearnCommand);
 
   const specCommand = addSpecsOptions(
-    program.command("spec").description("Load DevFlow spec knowledge by filters"),
+    localHelp(program.command("spec")).description(
+      localized(
+        "Load DevFlow spec knowledge by filters",
+        "按过滤条件加载 DevFlow spec 知识",
+      ),
+    ),
   );
   specCommand.action(runSpecsCommand);
   registerSpecManagementCommands(specCommand);
@@ -378,7 +401,12 @@ export function registerKnowledgeCommand(program: Command): void {
   }
 
   addSpecsOptions(
-    program.command("specs").description("Load DevFlow spec knowledge by filters"),
+    localHelp(program.command("specs")).description(
+      localized(
+        "Load DevFlow spec knowledge by filters",
+        "按过滤条件加载 DevFlow spec 知识",
+      ),
+    ),
   ).action(runSpecsCommand);
 
   knowledge
@@ -552,13 +580,13 @@ export function registerKnowledgeCommand(program: Command): void {
     });
   function addSpecsOptions(command: Command): Command {
     return command
-      .option("--package <name>", "Package spec directory name")
-      .option("--layer <name>", "Layer directory name, e.g. backend or frontend")
-      .option("--category <name>", "Filter structured entries by category")
-      .option("--keyword <word>", "Filter structured entries by exact keyword")
-      .option("--tool", "Include only tool-spec knowhow entries")
-      .option("--limit <n>", "Maximum rows", "20")
-      .option("--json", "Output JSON");
+      .option("--package <name>", localized("Package spec directory name", "包级 spec 目录名"))
+      .option("--layer <name>", localized("Layer directory name, e.g. backend or frontend", "层级目录名，例如 backend 或 frontend"))
+      .option("--category <name>", localized("Filter structured entries by category", "按分类过滤结构化条目"))
+      .option("--keyword <word>", localized("Filter structured entries by exact keyword", "按精确关键词过滤结构化条目"))
+      .option("--tool", localized("Include only tool-spec knowhow entries", "仅包含 tool-spec knowhow 条目"))
+      .option("--limit <n>", localized("Maximum rows", "最大行数"), "20")
+      .option("--json", localized("Output JSON", "输出 JSON"));
   }
 
   knowledge
@@ -1440,29 +1468,33 @@ function registerLearnCommand(parent: Command): void {
 }
 
 function registerKnowhowCommand(program: Command): void {
-  const knowhow = program
-    .command("knowhow")
+  const knowhow = localHelp(program.command("knowhow"))
     .alias("kh")
-    .description("Create, list, search, and load reusable knowhow entries");
+    .description(
+      localized(
+        "Create, list, search, and load reusable knowhow entries",
+        "创建、列出、搜索和加载可复用 knowhow 条目",
+      ),
+    );
 
   knowhow
     .command("add")
-    .description("Create a reusable knowhow entry")
+    .description(localized("Create a reusable knowhow entry", "创建可复用 knowhow 条目"))
     .requiredOption("--type <type>", "session|tip|template|recipe|reference|decision|asset|blueprint|document")
-    .requiredOption("--title <title>", "Entry title")
-    .option("--slug <slug>", "Kebab-case slug; generated from type, time, and title when omitted")
-    .option("--body <text>", "Inline body text")
-    .option("--body-file <path>", "Read body text from a file")
-    .option("--keywords <csv>", "Comma-separated keywords")
-    .option("--lang <lang>", "Programming language for template entries")
-    .option("--source-ref <ref>", "Original source reference for reference entries")
-    .option("--status <status>", "Decision status: proposed|accepted|superseded")
-    .option("--asset-type <type>", "Asset subtype for asset entries")
-    .option("--code-paths <csv>", "Comma-separated code paths for asset or blueprint entries")
-    .option("--tool", "Mark this knowhow entry as a tool spec")
-    .option("--category <name>", "Consumer/spec category for tool discovery")
-    .option("--related <csv>", "Comma-separated related knowledge ids")
-    .option("--json", "Output JSON")
+    .requiredOption("--title <title>", localized("Entry title", "条目标题"))
+    .option("--slug <slug>", localized("Kebab-case slug; generated from type, time, and title when omitted", "kebab-case slug；省略时根据类型、时间和标题生成"))
+    .option("--body <text>", localized("Inline body text", "内联正文文本"))
+    .option("--body-file <path>", localized("Read body text from a file", "从文件读取正文文本"))
+    .option("--keywords <csv>", localized("Comma-separated keywords", "逗号分隔的关键词"))
+    .option("--lang <lang>", localized("Programming language for template entries", "模板条目的编程语言"))
+    .option("--source-ref <ref>", localized("Original source reference for reference entries", "reference 条目的原始来源引用"))
+    .option("--status <status>", localized("Decision status: proposed|accepted|superseded", "决策状态：proposed|accepted|superseded"))
+    .option("--asset-type <type>", localized("Asset subtype for asset entries", "asset 条目的子类型"))
+    .option("--code-paths <csv>", localized("Comma-separated code paths for asset or blueprint entries", "asset 或 blueprint 条目的逗号分隔代码路径"))
+    .option("--tool", localized("Mark this knowhow entry as a tool spec", "将此 knowhow 条目标记为 tool spec"))
+    .option("--category <name>", localized("Consumer/spec category for tool discovery", "用于工具发现的 consumer/spec 分类"))
+    .option("--related <csv>", localized("Comma-separated related knowledge ids", "逗号分隔的相关知识 id"))
+    .option("--json", localized("Output JSON", "输出 JSON"))
     .action((options: KnowhowAddOptions) => {
       const cwd = process.cwd();
       const subtype = normalizeKnowhowType(options.type);
@@ -1498,11 +1530,11 @@ function registerKnowhowCommand(program: Command): void {
   knowhow
     .command("list")
     .alias("ls")
-    .description("List knowhow entries")
-    .option("--type <type>", "Filter by knowhow subtype")
-    .option("--keyword <word>", "Filter by exact keyword")
-    .option("--limit <n>", "Maximum rows", "20")
-    .option("--json", "Output JSON")
+    .description(localized("List knowhow entries", "列出 knowhow 条目"))
+    .option("--type <type>", localized("Filter by knowhow subtype", "按 knowhow 子类型过滤"))
+    .option("--keyword <word>", localized("Filter by exact keyword", "按精确关键词过滤"))
+    .option("--limit <n>", localized("Maximum rows", "最大行数"), "20")
+    .option("--json", localized("Output JSON", "输出 JSON"))
     .action((options: KnowhowListOptions) => {
       const cwd = process.cwd();
       const rows = knowhowDocuments(cwd, options.type, options.keyword)
@@ -1512,10 +1544,10 @@ function registerKnowhowCommand(program: Command): void {
 
   knowhow
     .command("search <query...>")
-    .description("Search knowhow entries")
-    .option("--type <type>", "Filter by knowhow subtype")
-    .option("--limit <n>", "Maximum rows", "20")
-    .option("--json", "Output JSON")
+    .description(localized("Search knowhow entries", "搜索 knowhow 条目"))
+    .option("--type <type>", localized("Filter by knowhow subtype", "按 knowhow 子类型过滤"))
+    .option("--limit <n>", localized("Maximum rows", "最大行数"), "20")
+    .option("--json", localized("Output JSON", "输出 JSON"))
     .action((queryParts: string[], options: KnowhowSearchOptions) => {
       const cwd = process.cwd();
       const query = queryParts.join(" ").trim();
@@ -1564,8 +1596,8 @@ function registerKnowhowCommand(program: Command): void {
   knowhow
     .command("get <id>")
     .alias("show")
-    .description("View a knowhow entry")
-    .option("--json", "Output JSON")
+    .description(localized("View a knowhow entry", "查看 knowhow 条目"))
+    .option("--json", localized("Output JSON", "输出 JSON"))
     .action(get);
 }
 

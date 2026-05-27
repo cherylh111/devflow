@@ -9,6 +9,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { downloadTemplate } from "giget";
+import { localized } from "./language-config.js";
 
 // =============================================================================
 // Constants
@@ -1129,15 +1130,19 @@ export async function downloadTemplateById(
       if (probeResult.templates.length === 0 && !probeResult.isNotFound) {
         return {
           success: false,
-          message:
+          message: localized(
             "Could not reach registry. Check your network connection and try again.",
+            "无法访问 registry。请检查网络连接后重试。",
+          ),
         };
       }
       if (probeResult.isNotFound) {
         return {
           success: false,
-          message:
+          message: localized(
             "Registry has no index.json. Remove --template to use direct download mode.",
+            "Registry 中没有 index.json。请移除 --template 以使用直接下载模式。",
+          ),
         };
       }
       resolved = probeResult.templates.find((t) => t.id === templateId);
@@ -1148,7 +1153,10 @@ export async function downloadTemplateById(
   if (!resolved) {
     return {
       success: false,
-      message: `Template "${templateId}" not found`,
+      message: localized(
+        `Template "${templateId}" not found`,
+        `未找到模板 "${templateId}"`,
+      ),
     };
   }
 
@@ -1156,7 +1164,10 @@ export async function downloadTemplateById(
   if (resolved.type !== "spec") {
     return {
       success: false,
-      message: `Template type "${resolved.type}" is not supported yet (only "spec" is supported)`,
+      message: localized(
+        `Template type "${resolved.type}" is not supported yet (only "spec" is supported)`,
+        `暂不支持模板类型 "${resolved.type}"（目前仅支持 "spec"）`,
+      ),
     };
   }
 
@@ -1168,7 +1179,10 @@ export async function downloadTemplateById(
     return {
       success: true,
       skipped: true,
-      message: `Skipped: ${destDir} already exists`,
+      message: localized(
+        `Skipped: ${destDir} already exists`,
+        `已跳过：${destDir} 已存在`,
+      ),
     };
   }
 
@@ -1195,7 +1209,10 @@ export async function downloadTemplateById(
     }
     return {
       success: true,
-      message: `Downloaded template "${templateId}" to ${destDir}`,
+      message: localized(
+        `Downloaded template "${templateId}" to ${destDir}`,
+        `已下载模板 "${templateId}" 到 ${destDir}`,
+      ),
     };
   } catch (error) {
     const errorMessage =
@@ -1212,8 +1229,10 @@ export async function downloadTemplateById(
     if (errorMessage.includes("timed out")) {
       return {
         success: false,
-        message:
+        message: localized(
           "Download timed out. Check your network connection and try again.",
+          "下载超时。请检查网络连接后重试。",
+        ),
       };
     }
     if (
@@ -1222,13 +1241,18 @@ export async function downloadTemplateById(
     ) {
       return {
         success: false,
-        message:
+        message: localized(
           "Could not reach template server. Check your network connection.",
+          "无法访问模板服务器。请检查网络连接。",
+        ),
       };
     }
     return {
       success: false,
-      message: `Download failed: ${errorMessage}`,
+      message: localized(
+        `Download failed: ${errorMessage}`,
+        `下载失败：${errorMessage}`,
+      ),
     };
   }
 }
@@ -1250,7 +1274,10 @@ export async function downloadRegistryDirect(
     return {
       success: true,
       skipped: true,
-      message: `Skipped: ${destDir} already exists`,
+      message: localized(
+        `Skipped: ${destDir} already exists`,
+        `已跳过：${destDir} 已存在`,
+      ),
     };
   }
 
@@ -1269,7 +1296,10 @@ export async function downloadRegistryDirect(
     }
     return {
       success: true,
-      message: `Downloaded spec from ${registry.gigetSource} to ${destDir}`,
+      message: localized(
+        `Downloaded spec from ${registry.gigetSource} to ${destDir}`,
+        `已从 ${registry.gigetSource} 下载 spec 到 ${destDir}`,
+      ),
     };
   } catch (error) {
     const errorMessage =
@@ -1285,8 +1315,10 @@ export async function downloadRegistryDirect(
     if (errorMessage.includes("timed out")) {
       return {
         success: false,
-        message:
+        message: localized(
           "Download timed out. Check your network connection and try again.",
+          "下载超时。请检查网络连接后重试。",
+        ),
       };
     }
     if (
@@ -1295,13 +1327,18 @@ export async function downloadRegistryDirect(
     ) {
       return {
         success: false,
-        message:
+        message: localized(
           "Could not reach template server. Check your network connection.",
+          "无法访问模板服务器。请检查网络连接。",
+        ),
       };
     }
     return {
       success: false,
-      message: `Download failed: ${errorMessage}`,
+      message: localized(
+        `Download failed: ${errorMessage}`,
+        `下载失败：${errorMessage}`,
+      ),
     };
   }
 }

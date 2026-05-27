@@ -28,6 +28,7 @@ import { runSupervisor } from "./supervisor.js";
 import { channelWait, parseDuration } from "./wait.js";
 import { parseCsv } from "./store/schema.js";
 import { parseInboxPolicy } from "@enpd/devflow-core/channel";
+import { localized } from "../../utils/language-config.js";
 
 function parseNonNegativeInteger(value: string): number {
   if (!/^\d+$/.test(value)) {
@@ -41,8 +42,15 @@ function parseNonNegativeInteger(value: string): number {
 export function registerChannelCommand(program: Command): void {
   const channel = program
     .command("channel")
+    .helpOption(
+      "-h, --help",
+      localized("display help for command", "显示命令帮助"),
+    )
     .description(
-      "Multi-agent collaboration runtime — spawn / coordinate / interrupt worker agents through a shared event log",
+      localized(
+        "Multi-agent collaboration runtime — spawn / coordinate / interrupt worker agents through a shared event log",
+        "多 Agent 协作运行时：通过共享事件日志启动、协调和中断 worker agent",
+      ),
     );
 
   channel

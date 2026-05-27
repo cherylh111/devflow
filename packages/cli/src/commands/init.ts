@@ -22,7 +22,10 @@ import { DIR_NAMES, FILE_NAMES, PATHS } from "../constants/paths.js";
 import { VERSION } from "../constants/version.js";
 import { getAgentsMdContent } from "../templates/markdown/index.js";
 import type { TemplateLanguage } from "../templates/language.js";
-import { configureTemplateLanguage } from "../utils/language-config.js";
+import {
+  configureTemplateLanguage,
+  localized,
+} from "../utils/language-config.js";
 import {
   setWriteMode,
   startRecordingWrites,
@@ -774,31 +777,58 @@ async function handleReinit(
   // No explicit flags → show menu
   if (!doAddPlatforms && !doAddDeveloper) {
     if (options.yes) {
-      console.log(chalk.gray(`Already initialized with: ${configuredNames}`));
       console.log(
         chalk.gray(
-          "Use platform flags (e.g., --codex) or -u <name> to add platforms/developer.",
+          localized(
+            `Already initialized with: ${configuredNames}`,
+            `已初始化的平台：${configuredNames}`,
+          ),
+        ),
+      );
+      console.log(
+        chalk.gray(
+          localized(
+            "Use platform flags (e.g., --codex) or -u <name> to add platforms/developer.",
+            "使用平台参数（例如 --codex）或 -u <name> 添加平台/开发者。",
+          ),
         ),
       );
       return true;
     }
 
     console.log(
-      chalk.gray(`\n   Already initialized with: ${configuredNames}\n`),
+      chalk.gray(
+        localized(
+          `\n   Already initialized with: ${configuredNames}\n`,
+          `\n   已初始化的平台：${configuredNames}\n`,
+        ),
+      ),
     );
 
     const { action } = await inquirer.prompt<{ action: string }>([
       {
         type: "list",
         name: "action",
-        message: "DevFlow is already initialized. What would you like to do?",
+        message: localized(
+          "DevFlow is already initialized. What would you like to do?",
+          "DevFlow 已初始化。你想怎么处理？",
+        ),
         choices: [
-          { name: "Add AI platform(s)", value: "add-platform" },
           {
-            name: "Set up developer identity on this device",
+            name: localized("Add AI platform(s)", "添加 AI 平台"),
+            value: "add-platform",
+          },
+          {
+            name: localized(
+              "Set up developer identity on this device",
+              "在这台设备上设置开发者身份",
+            ),
             value: "add-developer",
           },
-          { name: "Full re-initialize", value: "full" },
+          {
+            name: localized("Full re-initialize", "完整重新初始化"),
+            value: "full",
+          },
         ],
       },
     ]);
@@ -821,14 +851,22 @@ async function handleReinit(
 
       if (unconfigured.length === 0) {
         console.log(
-          chalk.green("✓ All available platforms are already configured."),
+          chalk.green(
+            localized(
+              "✓ All available platforms are already configured.",
+              "✓ 所有可用平台都已配置。",
+            ),
+          ),
         );
       } else {
         const answers = await inquirer.prompt<{ tools: string[] }>([
           {
             type: "checkbox",
             name: "tools",
-            message: "Select platforms to add:",
+            message: localized(
+              "Select platforms to add:",
+              "选择要添加的平台：",
+            ),
             choices: unconfigured.map((t) => ({
               name: t.name,
               value: t.key,
@@ -847,12 +885,20 @@ async function handleReinit(
           if (configuredPlatforms.has(platformId)) {
             console.log(
               chalk.gray(
-                `  ○ ${AI_TOOLS[platformId].name} already configured, skipping`,
+                localized(
+                  `  ○ ${AI_TOOLS[platformId].name} already configured, skipping`,
+                  `  ○ ${AI_TOOLS[platformId].name} 已配置，跳过`,
+                ),
               ),
             );
           } else {
             console.log(
-              chalk.blue(`📝 Configuring ${AI_TOOLS[platformId].name}...`),
+              chalk.blue(
+                localized(
+                  `📝 Configuring ${AI_TOOLS[platformId].name}...`,
+                  `📝 正在配置 ${AI_TOOLS[platformId].name}...`,
+                ),
+              ),
             );
             await configurePlatform(platformId, cwd);
           }
@@ -870,7 +916,12 @@ async function handleReinit(
     });
     if (hashedCount > 0) {
       console.log(
-        chalk.gray(`📋 Tracking ${hashedCount} template files for updates`),
+        chalk.gray(
+          localized(
+            `📋 Tracking ${hashedCount} template files for updates`,
+            `📋 已跟踪 ${hashedCount} 个模板文件用于后续更新`,
+          ),
+        ),
       );
     }
   }
@@ -879,10 +930,12 @@ async function handleReinit(
   if (doAddDeveloper) {
     let devName = developerName;
     if (!devName) {
-      devName = await askInput("Your name: ");
+      devName = await askInput(localized("Your name: ", "你的名字："));
       while (!devName) {
-        console.log(chalk.yellow("Name is required"));
-        devName = await askInput("Your name: ");
+        console.log(
+          chalk.yellow(localized("Name is required", "名称不能为空")),
+        );
+        devName = await askInput(localized("Your name: ", "你的名字："));
       }
     }
 
@@ -899,10 +952,22 @@ async function handleReinit(
         cwd,
         stdio: "pipe",
       });
-      console.log(chalk.green(`✓ Developer "${devName}" initialized`));
+      console.log(
+        chalk.green(
+          localized(
+            `✓ Developer "${devName}" initialized`,
+            `✓ 开发者 "${devName}" 已初始化`,
+          ),
+        ),
+      );
     } catch {
       console.log(
-        chalk.yellow("⚠ Could not initialize developer. Run manually:"),
+        chalk.yellow(
+          localized(
+            "⚠ Could not initialize developer. Run manually:",
+            "⚠ 无法初始化开发者。请手动运行：",
+          ),
+        ),
       );
       console.log(
         chalk.gray(
@@ -1061,29 +1126,60 @@ export async function init(options: InitOptions): Promise<void> {
   console.log(chalk.cyan(`\n${banner.trimEnd()}`));
   console.log(
     chalk.gray(
-      "\n   All-in-one AI framework & toolkit for Claude Code & Cursor\n",
+      localized(
+        "\n   All-in-one AI framework & toolkit for Claude Code & Cursor\n",
+        "\n   面向 Claude Code、Cursor 等工具的一体化 AI 开发框架和工具包\n",
+      ),
     ),
   );
 
   // Set up proxy before any network calls
   const proxyUrl = setupProxy();
   if (proxyUrl) {
-    console.log(chalk.gray(`   Using proxy: ${maskProxyUrl(proxyUrl)}\n`));
+    console.log(
+      chalk.gray(
+        localized(
+          `   Using proxy: ${maskProxyUrl(proxyUrl)}\n`,
+          `   使用代理：${maskProxyUrl(proxyUrl)}\n`,
+        ),
+      ),
+    );
   }
 
   // Set write mode based on options
   let writeMode: WriteMode = "ask";
   if (options.force) {
     writeMode = "force";
-    console.log(chalk.gray("Mode: Force overwrite existing files\n"));
+    console.log(
+      chalk.gray(
+        localized(
+          "Mode: Force overwrite existing files\n",
+          "模式：强制覆盖已有文件\n",
+        ),
+      ),
+    );
   } else if (options.skipExisting) {
     writeMode = "skip";
-    console.log(chalk.gray("Mode: Skip existing files\n"));
+    console.log(
+      chalk.gray(
+        localized(
+          "Mode: Skip existing files\n",
+          "模式：跳过已有文件\n",
+        ),
+      ),
+    );
   } else if (options.yes) {
     // -y implies non-interactive: never prompt on conflicts. Default to skip
     // (preserve user files) — explicit --force is required to overwrite.
     writeMode = "skip";
-    console.log(chalk.gray("Mode: Non-interactive (skip existing files)\n"));
+    console.log(
+      chalk.gray(
+        localized(
+          "Mode: Non-interactive (skip existing files)\n",
+          "模式：非交互式（跳过已有文件）\n",
+        ),
+      ),
+    );
   }
   setWriteMode(writeMode);
 
@@ -1105,7 +1201,10 @@ export async function init(options: InitOptions): Promise<void> {
   }
 
   if (developerName) {
-    console.log(chalk.blue("👤 Developer:"), chalk.gray(developerName));
+    console.log(
+      chalk.blue(localized("👤 Developer:", "👤 开发者：")),
+      chalk.gray(developerName),
+    );
   }
 
   const { command: pythonCmd } = resolveSupportedPython();
@@ -1142,17 +1241,25 @@ export async function init(options: InitOptions): Promise<void> {
     // Ask for developer name if not detected and not in yes mode
     console.log(
       chalk.gray(
-        "\nDevFlow supports team collaboration - each developer has their own\n" +
-          `workspace directory (${PATHS.WORKSPACE}/{name}/) to track AI sessions.\n` +
-          "Tip: Usually this is your git username (git config user.name).\n",
+        localized(
+          "\nDevFlow supports team collaboration - each developer has their own\n" +
+            `workspace directory (${PATHS.WORKSPACE}/{name}/) to track AI sessions.\n` +
+            "Tip: Usually this is your git username (git config user.name).\n",
+          "\nDevFlow 支持团队协作，每个开发者都有自己的\n" +
+            `workspace 目录（${PATHS.WORKSPACE}/{name}/）用于跟踪 AI 会话。\n` +
+            "提示：通常这里填写你的 git 用户名（git config user.name）。\n",
+        ),
       ),
     );
-    developerName = await askInput("Your name: ");
+    developerName = await askInput(localized("Your name: ", "你的名字："));
     while (!developerName) {
-      console.log(chalk.yellow("Name is required"));
-      developerName = await askInput("Your name: ");
+      console.log(chalk.yellow(localized("Name is required", "名称不能为空")));
+      developerName = await askInput(localized("Your name: ", "你的名字："));
     }
-    console.log(chalk.blue("👤 Developer:"), chalk.gray(developerName));
+    console.log(
+      chalk.blue(localized("👤 Developer:", "👤 开发者：")),
+      chalk.gray(developerName),
+    );
   }
 
   // Detect project type (silent - no output)
@@ -1195,11 +1302,14 @@ export async function init(options: InitOptions): Promise<void> {
     if (options.monorepo === true && !detected) {
       console.log(
         chalk.red(
-          "Error: --monorepo specified but no multi-package layout detected.",
+          localized(
+            "Error: --monorepo specified but no multi-package layout detected.",
+            "错误：指定了 --monorepo，但未检测到多包布局。",
+          ),
         ),
       );
       console.log("");
-      console.log(chalk.gray("Checked:"));
+      console.log(chalk.gray(localized("Checked:", "已检查：")));
       console.log(chalk.gray("  ✗ pnpm-workspace.yaml"));
       console.log(chalk.gray("  ✗ package.json workspaces"));
       console.log(chalk.gray("  ✗ Cargo.toml [workspace]"));
@@ -1208,7 +1318,12 @@ export async function init(options: InitOptions): Promise<void> {
       console.log(chalk.gray("  ✗ .gitmodules"));
       console.log(chalk.gray("  ✗ sibling .git directories (need ≥ 2)"));
       console.log("");
-      console.log("To configure manually, add to .devflow/config.yaml:");
+      console.log(
+        localized(
+          "To configure manually, add to .devflow/config.yaml:",
+          "如需手动配置，请添加到 .devflow/config.yaml：",
+        ),
+      );
       console.log("");
       console.log(chalk.cyan("  packages:"));
       console.log(chalk.cyan("    frontend:"));
@@ -1227,7 +1342,14 @@ export async function init(options: InitOptions): Promise<void> {
         enableMonorepo = true;
       } else {
         // Show detected packages and ask
-        console.log(chalk.blue("\n🔍 Detected monorepo packages:"));
+        console.log(
+          chalk.blue(
+            localized(
+              "\n🔍 Detected monorepo packages:",
+              "\n🔍 检测到 monorepo 包：",
+            ),
+          ),
+        );
         for (const pkg of detected) {
           const tag = pkg.isSubmodule
             ? chalk.gray(" (submodule)")
@@ -1249,7 +1371,10 @@ export async function init(options: InitOptions): Promise<void> {
           {
             type: "confirm",
             name: "useMonorepo",
-            message: "Enable monorepo mode?",
+            message: localized(
+              "Enable monorepo mode?",
+              "启用 monorepo 模式？",
+            ),
             default: true,
           },
         ]);
@@ -1269,10 +1394,25 @@ export async function init(options: InitOptions): Promise<void> {
               {
                 type: "list",
                 name: "specSource",
-                message: `Spec source for ${pkg.name} (${pkg.path}):`,
+                message: localized(
+                  `Spec source for ${pkg.name} (${pkg.path}):`,
+                  `${pkg.name}（${pkg.path}）的 spec 来源：`,
+                ),
                 choices: [
-                  { name: "From scratch (DevFlow default)", value: "blank" },
-                  { name: "Download remote template", value: "remote" },
+                  {
+                    name: localized(
+                      "From scratch (DevFlow default)",
+                      "从空白开始（DevFlow 默认）",
+                    ),
+                    value: "blank",
+                  },
+                  {
+                    name: localized(
+                      "Download remote template",
+                      "下载远程模板",
+                    ),
+                    value: "remote",
+                  },
                 ],
                 default: "blank",
               },
@@ -1285,7 +1425,14 @@ export async function init(options: InitOptions): Promise<void> {
                 PATHS.SPEC,
                 sanitizePkgName(pkg.name),
               );
-              console.log(chalk.blue(`📦 Select template for ${pkg.name}...`));
+              console.log(
+                chalk.blue(
+                  localized(
+                    `📦 Select template for ${pkg.name}...`,
+                    `📦 为 ${pkg.name} 选择模板...`,
+                  ),
+                ),
+              );
               // Fetch templates if not already done
               const templates = await fetchTemplateIndex();
               const specTemplates = templates
@@ -1302,7 +1449,10 @@ export async function init(options: InitOptions): Promise<void> {
                   {
                     type: "list",
                     name: "templateId",
-                    message: `Select template for ${pkg.name}:`,
+                    message: localized(
+                      `Select template for ${pkg.name}:`,
+                      `为 ${pkg.name} 选择模板：`,
+                    ),
                     choices: specTemplates,
                   },
                 ]);
@@ -1321,11 +1471,23 @@ export async function init(options: InitOptions): Promise<void> {
                   remoteSpecPackages.add(sanitizePkgName(pkg.name));
                 } else {
                   console.log(chalk.yellow(`   ${result.message}`));
-                  console.log(chalk.gray("   Falling back to blank spec..."));
+                  console.log(
+                    chalk.gray(
+                      localized(
+                        "   Falling back to blank spec...",
+                        "   将回退到空白 spec...",
+                      ),
+                    ),
+                  );
                 }
               } else {
                 console.log(
-                  chalk.gray("   No templates available. Using blank spec."),
+                  chalk.gray(
+                    localized(
+                      "   No templates available. Using blank spec.",
+                      "   没有可用模板。将使用空白 spec。",
+                    ),
+                  ),
                 );
               }
             }
@@ -1377,7 +1539,10 @@ export async function init(options: InitOptions): Promise<void> {
       {
         type: "checkbox",
         name: "tools",
-        message: "Select AI tools to configure:",
+        message: localized(
+          "Select AI tools to configure:",
+          "选择要配置的 AI 工具：",
+        ),
         choices: TOOLS.map((t) => ({
           name: t.name,
           value: t.key,
@@ -1394,7 +1559,12 @@ export async function init(options: InitOptions): Promise<void> {
 
   if (tools.length === 0) {
     console.log(
-      chalk.yellow("No tools selected. At least one tool is required."),
+      chalk.yellow(
+        localized(
+          "No tools selected. At least one tool is required.",
+          "未选择工具。至少需要选择一个工具。",
+        ),
+      ),
     );
     return;
   }
@@ -1424,16 +1594,33 @@ export async function init(options: InitOptions): Promise<void> {
     const timeoutSec = TIMEOUTS.INDEX_FETCH_MS / 1000;
     const sourceLabel = registry ? registry.gigetSource : TEMPLATE_INDEX_URL;
     console.log(
-      chalk.gray(`   Fetching available templates from ${sourceLabel}`),
+      chalk.gray(
+        localized(
+          `   Fetching available templates from ${sourceLabel}`,
+          `   正在从 ${sourceLabel} 获取可用模板`,
+        ),
+      ),
     );
     let elapsed = 0;
     const ticker = setInterval(() => {
       elapsed++;
       process.stdout.write(
-        `\r${chalk.gray(`   Loading... ${elapsed}s/${timeoutSec}s`)}`,
+        `\r${chalk.gray(
+          localized(
+            `   Loading... ${elapsed}s/${timeoutSec}s`,
+            `   正在加载... ${elapsed}s/${timeoutSec}s`,
+          ),
+        )}`,
       );
     }, 1000);
-    process.stdout.write(chalk.gray(`   Loading... 0s/${timeoutSec}s`));
+    process.stdout.write(
+      chalk.gray(
+        localized(
+          `   Loading... 0s/${timeoutSec}s`,
+          `   正在加载... 0s/${timeoutSec}s`,
+        ),
+      ),
+    );
     let templates: SpecTemplate[];
     let registryProbeNotFound = false;
     let registryProbeError: Error | undefined;
@@ -1455,24 +1642,40 @@ export async function init(options: InitOptions): Promise<void> {
       // Custom registry: confirmed no index.json — will try direct download later
       console.log(
         chalk.gray(
-          "   No index.json found at registry. Will download as direct spec template.",
+          localized(
+            "   No index.json found at registry. Will download as direct spec template.",
+            "   registry 中未找到 index.json。将作为直接 spec 模板下载。",
+          ),
         ),
       );
     } else if (templates.length === 0 && registry) {
       // Custom registry: transient error (not a 404) — abort, don't misclassify
       console.log(
         chalk.red(
-          `   ${registryProbeError?.message ?? "Could not reach registry. Check your connection and try again."}`,
+          `   ${registryProbeError?.message ?? localized(
+            "Could not reach registry. Check your connection and try again.",
+            "无法访问 registry。请检查连接后重试。",
+          )}`,
         ),
       );
       return;
     } else if (templates.length === 0) {
       console.log(
         chalk.gray(
-          "   Could not fetch templates (offline or server unavailable).",
+          localized(
+            "   Could not fetch templates (offline or server unavailable).",
+            "   无法获取模板（离线或服务器不可用）。",
+          ),
         ),
       );
-      console.log(chalk.gray("   Using blank templates.\n"));
+      console.log(
+        chalk.gray(
+          localized(
+            "   Using blank templates.\n",
+            "   将使用空白模板。\n",
+          ),
+        ),
+      );
     }
 
     if (templates.length > 0) {
@@ -1488,12 +1691,15 @@ export async function init(options: InitOptions): Promise<void> {
         ? specTemplates
         : [
             {
-              name: "from scratch (default)",
+              name: localized("from scratch (default)", "从空白开始（默认）"),
               value: "blank",
             },
             ...specTemplates,
             {
-              name: "custom (enter a registry source)",
+              name: localized(
+                "custom (enter a registry source)",
+                "自定义（输入 registry 来源）",
+              ),
               value: "__custom__",
             },
           ];
@@ -1505,7 +1711,7 @@ export async function init(options: InitOptions): Promise<void> {
           {
             type: "list",
             name: "template",
-            message: "Select a spec template:",
+            message: localized("Select a spec template:", "选择 spec 模板："),
             choices: templateChoices,
             default: registry ? undefined : "blank",
           },
@@ -1514,7 +1720,10 @@ export async function init(options: InitOptions): Promise<void> {
         if (templateAnswer.template === "__custom__") {
           // Prompt for custom registry source (empty → back to picker)
           const customSource = await askInput(
-            "Enter registry source (e.g., gh:myorg/myrepo/specs), or press Enter to go back: ",
+            localized(
+              "Enter registry source (e.g., gh:myorg/myrepo/specs), or press Enter to go back: ",
+              "输入 registry 来源（例如 gh:myorg/myrepo/specs），或按 Enter 返回：",
+            ),
           );
           if (!customSource) {
             continue; // Back to picker
@@ -1526,7 +1735,10 @@ export async function init(options: InitOptions): Promise<void> {
             const customIndexUrl = `${registry.rawBaseUrl}/index.json`;
             console.log(
               chalk.gray(
-                `   Checking for templates at ${registry.gigetSource}...`,
+                localized(
+                  `   Checking for templates at ${registry.gigetSource}...`,
+                  `   正在检查 ${registry.gigetSource} 中的模板...`,
+                ),
               ),
             );
             const customProbe = await probeRegistryIndex(
@@ -1551,7 +1763,10 @@ export async function init(options: InitOptions): Promise<void> {
                   {
                     type: "list",
                     name: "template",
-                    message: "Select a spec template:",
+                    message: localized(
+                      "Select a spec template:",
+                      "选择 spec 模板：",
+                    ),
                     choices: customChoices,
                   },
                 ]);
@@ -1570,15 +1785,30 @@ export async function init(options: InitOptions): Promise<void> {
                     {
                       type: "list",
                       name: "action",
-                      message: `Directory ${PATHS.SPEC} already exists. What do you want to do?`,
+                      message: localized(
+                        `Directory ${PATHS.SPEC} already exists. What do you want to do?`,
+                        `目录 ${PATHS.SPEC} 已存在。要怎么处理？`,
+                      ),
                       choices: [
-                        { name: "Skip (keep existing)", value: "skip" },
                         {
-                          name: "Overwrite (replace all)",
+                          name: localized(
+                            "Skip (keep existing)",
+                            "跳过（保留现有内容）",
+                          ),
+                          value: "skip",
+                        },
+                        {
+                          name: localized(
+                            "Overwrite (replace all)",
+                            "覆盖（全部替换）",
+                          ),
                           value: "overwrite",
                         },
                         {
-                          name: "Append (add missing files only)",
+                          name: localized(
+                            "Append (add missing files only)",
+                            "追加（仅添加缺失文件）",
+                          ),
                           value: "append",
                         },
                       ],
@@ -1596,7 +1826,10 @@ export async function init(options: InitOptions): Promise<void> {
               // Transient error (not 404) — loop back, don't misclassify
               console.log(
                 chalk.yellow(
-                  `   ${customProbe.error?.message ?? "Could not reach registry. Try again or enter a different source."}`,
+                  `   ${customProbe.error?.message ?? localized(
+                    "Could not reach registry. Try again or enter a different source.",
+                    "无法访问 registry。请重试或输入其他来源。",
+                  )}`,
                 ),
               );
               registry = undefined; // Reset so we don't fall through to direct download
@@ -1606,7 +1839,7 @@ export async function init(options: InitOptions): Promise<void> {
               chalk.red(
                 error instanceof Error
                   ? error.message
-                  : "Invalid registry source",
+                  : localized("Invalid registry source", "无效的 registry 来源"),
               ),
             );
             // Loop back to picker
@@ -1629,12 +1862,30 @@ export async function init(options: InitOptions): Promise<void> {
                 {
                   type: "list",
                   name: "action",
-                  message: `Directory ${PATHS.SPEC} already exists. What do you want to do?`,
+                  message: localized(
+                    `Directory ${PATHS.SPEC} already exists. What do you want to do?`,
+                    `目录 ${PATHS.SPEC} 已存在。要怎么处理？`,
+                  ),
                   choices: [
-                    { name: "Skip (keep existing)", value: "skip" },
-                    { name: "Overwrite (replace all)", value: "overwrite" },
                     {
-                      name: "Append (add missing files only)",
+                      name: localized(
+                        "Skip (keep existing)",
+                        "跳过（保留现有内容）",
+                      ),
+                      value: "skip",
+                    },
+                    {
+                      name: localized(
+                        "Overwrite (replace all)",
+                        "覆盖（全部替换）",
+                      ),
+                      value: "overwrite",
+                    },
+                    {
+                      name: localized(
+                        "Append (add missing files only)",
+                        "追加（仅添加缺失文件）",
+                      ),
                       value: "append",
                     },
                   ],
@@ -1660,8 +1911,12 @@ export async function init(options: InitOptions): Promise<void> {
       // Marketplace mode requires interactive selection — can't auto-select
       console.log(
         chalk.red(
-          "Error: Registry is a marketplace with multiple templates. " +
-            "Use --template <id> to specify which one, or remove -y for interactive selection.",
+          localized(
+            "Error: Registry is a marketplace with multiple templates. " +
+              "Use --template <id> to specify which one, or remove -y for interactive selection.",
+            "错误：该 registry 是包含多个模板的 marketplace。" +
+              "请使用 --template <id> 指定模板，或移除 -y 进行交互式选择。",
+          ),
         ),
       );
       return;
@@ -1670,7 +1925,10 @@ export async function init(options: InitOptions): Promise<void> {
       // Transient error (not 404) — abort, don't misclassify as direct-download
       console.log(
         chalk.red(
-          `Error: ${probeResult.error?.message ?? "Could not reach registry. Check your connection and try again."}`,
+          localized(
+            `Error: ${probeResult.error?.message ?? "Could not reach registry. Check your connection and try again."}`,
+            `错误：${probeResult.error?.message ?? "无法访问 registry。请检查连接后重试。"}`,
+          ),
         ),
       );
       return;
@@ -1686,8 +1944,22 @@ export async function init(options: InitOptions): Promise<void> {
 
   if (selectedTemplate) {
     // Marketplace mode: download specific template by ID
-    console.log(chalk.blue(`📦 Downloading template "${selectedTemplate}"...`));
-    console.log(chalk.gray("   This may take a moment on slow connections."));
+    console.log(
+      chalk.blue(
+        localized(
+          `📦 Downloading template "${selectedTemplate}"...`,
+          `📦 正在下载模板 "${selectedTemplate}"...`,
+        ),
+      ),
+    );
+    console.log(
+      chalk.gray(
+        localized(
+          "   This may take a moment on slow connections.",
+          "   网络较慢时可能需要一些时间。",
+        ),
+      ),
+    );
 
     // Find pre-fetched SpecTemplate to avoid double-fetch
     const prefetched = fetchedTemplates.find((t) => t.id === selectedTemplate);
@@ -1711,18 +1983,44 @@ export async function init(options: InitOptions): Promise<void> {
       }
     } else {
       console.log(chalk.yellow(`   ${result.message}`));
-      console.log(chalk.gray("   Falling back to blank templates..."));
+      console.log(
+        chalk.gray(
+          localized(
+            "   Falling back to blank templates...",
+            "   将回退到空白模板...",
+          ),
+        ),
+      );
       const retryCmd = registry
         ? `devflow init --registry ${registry.gigetSource} --template ${selectedTemplate}`
         : `devflow init --template ${selectedTemplate}`;
-      console.log(chalk.gray(`   You can retry later: ${retryCmd}`));
+      console.log(
+        chalk.gray(
+          localized(
+            `   You can retry later: ${retryCmd}`,
+            `   之后可重试：${retryCmd}`,
+          ),
+        ),
+      );
     }
   } else if (registry && fetchedTemplates.length === 0) {
     // Direct download mode: registry has no index.json, download directory directly
     console.log(
-      chalk.blue(`📦 Downloading spec from ${registry.gigetSource}...`),
+      chalk.blue(
+        localized(
+          `📦 Downloading spec from ${registry.gigetSource}...`,
+          `📦 正在从 ${registry.gigetSource} 下载 spec...`,
+        ),
+      ),
     );
-    console.log(chalk.gray("   This may take a moment on slow connections."));
+    console.log(
+      chalk.gray(
+        localized(
+          "   This may take a moment on slow connections.",
+          "   网络较慢时可能需要一些时间。",
+        ),
+      ),
+    );
 
     // Ask about existing spec dir in interactive mode
     if (!options.yes && !options.overwrite && !options.append) {
@@ -1734,11 +2032,32 @@ export async function init(options: InitOptions): Promise<void> {
           {
             type: "list",
             name: "action",
-            message: `Directory ${PATHS.SPEC} already exists. What do you want to do?`,
+            message: localized(
+              `Directory ${PATHS.SPEC} already exists. What do you want to do?`,
+              `目录 ${PATHS.SPEC} 已存在。要怎么处理？`,
+            ),
             choices: [
-              { name: "Skip (keep existing)", value: "skip" },
-              { name: "Overwrite (replace all)", value: "overwrite" },
-              { name: "Append (add missing files only)", value: "append" },
+              {
+                name: localized(
+                  "Skip (keep existing)",
+                  "跳过（保留现有内容）",
+                ),
+                value: "skip",
+              },
+              {
+                name: localized(
+                  "Overwrite (replace all)",
+                  "覆盖（全部替换）",
+                ),
+                value: "overwrite",
+              },
+              {
+                name: localized(
+                  "Append (add missing files only)",
+                  "追加（仅添加缺失文件）",
+                ),
+                value: "append",
+              },
             ],
             default: "skip",
           },
@@ -1764,10 +2083,20 @@ export async function init(options: InitOptions): Promise<void> {
       }
     } else {
       console.log(chalk.yellow(`   ${result.message}`));
-      console.log(chalk.gray("   Falling back to blank templates..."));
       console.log(
         chalk.gray(
-          `   You can retry later: devflow init --registry ${registry.gigetSource}`,
+          localized(
+            "   Falling back to blank templates...",
+            "   将回退到空白模板...",
+          ),
+        ),
+      );
+      console.log(
+        chalk.gray(
+          localized(
+            `   You can retry later: devflow init --registry ${registry.gigetSource}`,
+            `   之后可重试：devflow init --registry ${registry.gigetSource}`,
+          ),
         ),
       );
     }
@@ -1790,7 +2119,12 @@ export async function init(options: InitOptions): Promise<void> {
     if (resolved.id !== NATIVE_WORKFLOW_ID) {
       workflowMdOverride = resolved.content;
       console.log(
-        chalk.blue(`🧭 Using workflow template: ${chalk.cyan(resolved.id)}`),
+        chalk.blue(
+          localized(
+            `🧭 Using workflow template: ${resolved.id}`,
+            `🧭 使用工作流模板：${resolved.id}`,
+          ),
+        ),
       );
     }
   }
@@ -1807,7 +2141,14 @@ export async function init(options: InitOptions): Promise<void> {
   const writtenPaths = startRecordingWrites(cwd);
   try {
     // Create workflow structure with project type
-    console.log(chalk.blue("📁 Creating workflow structure..."));
+    console.log(
+      chalk.blue(
+        localized(
+          "📁 Creating workflow structure...",
+          "📁 正在创建工作流结构...",
+        ),
+      ),
+    );
     await createWorkflowStructure(cwd, {
       projectType,
       skipSpecTemplates: useRemoteTemplate,
@@ -1819,7 +2160,14 @@ export async function init(options: InitOptions): Promise<void> {
     // Write monorepo packages to config.yaml (non-destructive patch)
     if (monorepoPackages) {
       writeMonorepoConfig(cwd, monorepoPackages);
-      console.log(chalk.blue("📦 Monorepo packages written to config.yaml"));
+      console.log(
+        chalk.blue(
+          localized(
+            "📦 Monorepo packages written to config.yaml",
+            "📦 Monorepo 包信息已写入 config.yaml",
+          ),
+        ),
+      );
     }
 
     writeLanguageConfig(cwd, templateLanguage);
@@ -1833,7 +2181,12 @@ export async function init(options: InitOptions): Promise<void> {
       const platformId = resolveCliFlag(tool);
       if (platformId) {
         console.log(
-          chalk.blue(`📝 Configuring ${AI_TOOLS[platformId].name}...`),
+          chalk.blue(
+            localized(
+              `📝 Configuring ${AI_TOOLS[platformId].name}...`,
+              `📝 正在配置 ${AI_TOOLS[platformId].name}...`,
+            ),
+          ),
         );
         await configurePlatform(platformId, cwd);
       }
@@ -1857,7 +2210,12 @@ export async function init(options: InitOptions): Promise<void> {
   const hashedCount = initializeHashes(cwd, { trackedPaths: writtenPaths });
   if (hashedCount > 0) {
     console.log(
-      chalk.gray(`📋 Tracking ${hashedCount} template files for updates`),
+      chalk.gray(
+        localized(
+          `📋 Tracking ${hashedCount} template files for updates`,
+          `📋 已跟踪 ${hashedCount} 个模板文件用于后续更新`,
+        ),
+      ),
     );
   }
 
@@ -1912,13 +2270,21 @@ export async function init(options: InitOptions): Promise<void> {
       try {
         if (!createJoinerOnboardingTask(cwd, developerName, pythonCmd)) {
           console.warn(
-            chalk.yellow("⚠ Failed to create joiner onboarding task"),
+            chalk.yellow(
+              localized(
+                "⚠ Failed to create joiner onboarding task",
+                "⚠ 创建新加入开发者引导任务失败",
+              ),
+            ),
           );
         }
       } catch (err) {
         console.warn(
           chalk.yellow(
-            `⚠ Joiner onboarding setup failed: ${err instanceof Error ? err.message : String(err)}`,
+            localized(
+              `⚠ Joiner onboarding setup failed: ${err instanceof Error ? err.message : String(err)}`,
+              `⚠ 新加入开发者引导设置失败：${err instanceof Error ? err.message : String(err)}`,
+            ),
           ),
         );
       }
@@ -1949,6 +2315,8 @@ async function createRootFiles(cwd: string): Promise<void> {
   // Write AGENTS.md from template
   const agentsWritten = await writeFile(agentsPath, getAgentsMdContent());
   if (agentsWritten) {
-    console.log(chalk.blue("📄 Created AGENTS.md"));
+    console.log(
+      chalk.blue(localized("📄 Created AGENTS.md", "📄 已创建 AGENTS.md")),
+    );
   }
 }

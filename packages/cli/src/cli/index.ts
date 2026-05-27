@@ -20,6 +20,7 @@ import {
   configureTemplateLanguage,
   localized,
 } from "../utils/language-config.js";
+import { applyCommanderLocalization } from "../utils/commander-localization.js";
 
 // Re-export for backwards compatibility (consumers should prefer constants/version.js)
 export { VERSION, PACKAGE_NAME };
@@ -76,6 +77,11 @@ program
     VERSION,
     "-v, --version",
     localized("output the version number", "输出版本号"),
+  )
+  .helpOption("-h, --help", localized("display help for command", "显示命令帮助"))
+  .addHelpCommand(
+    "help [command]",
+    localized("display help for command", "显示命令帮助"),
   );
 
 program
@@ -471,5 +477,6 @@ program
 
 registerKnowledgeCommand(program);
 registerChannelCommand(program);
+applyCommanderLocalization(program);
 
 program.parse();
