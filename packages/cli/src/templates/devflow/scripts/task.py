@@ -24,6 +24,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import builtins
 import sys
 
 from common.log import Colors, colored
@@ -45,6 +46,113 @@ from common.active_task import (
 from common.io import read_json, write_json
 from common.task_utils import resolve_task_dir, run_task_hooks
 from common.tasks import iter_active_tasks, children_progress
+from common.devflow_config import tr as _tr
+
+
+_ORIGINAL_PRINT = builtins.print
+
+
+def _zh_text(value: str) -> str:
+    replacements = {
+        "Task Management Script": "任务管理脚本",
+        "Usage:": "用法：",
+        "Monorepo options:": "Monorepo 选项：",
+        "List options:": "列表选项：",
+        "Examples:": "示例：",
+        "Commands": "命令",
+        "Create new task": "创建新任务",
+        "Task title": "任务标题",
+        "Task slug": "任务 slug",
+        "Assignee developer": "负责人",
+        "Task description": "任务描述",
+        "Parent task directory (establishes subtask link)": "父任务目录（建立子任务关联）",
+        "Package name for monorepo projects": "Monorepo 项目中的 package 名称",
+        "Add context entry": "添加上下文条目",
+        "Task directory": "任务目录",
+        "JSONL file (implement|check)": "JSONL 文件（implement|check）",
+        "File path to add": "要添加的文件路径",
+        "Reason for adding": "添加原因",
+        "Validate context files": "验证上下文文件",
+        "List context entries": "列出上下文条目",
+        "Set active task": "设置活动任务",
+        "Show active task": "显示活动任务",
+        "Show active task source": "显示活动任务来源",
+        "Clear active task": "清除活动任务",
+        "Set git branch": "设置 git 分支",
+        "Branch name": "分支名",
+        "Set PR target branch": "设置 PR 目标分支",
+        "Base branch name (PR target)": "基准分支名（PR 目标）",
+        "Set scope": "设置 scope",
+        "Scope name": "scope 名称",
+        "Archive task": "归档任务",
+        "Task directory or name": "任务目录或名称",
+        "Skip auto git commit after archive": "归档后跳过自动 git 提交",
+        "List tasks": "列出任务",
+        "My tasks only": "只显示我的任务",
+        "Filter by status": "按状态过滤",
+        "Link child task to parent": "将子任务关联到父任务",
+        "Parent task directory": "父任务目录",
+        "Child task directory": "子任务目录",
+        "Unlink child task from parent": "取消父子任务关联",
+        "List archived tasks": "列出已归档任务",
+        "Month (YYYY-MM)": "月份（YYYY-MM）",
+        "Error: task directory or name required": "错误：必须提供任务目录或名称",
+        "Error: Failed to set current task": "错误：设置当前任务失败",
+        "No current task set": "当前未设置任务",
+        "All active tasks:": "所有活动任务：",
+        "Archived tasks:": "已归档任务：",
+        "State: stale": "状态：已失效",
+        "The hook will now inject context from this task's jsonl files.": "Hook 现在会从该任务的 jsonl 文件注入上下文。",
+    }
+    for en, zh in replacements.items():
+        value = value.replace(en, zh)
+    dynamic_prefixes = [
+        ("Error: Task not found: ", "错误：未找到任务："),
+        ("Hint: Use task name", "提示：可使用任务名称"),
+        ("Current task set to: ", "当前任务已设为："),
+        ("Cleared current task (was: ", "已清除当前任务（原为："),
+        ("Current task: ", "当前任务："),
+        ("Source: ", "来源："),
+        ("My tasks (assignee: ", "我的任务（负责人："),
+        ("Total: ", "总计："),
+        ("No archives for ", "没有归档："),
+    ]
+    for en, zh in dynamic_prefixes:
+        if value.startswith(en):
+            value = zh + value[len(en):]
+    return value
+
+
+def _install_output_localization() -> None:
+    try:
+        repo_root = get_repo_root()
+    except Exception:
+        repo_root = None
+    if _tr("en", "zh", repo_root) != "zh":
+        return
+
+    argparse_labels = {
+        "usage: ": "用法：",
+        "positional arguments": "位置参数",
+        "options": "选项",
+        "optional arguments": "可选参数",
+        "show this help message and exit": "显示此帮助信息并退出",
+    }
+    argparse._ = lambda text: argparse_labels.get(text, text)  # type: ignore[attr-defined]
+
+    def localized_print(*args, **kwargs):
+        localized_args = tuple(_zh_text(arg) if isinstance(arg, str) else arg for arg in args)
+        _ORIGINAL_PRINT(*localized_args, **kwargs)
+
+    builtins.print = localized_print
+
+
+def _h(en: str, zh: str) -> str:
+    try:
+        repo_root = get_repo_root()
+    except Exception:
+        repo_root = None
+    return _tr(en, zh, repo_root)
 
 # Import command handlers from split modules (also re-exports for plan.py compatibility)
 from common.task_store import (
@@ -353,6 +461,8 @@ Examples:
 
 def main() -> int:
     """CLI entry point."""
+    _install_output_localization()
+
     # Deprecation guard: `init-context` was removed in v0.5.0-beta.12.
     # Detect early so argparse doesn't mask the real reason with a generic
     # "invalid choice" error.
@@ -384,86 +494,86 @@ def main() -> int:
         return 2
 
     parser = argparse.ArgumentParser(
-        description="Task Management Script",
+        description=_h("Task Management Script", "任务管理脚本"),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    subparsers = parser.add_subparsers(dest="command", help="Commands")
+    subparsers = parser.add_subparsers(dest="command", help=_h("Commands", "命令"))
 
     # create
-    p_create = subparsers.add_parser("create", help="Create new task")
-    p_create.add_argument("title", help="Task title")
-    p_create.add_argument("--slug", "-s", help="Task slug")
-    p_create.add_argument("--assignee", "-a", help="Assignee developer")
-    p_create.add_argument("--priority", "-p", default="P2", help="Priority (P0-P3)")
-    p_create.add_argument("--description", "-d", help="Task description")
-    p_create.add_argument("--parent", help="Parent task directory (establishes subtask link)")
-    p_create.add_argument("--package", help="Package name for monorepo projects")
+    p_create = subparsers.add_parser("create", help=_h("Create new task", "创建新任务"))
+    p_create.add_argument("title", help=_h("Task title", "任务标题"))
+    p_create.add_argument("--slug", "-s", help=_h("Task slug", "任务 slug"))
+    p_create.add_argument("--assignee", "-a", help=_h("Assignee developer", "负责人"))
+    p_create.add_argument("--priority", "-p", default="P2", help=_h("Priority (P0-P3)", "优先级（P0-P3）"))
+    p_create.add_argument("--description", "-d", help=_h("Task description", "任务描述"))
+    p_create.add_argument("--parent", help=_h("Parent task directory (establishes subtask link)", "父任务目录（建立子任务关联）"))
+    p_create.add_argument("--package", help=_h("Package name for monorepo projects", "Monorepo 项目中的 package 名称"))
 
     # add-context
-    p_add = subparsers.add_parser("add-context", help="Add context entry")
-    p_add.add_argument("dir", help="Task directory")
-    p_add.add_argument("file", help="JSONL file (implement|check)")
-    p_add.add_argument("path", help="File path to add")
-    p_add.add_argument("reason", nargs="?", help="Reason for adding")
+    p_add = subparsers.add_parser("add-context", help=_h("Add context entry", "添加上下文条目"))
+    p_add.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_add.add_argument("file", help=_h("JSONL file (implement|check)", "JSONL 文件（implement|check）"))
+    p_add.add_argument("path", help=_h("File path to add", "要添加的文件路径"))
+    p_add.add_argument("reason", nargs="?", help=_h("Reason for adding", "添加原因"))
 
     # validate
-    p_validate = subparsers.add_parser("validate", help="Validate context files")
-    p_validate.add_argument("dir", help="Task directory")
+    p_validate = subparsers.add_parser("validate", help=_h("Validate context files", "验证上下文文件"))
+    p_validate.add_argument("dir", help=_h("Task directory", "任务目录"))
 
     # list-context
-    p_listctx = subparsers.add_parser("list-context", help="List context entries")
-    p_listctx.add_argument("dir", help="Task directory")
+    p_listctx = subparsers.add_parser("list-context", help=_h("List context entries", "列出上下文条目"))
+    p_listctx.add_argument("dir", help=_h("Task directory", "任务目录"))
 
     # start
-    p_start = subparsers.add_parser("start", help="Set active task")
-    p_start.add_argument("dir", help="Task directory")
+    p_start = subparsers.add_parser("start", help=_h("Set active task", "设置活动任务"))
+    p_start.add_argument("dir", help=_h("Task directory", "任务目录"))
 
     # current
-    p_current = subparsers.add_parser("current", help="Show active task")
+    p_current = subparsers.add_parser("current", help=_h("Show active task", "显示活动任务"))
     p_current.add_argument("--source", action="store_true",
-                           help="Show active task source")
+                           help=_h("Show active task source", "显示活动任务来源"))
 
     # finish
-    subparsers.add_parser("finish", help="Clear active task")
+    subparsers.add_parser("finish", help=_h("Clear active task", "清除活动任务"))
 
     # set-branch
-    p_branch = subparsers.add_parser("set-branch", help="Set git branch")
-    p_branch.add_argument("dir", help="Task directory")
-    p_branch.add_argument("branch", help="Branch name")
+    p_branch = subparsers.add_parser("set-branch", help=_h("Set git branch", "设置 git 分支"))
+    p_branch.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_branch.add_argument("branch", help=_h("Branch name", "分支名"))
 
     # set-base-branch
-    p_base = subparsers.add_parser("set-base-branch", help="Set PR target branch")
-    p_base.add_argument("dir", help="Task directory")
-    p_base.add_argument("base_branch", help="Base branch name (PR target)")
+    p_base = subparsers.add_parser("set-base-branch", help=_h("Set PR target branch", "设置 PR 目标分支"))
+    p_base.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_base.add_argument("base_branch", help=_h("Base branch name (PR target)", "基准分支名（PR 目标）"))
 
     # set-scope
-    p_scope = subparsers.add_parser("set-scope", help="Set scope")
-    p_scope.add_argument("dir", help="Task directory")
-    p_scope.add_argument("scope", help="Scope name")
+    p_scope = subparsers.add_parser("set-scope", help=_h("Set scope", "设置 scope"))
+    p_scope.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_scope.add_argument("scope", help=_h("Scope name", "scope 名称"))
 
     # archive
-    p_archive = subparsers.add_parser("archive", help="Archive task")
-    p_archive.add_argument("name", help="Task directory or name")
-    p_archive.add_argument("--no-commit", action="store_true", help="Skip auto git commit after archive")
+    p_archive = subparsers.add_parser("archive", help=_h("Archive task", "归档任务"))
+    p_archive.add_argument("name", help=_h("Task directory or name", "任务目录或名称"))
+    p_archive.add_argument("--no-commit", action="store_true", help=_h("Skip auto git commit after archive", "归档后跳过自动 git 提交"))
 
     # list
-    p_list = subparsers.add_parser("list", help="List tasks")
-    p_list.add_argument("--mine", "-m", action="store_true", help="My tasks only")
-    p_list.add_argument("--status", "-s", help="Filter by status")
+    p_list = subparsers.add_parser("list", help=_h("List tasks", "列出任务"))
+    p_list.add_argument("--mine", "-m", action="store_true", help=_h("My tasks only", "只显示我的任务"))
+    p_list.add_argument("--status", "-s", help=_h("Filter by status", "按状态过滤"))
 
     # add-subtask
-    p_addsub = subparsers.add_parser("add-subtask", help="Link child task to parent")
-    p_addsub.add_argument("parent_dir", help="Parent task directory")
-    p_addsub.add_argument("child_dir", help="Child task directory")
+    p_addsub = subparsers.add_parser("add-subtask", help=_h("Link child task to parent", "将子任务关联到父任务"))
+    p_addsub.add_argument("parent_dir", help=_h("Parent task directory", "父任务目录"))
+    p_addsub.add_argument("child_dir", help=_h("Child task directory", "子任务目录"))
 
     # remove-subtask
-    p_rmsub = subparsers.add_parser("remove-subtask", help="Unlink child task from parent")
-    p_rmsub.add_argument("parent_dir", help="Parent task directory")
-    p_rmsub.add_argument("child_dir", help="Child task directory")
+    p_rmsub = subparsers.add_parser("remove-subtask", help=_h("Unlink child task from parent", "取消父子任务关联"))
+    p_rmsub.add_argument("parent_dir", help=_h("Parent task directory", "父任务目录"))
+    p_rmsub.add_argument("child_dir", help=_h("Child task directory", "子任务目录"))
 
     # list-archive
-    p_listarch = subparsers.add_parser("list-archive", help="List archived tasks")
-    p_listarch.add_argument("month", nargs="?", help="Month (YYYY-MM)")
+    p_listarch = subparsers.add_parser("list-archive", help=_h("List archived tasks", "列出已归档任务"))
+    p_listarch.add_argument("month", nargs="?", help=_h("Month (YYYY-MM)", "月份（YYYY-MM）"))
 
     args = parser.parse_args()
 

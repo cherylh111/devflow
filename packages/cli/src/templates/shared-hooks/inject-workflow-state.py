@@ -216,6 +216,11 @@ def _read_devflow_config(root: Path) -> dict:
         return {}
 
 
+def _is_zh(config: dict) -> bool:
+    language = config.get("language") if isinstance(config, dict) else None
+    return str(language or "").strip().lower() in {"zh", "cn", "zh-cn", "chinese", "han"}
+
+
 def _codex_mode_banner(config: dict) -> str:
     """Emit a `<codex-mode>` banner for the additionalContext payload.
 
@@ -235,15 +240,21 @@ def _codex_mode_banner(config: dict) -> str:
             if cfg_mode in ("inline", "sub-agent"):
                 mode = cfg_mode
     if mode == "sub-agent":
-        meaning = (
-            "sub-agent: implement/check work defaults to DevFlow sub-agents; "
-            "the main session still coordinates, clarifies, updates specs, commits, and finishes."
-        )
+        if _is_zh(config):
+            meaning = "sub-agent：实现/检查默认交给 DevFlow sub-agent；主会话仍负责协调、澄清、更新 spec、提交和收尾。"
+        else:
+            meaning = (
+                "sub-agent: implement/check work defaults to DevFlow sub-agents; "
+                "the main session still coordinates, clarifies, updates specs, commits, and finishes."
+            )
     else:
-        meaning = (
-            "inline: the main session implements/checks directly; "
-            "do not dispatch implement/check sub-agents."
-        )
+        if _is_zh(config):
+            meaning = "inline：主会话直接实现/检查；不要分派 implement/check sub-agent。"
+        else:
+            meaning = (
+                "inline: the main session implements/checks directly; "
+                "do not dispatch implement/check sub-agents."
+            )
     return f"<codex-mode>{meaning}</codex-mode>"
 
 
@@ -290,10 +301,18 @@ def build_breadcrumb(
     body = templates.get(lookup_key)
     if body is None and lookup_key != status:
         body = templates.get(status)
+    config = _CURRENT_CONFIG
     if body is None:
-        body = "Refer to workflow.md for current step."
-    header = f"Status: {status}" if task_id is None else f"Task: {task_id} ({status})"
+        body = "请参考 workflow.md 判断当前步骤。" if _is_zh(config) else "Refer to workflow.md for current step."
+    header = (
+        f"状态：{status}" if task_id is None else f"任务：{task_id} ({status})"
+    ) if _is_zh(config) else (
+        f"Status: {status}" if task_id is None else f"Task: {task_id} ({status})"
+    )
     return f"<workflow-state>\n{header}\n{body}\n</workflow-state>"
+
+
+_CURRENT_CONFIG: dict = {}
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +338,8 @@ def main() -> int:
     templates = load_breadcrumbs(root)
     platform = _detect_platform(data)
     config = _read_devflow_config(root)
+    global _CURRENT_CONFIG
+    _CURRENT_CONFIG = config
     task = get_active_task(root, data)
     if task is None:
         # No active task — still emit a breadcrumb nudging AI toward
@@ -337,7 +358,13 @@ def main() -> int:
     if platform == "codex":
         parts: list[str] = []
         if task is None:
-            parts.append(CODEX_NO_TASK_BOOTSTRAP_NOTICE)
+            parts.append(
+                """<devflow-bootstrap>
+如果本会话还没有加载 DevFlow 上下文，请先读取一次 `devflow-start` skill。
+</devflow-bootstrap>"""
+                if _is_zh(config)
+                else CODEX_NO_TASK_BOOTSTRAP_NOTICE
+            )
         parts.append(_codex_mode_banner(config))
         parts.append(breadcrumb)
         breadcrumb = "\n\n".join(parts)

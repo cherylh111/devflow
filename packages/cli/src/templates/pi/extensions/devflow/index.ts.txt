@@ -837,6 +837,9 @@ const WF_RE =
 function workflowBreadcrumb(root: string, key: string | null): string {
   const wf = readText(join(root, ".devflow", "workflow.md"));
   if (!wf) return "";
+  const cfg = readText(join(root, ".devflow", "config.yaml"));
+  const lang = cfg.match(/^\s*language\s*:\s*['"]?([^'"\s#]+)/m)?.[1]?.toLowerCase();
+  const zh = lang === "zh" || lang === "cn" || lang === "zh-cn";
   const templates: Record<string, string> = {};
   for (const m of wf.matchAll(WF_RE)) {
     const s = m[1] ?? "",
@@ -844,7 +847,7 @@ function workflowBreadcrumb(root: string, key: string | null): string {
     if (s && b) templates[s] = b;
   }
   const dir = readTaskDir(root, key);
-  let header = "Status: no_task",
+  let header = zh ? "状态：no_task" : "Status: no_task",
     lookup = "no_task";
   if (dir) {
     try {
@@ -852,12 +855,12 @@ function workflowBreadcrumb(root: string, key: string | null): string {
       const status = str(d.status) ?? "";
       const id = str(d.id) ?? dir.split(/[\\/]/).pop() ?? "";
       if (status) {
-        header = `Task: ${id} (${status})`;
+        header = zh ? `任务：${id} (${status})` : `Task: ${id} (${status})`;
         lookup = status;
       }
     } catch {}
   }
-  const body = templates[lookup] ?? "Refer to workflow.md for current step.";
+  const body = templates[lookup] ?? (zh ? "请参考 workflow.md 判断当前步骤。" : "Refer to workflow.md for current step.");
   return `<workflow-state>\n${header}\n${body}\n</workflow-state>`;
 }
 

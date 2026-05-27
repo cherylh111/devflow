@@ -58,6 +58,16 @@ function loadBreadcrumbs(directory) {
   return result
 }
 
+function isZh(directory) {
+  try {
+    const content = readFileSync(join(directory, ".devflow", "config.yaml"), "utf-8")
+    const match = content.match(/^\s*language\s*:\s*['"]?([^'"\s#]+)/m)
+    return Boolean(match && ["zh", "cn", "zh-cn"].includes(String(match[1]).toLowerCase()))
+  } catch {
+    return false
+  }
+}
+
 /**
  * Get (taskId, status) from active task, or null if no active task.
  */
@@ -89,12 +99,14 @@ function getActiveTask(ctx, platformInput = null) {
  *   "Refer to workflow.md for current step." line
  * - no_task pseudo-status (id === null) → header omits task info
  */
-function buildBreadcrumb(id, status, templates) {
+function buildBreadcrumb(id, status, templates, zh = false) {
   let body = templates[status]
   if (body === undefined) {
-    body = "Refer to workflow.md for current step."
+    body = zh ? "请参考 workflow.md 判断当前步骤。" : "Refer to workflow.md for current step."
   }
-  let header = id === null ? `Status: ${status}` : `Task: ${id} (${status})`
+  let header = zh
+    ? (id === null ? `状态：${status}` : `任务：${id} (${status})`)
+    : (id === null ? `Status: ${status}` : `Task: ${id} (${status})`)
   return `<workflow-state>\n${header}\n${body}\n</workflow-state>`
 }
 
@@ -125,10 +137,11 @@ export default async ({ directory }) => {
             return
           }
           const templates = loadBreadcrumbs(directory)
+          const zh = isZh(directory)
           const task = getActiveTask(ctx, input)
           const breadcrumb = task
-            ? buildBreadcrumb(task.id, task.status, templates, task.source)
-            : buildBreadcrumb(null, "no_task", templates)
+            ? buildBreadcrumb(task.id, task.status, templates, zh)
+            : buildBreadcrumb(null, "no_task", templates, zh)
 
           const parts = output?.parts || []
           const textPartIndex = parts.findIndex(

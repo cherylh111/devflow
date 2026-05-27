@@ -149,6 +149,61 @@ def read_file(path: Path, fallback: str = "") -> str:
         return fallback
 
 
+def _read_language(devflow_dir: Path) -> str:
+    scripts_dir = devflow_dir / "scripts"
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from common.devflow_config import get_language  # type: ignore[import-not-found]
+
+        return get_language(devflow_dir.parent)
+    except Exception:
+        config = read_file(devflow_dir / "config.yaml")
+        match = re.search(r"^\s*language\s*:\s*['\"]?([^'\"\s#]+)", config, re.MULTILINE)
+        return "zh" if match and match.group(1).lower() in {"zh", "cn", "zh-cn"} else "en"
+
+
+def _localize_session_context(text: str, devflow_dir: Path) -> str:
+    if _read_language(devflow_dir) != "zh":
+        return text
+    replacements = {
+        "DevFlow compact SessionStart context. Use it to orient the session; load details on demand.": "DevFlow 精简 SessionStart 上下文已加载。用它定位当前会话；需要时再按需加载详情。",
+        "On the first visible assistant reply in this session, begin with exactly one short Chinese sentence:": "本会话首次可见回复时，用一句简短中文开头：",
+        "Then continue directly with the user's request. This notice is one-shot: do not repeat it after the first assistant reply in the same session.": "然后直接继续处理用户请求。这条提示只执行一次：同一会话首次回复后不要重复。",
+        "Status: NO ACTIVE TASK": "状态：无活动任务",
+        "Next: Classify the current turn and ask for task-creation consent before creating any DevFlow task.": "下一步：判断当前请求类型，并在创建任何 DevFlow 任务前征求创建任务许可。",
+        "Next: Task directory not found. Run: python3 ./.devflow/scripts/task.py finish": "下一步：任务目录不存在。运行：python3 ./.devflow/scripts/task.py finish",
+        "Next: Archive with": "下一步：使用",
+        "or start a new task.": "归档，或开始一个新任务。",
+        "Next: Load devflow-brainstorm and write prd.md. Stay in planning.": "下一步：加载 devflow-brainstorm 并编写 prd.md。保持在规划阶段。",
+        "Review planning artifacts with the user before `task.py start`.": "在 `task.py start` 前请用户 review 规划产物。",
+        "Lightweight task can ask for start review with PRD-only; complex task must add design.md and implement.md before `task.py start`.": "轻量任务可只用 PRD 请求开始 review；复杂任务必须在 `task.py start` 前补充 design.md 和 implement.md。",
+        "Next: Follow the matching per-turn workflow-state. Context order is jsonl entries, prd.md, design.md if present, implement.md if present.": "下一步：遵循匹配的逐轮 workflow-state。上下文顺序为 jsonl 条目、prd.md、design.md（如有）、implement.md（如有）。",
+        "Current task: none.": "当前任务：无。",
+        "Developer:": "开发者：",
+        "Git: branch": "Git：分支",
+        "; clean.": "；干净。",
+        "Active tasks:": "活动任务：",
+        "total. Use `python3 ./.devflow/scripts/task.py list --mine` only if needed.": "个。仅在需要时使用 `python3 ./.devflow/scripts/task.py list --mine`。",
+        "Journal:": "日志：",
+        "Spec indexes:": "Spec 索引：",
+        "available.": "个可用。",
+        "# Development Workflow - Session Summary": "# 开发工作流 - 会话摘要",
+        "Full guide: .devflow/workflow.md. Step detail: `python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`.": "完整指南：.devflow/workflow.md。步骤详情：`python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`。",
+        "Task context order for implementation/check: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`. Missing optional artifacts are skipped for lightweight tasks.": "实现/检查的任务上下文顺序：jsonl 条目 -> `prd.md` -> `design.md（如有）` -> `implement.md（如有）`。轻量任务会跳过缺失的可选产物。",
+        "## Available indexes (read on demand)": "## 可用索引（按需读取）",
+        "Discover more via: `python3 ./.devflow/scripts/get_context.py --mode packages`": "发现更多：`python3 ./.devflow/scripts/get_context.py --mode packages`",
+        "Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.": "上下文已加载。遵循 <task-status>；仅在需要时加载 workflow/spec/task 详情。",
+        "Status:": "状态：",
+        "Task:": "任务：",
+        "Present:": "已有：",
+        "Next:": "下一步：",
+    }
+    for en, zh in replacements.items():
+        text = text.replace(en, zh)
+    return text
+
+
 def _resolve_context_key(project_dir: Path, hook_input: dict) -> str | None:
     scripts_dir = project_dir / ".devflow" / "scripts"
     if str(scripts_dir) not in sys.path:
@@ -528,7 +583,7 @@ DevFlow compact SessionStart context. Use it to orient the session; load details
 Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.
 </ready>""")
 
-    context = output.getvalue()
+    context = _localize_session_context(output.getvalue(), devflow_dir)
     result = {
         "suppressOutput": True,
         "systemMessage": f"DevFlow context injected ({len(context)} chars)",

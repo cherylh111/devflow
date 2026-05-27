@@ -53,7 +53,7 @@ Phase 3: Finish  -> 验证，更新 spec，提交，并收尾
 一个请求包含多个可独立验证交付物时，使用 parent task 持有总需求和集成验收；使用 child task 承载具体交付物。child 之间的依赖必须写入 child 的 `prd.md` / `implement.md`，不要只靠树结构表达。
 
 [workflow-state:no_task]
-No active task. First classify the current turn and ask for task-creation consent before creating any DevFlow task.
+当前没有活动任务。先判断本轮请求类型，并在创建任何 DevFlow task 前征求创建任务许可。
 简单对话或小任务：只问本轮是否创建 DevFlow task；用户拒绝则跳过 DevFlow。
 复杂任务：询问是否可以创建 DevFlow task 并进入规划；用户拒绝则澄清范围或建议拆小。
 [/workflow-state:no_task]
@@ -97,16 +97,16 @@ python3 ./.devflow/scripts/task.py start <task-dir>
 规划完成条件：任务产物存在、验收标准清楚、实现路径和验证命令明确。
 
 [workflow-state:planning]
-Load `devflow-brainstorm`; stay in planning.
+加载 `devflow-brainstorm`；保持在规划阶段。
 轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`；`task.py start` 前必须请求 review。
 多交付范围：考虑 parent task + 可独立验证的 child tasks；依赖写入 child artifacts。
-Sub-agent mode: curate `implement.jsonl` and `check.jsonl` before start when extra context is needed.
+Sub-agent 模式：需要额外上下文时，在开始前整理 `implement.jsonl` 和 `check.jsonl`。
 [/workflow-state:planning]
 
 [workflow-state:planning-inline]
-Load `devflow-brainstorm`; stay in planning.
+加载 `devflow-brainstorm`；保持在规划阶段。
 轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`；`task.py start` 前必须请求 review。
-Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `devflow-before-dev`.
+Inline 模式：跳过 jsonl 整理；Phase 2 通过 `devflow-before-dev` 读取产物和 spec。
 [/workflow-state:planning-inline]
 
 ### Phase 2: Execute
@@ -126,16 +126,16 @@ Sub-agent 模式分派 `devflow-implement`；inline 模式先加载 `devflow-bef
 Sub-agent dispatch protocol applies to all platforms: every dispatch prompt starts with `Active task: <task path from task.py current>`.
 
 [workflow-state:in_progress]
-Tools: `devflow-implement` / `devflow-research` are sub-agent types only. `devflow-update-spec` is a skill. `devflow-check` may exist as both; prefer Agent form after code changes.
-Flow: `devflow-implement` -> `devflow-check` -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
-Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `devflow-implement` or `devflow-check`, do NOT spawn another DevFlow implement/check agent.
-Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
+工具：`devflow-implement` / `devflow-research` 仅是 sub-agent 类型；`devflow-update-spec` 是 skill；`devflow-check` 可能同时存在 agent 和 skill，代码变更后优先使用 Agent 形式。
+流程：`devflow-implement` -> `devflow-check` -> `devflow-update-spec` -> commit（Phase 3.4）-> `/devflow:finish-work`。
+主会话默认分派 implement/check sub-agent。Sub-agent 自豁免：如果已经在 `devflow-implement` 或 `devflow-check` 中运行，不要再启动另一个 DevFlow implement/check agent。
+分派提示以 `Active task: <task path from task.py current>` 开头。读取上下文：jsonl 条目 -> `prd.md` -> `design.md（如有）` -> `implement.md（如有）`。
 [/workflow-state:in_progress]
 
 [workflow-state:in_progress-inline]
-Flow: `devflow-before-dev` -> edit -> `devflow-check` -> validation -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
-Do not dispatch implement/check sub-agents in inline mode.
-Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
+流程：`devflow-before-dev` -> edit -> `devflow-check` -> validation -> `devflow-update-spec` -> commit（Phase 3.4）-> `/devflow:finish-work`。
+Inline 模式不要分派 implement/check sub-agent。
+读取上下文：`prd.md` -> `design.md（如有）` -> `implement.md（如有）`，以及 skill 加载的相关 spec/research。
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
@@ -161,7 +161,7 @@ Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, p
 提醒用户运行 `/devflow:finish-work` 完成归档和 journal 记录。
 
 [workflow-state:completed]
-Code committed. Run `/devflow:finish-work`; if dirty, return to Phase 3.4 first.
+代码已提交。运行 `/devflow:finish-work`；如果工作区有未提交变更，先回到 Phase 3.4。
 [/workflow-state:completed]
 
 ### Rules

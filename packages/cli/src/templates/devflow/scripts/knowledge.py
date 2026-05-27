@@ -9,6 +9,7 @@ project knowledge without depending on the global devflow CLI after init.
 from __future__ import annotations
 
 import argparse
+import builtins
 import json
 import re
 import secrets
@@ -26,6 +27,7 @@ from common.paths import (
     get_current_task,
     get_repo_root,
 )
+from common.devflow_config import tr as _tr
 
 
 MARKDOWN_EXT = ".md"
@@ -34,6 +36,76 @@ SPEC_ENTRY_OPEN_RE = re.compile(r"<spec-entry\b([^>]*)>")
 ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 TOKEN_RE = re.compile(r"[^\w-]+", re.UNICODE)
 REQUIRED_ATTRS = ("id", "type", "category", "keywords", "source", "date")
+
+_ORIGINAL_PRINT = builtins.print
+
+
+def _zh_text(value: str) -> str:
+    replacements = {
+        "Search, load, and capture local DevFlow knowledge": "搜索、加载和沉淀本地 DevFlow 知识",
+        "Capture a reusable learning": "记录可复用经验",
+        "List structured knowledge entries": "列出结构化知识条目",
+        "Search local knowledge": "搜索本地知识",
+        "Show one knowledge entry": "显示一条知识",
+        "Load one or more knowledge entries": "加载一条或多条知识",
+        "Check knowledge store health": "检查知识库健康状态",
+        "Show knowledge store statistics": "显示知识库统计",
+        "usage: knowledge.py search <query>": "用法：knowledge.py search <查询>",
+        "usage: knowledge.py learn <insight>": "用法：knowledge.py learn <经验>",
+        "(no matches)": "（无匹配）",
+        "(no entries)": "（无条目）",
+        "no entries found for requested ids": "未找到请求 id 对应的条目",
+        "Knowledge Documents": "知识文档",
+        "Title:": "标题：",
+        "Path:": "路径：",
+        "Keywords:": "关键词：",
+        "Source:": "来源：",
+        "Captured learning:": "已记录经验：",
+        "Documents:": "文档数：",
+        "Spec entries:": "Spec 条目数：",
+        "Diagnostics:": "诊断数：",
+        "Duplicate ids:": "重复 id 数：",
+        "Types:": "类型：",
+        "warning: not found:": "警告：未找到：",
+        "knowledge entry not found:": "未找到知识条目：",
+        " loaded)": " 已加载）",
+        " loaded": " 已加载",
+    }
+    for en, zh in replacements.items():
+        value = value.replace(en, zh)
+    return value
+
+
+def _install_output_localization() -> None:
+    try:
+        repo_root = get_repo_root()
+    except Exception:
+        repo_root = None
+    if _tr("en", "zh", repo_root) != "zh":
+        return
+
+    argparse_labels = {
+        "usage: ": "用法：",
+        "positional arguments": "位置参数",
+        "options": "选项",
+        "optional arguments": "可选参数",
+        "show this help message and exit": "显示此帮助信息并退出",
+    }
+    argparse._ = lambda text: argparse_labels.get(text, text)  # type: ignore[attr-defined]
+
+    def localized_print(*args, **kwargs):
+        localized_args = tuple(_zh_text(arg) if isinstance(arg, str) else arg for arg in args)
+        _ORIGINAL_PRINT(*localized_args, **kwargs)
+
+    builtins.print = localized_print
+
+
+def _h(en: str, zh: str) -> str:
+    try:
+        repo_root = get_repo_root()
+    except Exception:
+        repo_root = None
+    return _tr(en, zh, repo_root)
 
 
 @dataclass
@@ -657,10 +729,15 @@ def add_filter_options(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Search, load, and capture local DevFlow knowledge")
+    parser = argparse.ArgumentParser(
+        description=_h(
+            "Search, load, and capture local DevFlow knowledge",
+            "搜索、加载和沉淀本地 DevFlow 知识",
+        )
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    p_learn = subparsers.add_parser("learn", help="Capture a reusable learning")
+    p_learn = subparsers.add_parser("learn", help=_h("Capture a reusable learning", "记录可复用经验"))
     p_learn.add_argument("insight", nargs="+")
     p_learn.add_argument("--title")
     p_learn.add_argument("--category")
@@ -674,30 +751,30 @@ def build_parser() -> argparse.ArgumentParser:
     p_learn.add_argument("--json", action="store_true")
     p_learn.set_defaults(func=cmd_learn)
 
-    p_list = subparsers.add_parser("list", aliases=["ls"], help="List structured knowledge entries")
+    p_list = subparsers.add_parser("list", aliases=["ls"], help=_h("List structured knowledge entries", "列出结构化知识条目"))
     add_filter_options(p_list)
     p_list.set_defaults(func=cmd_list)
 
-    p_search = subparsers.add_parser("search", help="Search local knowledge")
+    p_search = subparsers.add_parser("search", help=_h("Search local knowledge", "搜索本地知识"))
     p_search.add_argument("query", nargs="+")
     add_filter_options(p_search)
     p_search.set_defaults(func=cmd_search)
 
-    p_show = subparsers.add_parser("show", aliases=["get"], help="Show one knowledge entry")
+    p_show = subparsers.add_parser("show", aliases=["get"], help=_h("Show one knowledge entry", "显示一条知识"))
     p_show.add_argument("id")
     p_show.add_argument("--json", action="store_true")
     p_show.set_defaults(func=cmd_show)
 
-    p_load = subparsers.add_parser("load", help="Load one or more knowledge entries")
+    p_load = subparsers.add_parser("load", help=_h("Load one or more knowledge entries", "加载一条或多条知识"))
     p_load.add_argument("ids", nargs="+")
     p_load.add_argument("--json", action="store_true")
     p_load.set_defaults(func=cmd_load)
 
-    p_health = subparsers.add_parser("health", help="Check knowledge store health")
+    p_health = subparsers.add_parser("health", help=_h("Check knowledge store health", "检查知识库健康状态"))
     p_health.add_argument("--json", action="store_true")
     p_health.set_defaults(func=cmd_health)
 
-    p_stats = subparsers.add_parser("stats", help="Show knowledge store statistics")
+    p_stats = subparsers.add_parser("stats", help=_h("Show knowledge store statistics", "显示知识库统计"))
     p_stats.add_argument("--json", action="store_true")
     p_stats.set_defaults(func=cmd_stats)
 
@@ -705,6 +782,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    _install_output_localization()
     parser = build_parser()
     args = parser.parse_args()
     return args.func(args)

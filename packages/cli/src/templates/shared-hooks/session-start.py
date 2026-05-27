@@ -457,6 +457,61 @@ def _load_devflow_config(devflow_dir: Path, input_data: dict) -> tuple:
         return False, {}, None, None, None
 
 
+def _read_language(devflow_dir: Path) -> str:
+    try:
+        from common.devflow_config import get_language  # type: ignore[import-not-found]
+
+        return get_language(devflow_dir.parent)
+    except Exception:
+        config_path = devflow_dir / "config.yaml"
+        try:
+            content = config_path.read_text(encoding="utf-8")
+        except OSError:
+            return "en"
+        match = re.search(r"^\s*language\s*:\s*['\"]?([^'\"\s#]+)", content, re.MULTILINE)
+        return "zh" if match and match.group(1).lower() in {"zh", "cn", "zh-cn"} else "en"
+
+
+def _localize_session_context(text: str, devflow_dir: Path) -> str:
+    if _read_language(devflow_dir) != "zh":
+        return text
+    replacements = {
+        "DevFlow compact SessionStart context. Use it to orient the session; load details on demand.": "DevFlow 精简 SessionStart 上下文已加载。用它定位当前会话；需要时再按需加载详情。",
+        "First visible reply: say once in Chinese that DevFlow SessionStart context is loaded, then answer directly.": "首次可见回复：用一句中文说明 DevFlow SessionStart 上下文已加载，然后直接回答用户请求。",
+        "This notice is one-shot: do not repeat it after the first assistant reply in the same session.": "这条提示只执行一次：同一会话首次回复后不要重复。",
+        "Status: NO ACTIVE TASK": "状态：无活动任务",
+        "Next-Action: Classify the current turn before creating any DevFlow task. Simple conversation / small task asks only whether this turn should create a DevFlow task. Complex task asks whether task creation and planning are allowed.": "下一步：创建任何 DevFlow 任务前，先判断当前请求类型。简单对话或小任务只询问本轮是否创建 DevFlow 任务；复杂任务询问是否允许创建任务并进入规划。",
+        "Next-Action: Run `/devflow:finish-work`. If the working tree is dirty, return to Phase 3.4 first.": "下一步：运行 `/devflow:finish-work`。如果工作区有未提交变更，先回到 Phase 3.4。",
+        "Next-Action: Load `devflow-brainstorm` and write `prd.md`. Stay in planning.": "下一步：加载 `devflow-brainstorm` 并编写 `prd.md`。保持在规划阶段。",
+        "Do not enter implementation until the user confirms start.": "用户确认开始前不要进入实现。",
+        "Next-Action: Follow the matching per-turn workflow-state. Implementation/check context order is jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.": "下一步：遵循匹配的逐轮 workflow-state。实现/检查上下文顺序为 jsonl 条目 -> `prd.md` -> `design.md（如有）` -> `implement.md（如有）`。",
+        "Current task: none.": "当前任务：无。",
+        "Developer:": "开发者：",
+        "Git: branch": "Git：分支",
+        "; clean.": "；干净。",
+        "dirty": "有变更",
+        "paths": "个路径",
+        "Active tasks:": "活动任务：",
+        "total. Use `python3 ./.devflow/scripts/task.py list --mine` only if needed.": "个。仅在需要时使用 `python3 ./.devflow/scripts/task.py list --mine`。",
+        "Journal:": "日志：",
+        "Spec indexes:": "Spec 索引：",
+        "available.": "个可用。",
+        "# Development Workflow - Session Summary": "# 开发工作流 - 会话摘要",
+        "Full guide: .devflow/workflow.md. Step detail: `python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`.": "完整指南：.devflow/workflow.md。步骤详情：`python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`。",
+        "Task context order for implementation/check: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`. Missing optional artifacts are skipped for lightweight tasks.": "实现/检查的任务上下文顺序：jsonl 条目 -> `prd.md` -> `design.md（如有）` -> `implement.md（如有）`。轻量任务会跳过缺失的可选产物。",
+        "## Available indexes (read on demand)": "## 可用索引（按需读取）",
+        "Discover more via: `python3 ./.devflow/scripts/get_context.py --mode packages`": "发现更多：`python3 ./.devflow/scripts/get_context.py --mode packages`",
+        "Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.": "上下文已加载。遵循 <task-status>；仅在需要时加载 workflow/spec/task 详情。",
+        "Present:": "已有：",
+        "Status:": "状态：",
+        "Task:": "任务：",
+        "Next-Action:": "下一步：",
+    }
+    for en, zh in replacements.items():
+        text = text.replace(en, zh)
+    return text
+
+
 def _check_legacy_spec(devflow_dir: Path, is_mono: bool, packages: dict) -> str | None:
     """Check for legacy spec directory structure in monorepo.
 
@@ -812,7 +867,7 @@ DevFlow compact SessionStart context. Use it to orient the session; load details
 Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.
 </ready>""")
 
-    context_text = output.getvalue()
+    context_text = _localize_session_context(output.getvalue(), devflow_dir)
     result = {
         # Claude Code / Qoder / CodeBuddy / Droid / Gemini / Copilot format
         "hookSpecificOutput": {
