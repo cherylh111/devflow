@@ -1,7 +1,8 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { AI_TOOLS } from "../types/ai-tools.js";
 import { getOpenCodeTemplatePath } from "../templates/extract.js";
+import { readLocalizedTemplateFile } from "../templates/language.js";
 import { ensureDir, writeFile } from "../utils/file-writer.js";
 import { toPosix } from "../utils/posix.js";
 import {
@@ -61,7 +62,7 @@ function walkOpenCodeTemplateDir(): Map<string, string> {
         if (relEntry === "commands") continue;
         walk(relEntry);
       } else {
-        const content = readFileSync(absEntry, "utf-8");
+        const content = readLocalizedTemplateFile(absEntry);
         // Map keys are logical paths used as cross-platform hash keys / lookup
         // keys downstream. Always POSIX, regardless of host OS.
         files.set(

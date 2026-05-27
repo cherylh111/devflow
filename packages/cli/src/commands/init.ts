@@ -20,7 +20,9 @@ import {
 import { AI_TOOLS, type CliFlag } from "../types/ai-tools.js";
 import { DIR_NAMES, FILE_NAMES, PATHS } from "../constants/paths.js";
 import { VERSION } from "../constants/version.js";
-import { agentsMdContent } from "../templates/markdown/index.js";
+import { getAgentsMdContent } from "../templates/markdown/index.js";
+import type { TemplateLanguage } from "../templates/language.js";
+import { configureTemplateLanguage } from "../utils/language-config.js";
 import {
   setWriteMode,
   startRecordingWrites,
@@ -957,6 +959,7 @@ interface InitOptions {
   monorepo?: boolean;
   workflow?: string;
   workflowSource?: string;
+  lang?: string;
 }
 
 // Compile-time check: every CliFlag must be a key of InitOptions.
@@ -1012,6 +1015,22 @@ function writeMonorepoConfig(cwd: string, packages: DetectedPackage[]): void {
   );
 }
 
+function writeLanguageConfig(cwd: string, language: TemplateLanguage): void {
+  if (language === "en") return;
+
+  const configPath = path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml");
+  if (!fs.existsSync(configPath)) return;
+
+  const content = fs.readFileSync(configPath, "utf-8");
+  if (/^language\s*:/m.test(content)) return;
+
+  fs.writeFileSync(
+    configPath,
+    `${content.trimEnd()}\n\n# Template language for DevFlow-managed files\nlanguage: ${language}\n`,
+    "utf-8",
+  );
+}
+
 interface InitAnswers {
   tools: string[];
   template?: string;
@@ -1028,6 +1047,7 @@ export async function init(options: InitOptions): Promise<void> {
   }
 
   const cwd = process.cwd();
+  const templateLanguage = configureTemplateLanguage(cwd, options.lang);
   const isFirstInit = !fs.existsSync(path.join(cwd, DIR_NAMES.WORKFLOW));
   // Captured here (before createWorkflowStructure + init_developer run) so
   // the three-branch dispatch at the bottom can tell "fresh clone joiner"
@@ -1802,6 +1822,8 @@ export async function init(options: InitOptions): Promise<void> {
       console.log(chalk.blue("📦 Monorepo packages written to config.yaml"));
     }
 
+    writeLanguageConfig(cwd, templateLanguage);
+
     // Write version file for update tracking
     const versionPath = path.join(cwd, DIR_NAMES.WORKFLOW, ".version");
     fs.writeFileSync(versionPath, VERSION);
@@ -1925,7 +1947,7 @@ async function createRootFiles(cwd: string): Promise<void> {
   const agentsPath = path.join(cwd, FILE_NAMES.AGENTS);
 
   // Write AGENTS.md from template
-  const agentsWritten = await writeFile(agentsPath, agentsMdContent);
+  const agentsWritten = await writeFile(agentsPath, getAgentsMdContent());
   if (agentsWritten) {
     console.log(chalk.blue("📄 Created AGENTS.md"));
   }

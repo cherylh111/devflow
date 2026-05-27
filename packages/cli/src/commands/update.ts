@@ -37,12 +37,11 @@ import { emptyTaskJson } from "../utils/task-json.js";
 // Import templates for comparison
 import {
   getAllScripts,
-  // Configuration
-  configYamlTemplate,
-  gitignoreTemplate,
-  workflowMdTemplate,
+  getConfigYamlTemplate,
+  getGitignoreTemplate,
+  getWorkflowMdTemplate,
 } from "../templates/devflow/index.js";
-import { agentsMdContent } from "../templates/markdown/index.js";
+import { getAgentsMdContent } from "../templates/markdown/index.js";
 
 import {
   ALL_MANAGED_DIRS,
@@ -53,6 +52,10 @@ import {
 } from "../configurators/index.js";
 import { replacePythonCommandLiterals } from "../configurators/shared.js";
 import { pruneOrphanManifestKeys } from "../utils/manifest-prune.js";
+import {
+  configureTemplateLanguage,
+  localized,
+} from "../utils/language-config.js";
 
 export interface UpdateOptions {
   dryRun?: boolean;
@@ -61,6 +64,7 @@ export interface UpdateOptions {
   createNew?: boolean;
   allowDowngrade?: boolean;
   migrate?: boolean;
+  lang?: string;
 }
 
 interface FileChange {
@@ -143,6 +147,7 @@ function replaceDevFlowManagedBlock(
 }
 
 function buildAgentsMdTemplate(cwd: string): string {
+  const agentsMdContent = getAgentsMdContent();
   const fullPath = path.join(cwd, FILE_NAMES.AGENTS);
   if (!fs.existsSync(fullPath)) {
     return agentsMdContent;
@@ -634,8 +639,8 @@ function collectTemplateFiles(
   }
 
   // Configuration
-  files.set(`${DIR_NAMES.WORKFLOW}/config.yaml`, configYamlTemplate);
-  files.set(`${DIR_NAMES.WORKFLOW}/.gitignore`, gitignoreTemplate);
+  files.set(`${DIR_NAMES.WORKFLOW}/config.yaml`, getConfigYamlTemplate());
+  files.set(`${DIR_NAMES.WORKFLOW}/.gitignore`, getGitignoreTemplate());
   // workflow.md is included here because it is runtime-parsed by
   // get_context.py and shared hooks. Keep it on the normal template update
   // path: if the installed file still matches the tracked hash, update the
@@ -643,7 +648,7 @@ function collectTemplateFiles(
   // --force behavior applies. Partial tag-block merging is unsafe because
   // platform routing markers outside [workflow-state:*] blocks are also
   // script-consumed.
-  files.set(`${DIR_NAMES.WORKFLOW}/workflow.md`, workflowMdTemplate);
+  files.set(`${DIR_NAMES.WORKFLOW}/workflow.md`, getWorkflowMdTemplate());
   // workspace/index.md stays excluded — it's runtime-appended by add_session.py
   // (journal index) and has no script-parsed structure.
   files.set(FILE_NAMES.AGENTS, buildAgentsMdTemplate(cwd));
@@ -1680,15 +1685,27 @@ function printMigrationResult(result: MigrationResult): void {
  */
 export async function update(options: UpdateOptions): Promise<void> {
   const cwd = process.cwd();
+  configureTemplateLanguage(cwd, options.lang);
 
   // Check if DevFlow is initialized
   if (!fs.existsSync(path.join(cwd, DIR_NAMES.WORKFLOW))) {
-    console.log(chalk.red("Error: DevFlow not initialized in this directory."));
-    console.log(chalk.gray("Run 'devflow init' first."));
+    console.log(
+      chalk.red(
+        localized(
+          "Error: DevFlow not initialized in this directory.",
+          "错误：当前目录尚未初始化 DevFlow。",
+        ),
+      ),
+    );
+    console.log(
+      chalk.gray(
+        localized("Run 'devflow init' first.", "请先运行 'devflow init'。"),
+      ),
+    );
     return;
   }
 
-  console.log(chalk.cyan("\nDevFlow Update"));
+  console.log(chalk.cyan(localized("\nDevFlow Update", "\nDevFlow 更新")));
   console.log(chalk.cyan("══════════════\n"));
 
   // Set up proxy before any network calls (npm version check)

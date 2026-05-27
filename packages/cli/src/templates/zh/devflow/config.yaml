@@ -1,0 +1,48 @@
+# DevFlow 配置
+# 项目级 DevFlow 工作流设置。只覆盖你确实需要调整的选项。
+
+# 生成模板语言。可选：en / zh
+language: zh
+
+#-------------------------------------------------------------------------------
+# 会话记录
+#-------------------------------------------------------------------------------
+
+session_commit_message: "chore: record journal"
+max_journal_lines: 2000
+
+# session_auto_commit: true
+
+#-------------------------------------------------------------------------------
+# 任务生命周期 Hook
+#-------------------------------------------------------------------------------
+
+# hooks:
+#   after_create:
+#     - "echo 'Task created'"
+#   after_start:
+#     - "echo 'Task started'"
+#   after_finish:
+#     - "echo 'Task finished'"
+#   after_archive:
+#     - "echo 'Task archived'"
+
+#-------------------------------------------------------------------------------
+# Monorepo / Packages
+#-------------------------------------------------------------------------------
+
+# packages:
+#   frontend:
+#     path: packages/frontend
+#   backend:
+#     path: packages/backend
+#
+# default_package: frontend
+
+channel:
+  worker_guard:
+    idle_timeout: 5m
+    max_live_workers: 6
+
+# codex:
+#   dispatch_mode: inline  # 或 "sub-agent"

@@ -3,9 +3,10 @@
  * Eliminates boilerplate across qoder/, codebuddy/, droid/, cursor/, gemini/, kiro/ index.ts files.
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readLocalizedTemplate } from "./language.js";
 
 export interface AgentTemplate {
   name: string;
@@ -34,7 +35,7 @@ export function createTemplateReader(importMetaUrl: string): TemplateReader {
   const __dirname = dirname(fileURLToPath(importMetaUrl));
 
   function readTemplate(relativePath: string): string {
-    return readFileSync(join(__dirname, relativePath), "utf-8");
+    return readLocalizedTemplate(importMetaUrl, relativePath);
   }
 
   function listFiles(dir: string): string[] {

@@ -5,33 +5,33 @@ import { copyDevFlowDir } from "../templates/extract.js";
 
 // Import devflow templates (generic, not project-specific)
 import {
-  workflowMdTemplate,
-  configYamlTemplate,
-  gitignoreTemplate,
+  getWorkflowMdTemplate,
+  getConfigYamlTemplate,
+  getGitignoreTemplate,
 } from "../templates/devflow/index.js";
 
 // Import markdown templates
 import {
-  agentProgressIndexContent,
+  getWorkspaceIndexContent,
   // Backend structure (multi-doc)
-  backendIndexContent,
-  backendDirectoryStructureContent,
-  backendDatabaseGuidelinesContent,
-  backendLoggingGuidelinesContent,
-  backendQualityGuidelinesContent,
-  backendErrorHandlingContent,
+  getBackendIndexContent,
+  getBackendDirectoryStructureContent,
+  getBackendDatabaseGuidelinesContent,
+  getBackendLoggingGuidelinesContent,
+  getBackendQualityGuidelinesContent,
+  getBackendErrorHandlingContent,
   // Frontend structure (multi-doc)
-  frontendIndexContent,
-  frontendDirectoryStructureContent,
-  frontendTypeSafetyContent,
-  frontendHookGuidelinesContent,
-  frontendComponentGuidelinesContent,
-  frontendQualityGuidelinesContent,
-  frontendStateManagementContent,
+  getFrontendIndexContent,
+  getFrontendDirectoryStructureContent,
+  getFrontendTypeSafetyContent,
+  getFrontendHookGuidelinesContent,
+  getFrontendComponentGuidelinesContent,
+  getFrontendQualityGuidelinesContent,
+  getFrontendStateManagementContent,
   // Guides structure
-  guidesIndexContent,
-  guidesCrossLayerThinkingGuideContent,
-  guidesCodeReuseThinkingGuideContent,
+  getGuidesIndexContent,
+  getGuidesCrossLayerThinkingGuideContent,
+  getGuidesCodeReuseThinkingGuideContent,
 } from "../templates/markdown/index.js";
 
 import { writeFile, ensureDir } from "../utils/file-writer.js";
@@ -90,7 +90,7 @@ export async function createWorkflowStructure(
   const skipSpecTemplates = options?.skipSpecTemplates ?? false;
   const packages = options?.packages;
   const remoteSpecPackages = options?.remoteSpecPackages;
-  const workflowMd = options?.workflowMdOverride ?? workflowMdTemplate;
+  const workflowMd = options?.workflowMdOverride ?? getWorkflowMdTemplate();
 
   // Create base .devflow directory
   ensureDir(path.join(cwd, DIR_NAMES.WORKFLOW));
@@ -109,20 +109,20 @@ export async function createWorkflowStructure(
   // Copy .gitignore from templates
   await writeFile(
     path.join(cwd, DIR_NAMES.WORKFLOW, ".gitignore"),
-    gitignoreTemplate,
+    getGitignoreTemplate(),
   );
 
   // Copy config.yaml from templates
   await writeFile(
     path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml"),
-    configYamlTemplate,
+    getConfigYamlTemplate(),
   );
 
   // Create workspace/ with index.md
   ensureDir(path.join(cwd, PATHS.WORKSPACE));
   await writeFile(
     path.join(cwd, PATHS.WORKSPACE, "index.md"),
-    replacePythonCommandLiterals(agentProgressIndexContent),
+    replacePythonCommandLiterals(getWorkspaceIndexContent()),
   );
 
   // Create tasks/ directory
@@ -146,18 +146,24 @@ async function writeBackendDocs(specBase: string): Promise<void> {
   const backendDir = path.join(specBase, "backend");
   ensureDir(backendDir);
   const docs: DocDefinition[] = [
-    { name: "index.md", content: backendIndexContent },
+    { name: "index.md", content: getBackendIndexContent() },
     {
       name: "directory-structure.md",
-      content: backendDirectoryStructureContent,
+      content: getBackendDirectoryStructureContent(),
     },
     {
       name: "database-guidelines.md",
-      content: backendDatabaseGuidelinesContent,
+      content: getBackendDatabaseGuidelinesContent(),
     },
-    { name: "logging-guidelines.md", content: backendLoggingGuidelinesContent },
-    { name: "quality-guidelines.md", content: backendQualityGuidelinesContent },
-    { name: "error-handling.md", content: backendErrorHandlingContent },
+    {
+      name: "logging-guidelines.md",
+      content: getBackendLoggingGuidelinesContent(),
+    },
+    {
+      name: "quality-guidelines.md",
+      content: getBackendQualityGuidelinesContent(),
+    },
+    { name: "error-handling.md", content: getBackendErrorHandlingContent() },
   ];
   for (const doc of docs) {
     await writeFile(path.join(backendDir, doc.name), doc.content);
@@ -171,22 +177,25 @@ async function writeFrontendDocs(specBase: string): Promise<void> {
   const frontendDir = path.join(specBase, "frontend");
   ensureDir(frontendDir);
   const docs: DocDefinition[] = [
-    { name: "index.md", content: frontendIndexContent },
+    { name: "index.md", content: getFrontendIndexContent() },
     {
       name: "directory-structure.md",
-      content: frontendDirectoryStructureContent,
+      content: getFrontendDirectoryStructureContent(),
     },
-    { name: "type-safety.md", content: frontendTypeSafetyContent },
-    { name: "hook-guidelines.md", content: frontendHookGuidelinesContent },
+    { name: "type-safety.md", content: getFrontendTypeSafetyContent() },
+    { name: "hook-guidelines.md", content: getFrontendHookGuidelinesContent() },
     {
       name: "component-guidelines.md",
-      content: frontendComponentGuidelinesContent,
+      content: getFrontendComponentGuidelinesContent(),
     },
     {
       name: "quality-guidelines.md",
-      content: frontendQualityGuidelinesContent,
+      content: getFrontendQualityGuidelinesContent(),
     },
-    { name: "state-management.md", content: frontendStateManagementContent },
+    {
+      name: "state-management.md",
+      content: getFrontendStateManagementContent(),
+    },
   ];
   for (const doc of docs) {
     await writeFile(path.join(frontendDir, doc.name), doc.content);
@@ -221,14 +230,14 @@ async function createSpecTemplates(
   const guidesDir = path.join(cwd, `${PATHS.SPEC}/guides`);
   ensureDir(guidesDir);
   const guidesDocs: DocDefinition[] = [
-    { name: "index.md", content: guidesIndexContent },
+    { name: "index.md", content: getGuidesIndexContent() },
     {
       name: "cross-layer-thinking-guide.md",
-      content: guidesCrossLayerThinkingGuideContent,
+      content: getGuidesCrossLayerThinkingGuideContent(),
     },
     {
       name: "code-reuse-thinking-guide.md",
-      content: guidesCodeReuseThinkingGuideContent,
+      content: getGuidesCodeReuseThinkingGuideContent(),
     },
   ];
   for (const doc of guidesDocs) {

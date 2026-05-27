@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ensureDir, writeFile } from "../utils/file-writer.js";
 import { replacePythonCommandLiterals } from "../configurators/shared.js";
+import { readLocalizedTemplate } from "./language.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,9 +76,7 @@ export function getPiSourcePath(): string {
  * Read a file from the devflow template directory.
  */
 export function readDevFlowFile(relativePath: string): string {
-  const devflowPath = getDevFlowSourcePath();
-  const filePath = path.join(devflowPath, relativePath);
-  return fs.readFileSync(filePath, "utf-8");
+  return readLocalizedTemplate(import.meta.url, `devflow/${relativePath}`);
 }
 
 /**
@@ -131,7 +130,11 @@ async function copyDirRecursive(
     if (stat.isDirectory()) {
       await copyDirRecursive(srcPath, destPath, options);
     } else {
-      const content = fs.readFileSync(srcPath, "utf-8");
+      const sourceRelativePath = path
+        .relative(path.join(__dirname, "devflow"), srcPath)
+        .split(path.sep)
+        .join("/");
+      const content = readDevFlowFile(sourceRelativePath);
       const isExecutable =
         options?.executable && (entry.endsWith(".sh") || entry.endsWith(".py"));
       await writeFile(destPath, replacePythonCommandLiterals(content), {

@@ -1,120 +1,129 @@
 /**
- * DevFlow workflow templates
+ * DevFlow workflow templates.
  *
- * These are GENERIC templates for user projects.
- * Do NOT use DevFlow project's own .devflow/ directory (which may be customized).
- *
- * Directory structure:
- *   devflow/
- *   ├── scripts/
- *   │   ├── __init__.py
- *   │   ├── common/           # Shared utilities (Python)
- *   │   └── *.py              # Main scripts (Python)
- *   ├── scripts-shell-archive/ # Archived shell scripts (for reference)
- *   ├── workflow.md           # Workflow guide
- *   ├── config.yaml            # DevFlow configuration
- *   └── gitignore.txt         # .gitignore content
+ * Existing exported constants are kept as English bytes for compatibility.
+ * Runtime writers should call the getter functions so the active template
+ * language can select an overlay under templates/zh/.
  */
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readLocalizedTemplate } from "../language.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-function readTemplate(relativePath: string): string {
+function readEnglishTemplate(relativePath: string): string {
   return readFileSync(join(__dirname, relativePath), "utf-8");
 }
 
+function readRuntimeTemplate(relativePath: string): string {
+  return readLocalizedTemplate(import.meta.url, relativePath);
+}
+
+const SCRIPT_PATHS = [
+  "__init__.py",
+  "common/__init__.py",
+  "common/paths.py",
+  "common/developer.py",
+  "common/git_context.py",
+  "common/task_queue.py",
+  "common/task_utils.py",
+  "common/active_task.py",
+  "common/cli_adapter.py",
+  "common/config.py",
+  "common/io.py",
+  "common/log.py",
+  "common/git.py",
+  "common/types.py",
+  "common/tasks.py",
+  "common/task_context.py",
+  "common/task_store.py",
+  "common/session_context.py",
+  "common/packages_context.py",
+  "common/workflow_phase.py",
+  "common/devflow_config.py",
+  "common/safe_commit.py",
+  "common/trace.py",
+  "get_developer.py",
+  "init_developer.py",
+  "task.py",
+  "get_context.py",
+  "add_session.py",
+  "knowledge.py",
+] as const;
+
+function readScriptTemplate(
+  relativePath: (typeof SCRIPT_PATHS)[number],
+): string {
+  return readEnglishTemplate(`scripts/${relativePath}`);
+}
+
 // Python scripts - package init
-export const scriptsInit = readTemplate("scripts/__init__.py");
+export const scriptsInit = readScriptTemplate("__init__.py");
 
 // Python scripts - common
-export const commonInit = readTemplate("scripts/common/__init__.py");
-export const commonPaths = readTemplate("scripts/common/paths.py");
-export const commonDeveloper = readTemplate("scripts/common/developer.py");
-export const commonGitContext = readTemplate("scripts/common/git_context.py");
-export const commonTaskQueue = readTemplate("scripts/common/task_queue.py");
-export const commonTaskUtils = readTemplate("scripts/common/task_utils.py");
-export const commonActiveTask = readTemplate("scripts/common/active_task.py");
-export const commonCliAdapter = readTemplate("scripts/common/cli_adapter.py");
-export const commonConfig = readTemplate("scripts/common/config.py");
-export const commonIo = readTemplate("scripts/common/io.py");
-export const commonLog = readTemplate("scripts/common/log.py");
-export const commonGit = readTemplate("scripts/common/git.py");
-export const commonTypes = readTemplate("scripts/common/types.py");
-export const commonTasks = readTemplate("scripts/common/tasks.py");
-export const commonTaskContext = readTemplate("scripts/common/task_context.py");
-export const commonTaskStore = readTemplate("scripts/common/task_store.py");
-export const commonSessionContext = readTemplate(
-  "scripts/common/session_context.py",
+export const commonInit = readScriptTemplate("common/__init__.py");
+export const commonPaths = readScriptTemplate("common/paths.py");
+export const commonDeveloper = readScriptTemplate("common/developer.py");
+export const commonGitContext = readScriptTemplate("common/git_context.py");
+export const commonTaskQueue = readScriptTemplate("common/task_queue.py");
+export const commonTaskUtils = readScriptTemplate("common/task_utils.py");
+export const commonActiveTask = readScriptTemplate("common/active_task.py");
+export const commonCliAdapter = readScriptTemplate("common/cli_adapter.py");
+export const commonConfig = readScriptTemplate("common/config.py");
+export const commonIo = readScriptTemplate("common/io.py");
+export const commonLog = readScriptTemplate("common/log.py");
+export const commonGit = readScriptTemplate("common/git.py");
+export const commonTypes = readScriptTemplate("common/types.py");
+export const commonTasks = readScriptTemplate("common/tasks.py");
+export const commonTaskContext = readScriptTemplate("common/task_context.py");
+export const commonTaskStore = readScriptTemplate("common/task_store.py");
+export const commonSessionContext = readScriptTemplate(
+  "common/session_context.py",
 );
-export const commonPackagesContext = readTemplate(
-  "scripts/common/packages_context.py",
+export const commonPackagesContext = readScriptTemplate(
+  "common/packages_context.py",
 );
-export const commonWorkflowPhase = readTemplate(
-  "scripts/common/workflow_phase.py",
+export const commonWorkflowPhase = readScriptTemplate(
+  "common/workflow_phase.py",
 );
-export const commonDevFlowConfig = readTemplate(
-  "scripts/common/devflow_config.py",
+export const commonDevFlowConfig = readScriptTemplate(
+  "common/devflow_config.py",
 );
-export const commonSafeCommit = readTemplate("scripts/common/safe_commit.py");
-export const commonTrace = readTemplate("scripts/common/trace.py");
+export const commonSafeCommit = readScriptTemplate("common/safe_commit.py");
+export const commonTrace = readScriptTemplate("common/trace.py");
 
 // Python scripts - main
-export const getDeveloperScript = readTemplate("scripts/get_developer.py");
-export const initDeveloperScript = readTemplate("scripts/init_developer.py");
-export const taskScript = readTemplate("scripts/task.py");
-export const getContextScript = readTemplate("scripts/get_context.py");
-export const addSessionScript = readTemplate("scripts/add_session.py");
-export const knowledgeScript = readTemplate("scripts/knowledge.py");
+export const getDeveloperScript = readScriptTemplate("get_developer.py");
+export const initDeveloperScript = readScriptTemplate("init_developer.py");
+export const taskScript = readScriptTemplate("task.py");
+export const getContextScript = readScriptTemplate("get_context.py");
+export const addSessionScript = readScriptTemplate("add_session.py");
+export const knowledgeScript = readScriptTemplate("knowledge.py");
 
 // Configuration files
-export const workflowMdTemplate = readTemplate("workflow.md");
-export const configYamlTemplate = readTemplate("config.yaml");
-export const gitignoreTemplate = readTemplate("gitignore.txt");
+export const workflowMdTemplate = readEnglishTemplate("workflow.md");
+export const configYamlTemplate = readEnglishTemplate("config.yaml");
+export const gitignoreTemplate = readEnglishTemplate("gitignore.txt");
 
-/**
- * Get all script templates as a map of relative path to content
- */
+export function getWorkflowMdTemplate(): string {
+  return readRuntimeTemplate("workflow.md");
+}
+
+export function getConfigYamlTemplate(): string {
+  return readRuntimeTemplate("config.yaml");
+}
+
+export function getGitignoreTemplate(): string {
+  return readRuntimeTemplate("gitignore.txt");
+}
+
 export function getAllScripts(): Map<string, string> {
   const scripts = new Map<string, string>();
-
-  // Package init
-  scripts.set("__init__.py", scriptsInit);
-
-  // Common
-  scripts.set("common/__init__.py", commonInit);
-  scripts.set("common/paths.py", commonPaths);
-  scripts.set("common/developer.py", commonDeveloper);
-  scripts.set("common/git_context.py", commonGitContext);
-  scripts.set("common/task_queue.py", commonTaskQueue);
-  scripts.set("common/task_utils.py", commonTaskUtils);
-  scripts.set("common/active_task.py", commonActiveTask);
-  scripts.set("common/cli_adapter.py", commonCliAdapter);
-  scripts.set("common/config.py", commonConfig);
-  scripts.set("common/io.py", commonIo);
-  scripts.set("common/log.py", commonLog);
-  scripts.set("common/git.py", commonGit);
-  scripts.set("common/types.py", commonTypes);
-  scripts.set("common/tasks.py", commonTasks);
-  scripts.set("common/task_context.py", commonTaskContext);
-  scripts.set("common/task_store.py", commonTaskStore);
-  scripts.set("common/session_context.py", commonSessionContext);
-  scripts.set("common/packages_context.py", commonPackagesContext);
-  scripts.set("common/workflow_phase.py", commonWorkflowPhase);
-  scripts.set("common/devflow_config.py", commonDevFlowConfig);
-  scripts.set("common/safe_commit.py", commonSafeCommit);
-  scripts.set("common/trace.py", commonTrace);
-
-  // Main
-  scripts.set("get_developer.py", getDeveloperScript);
-  scripts.set("init_developer.py", initDeveloperScript);
-  scripts.set("task.py", taskScript);
-  scripts.set("get_context.py", getContextScript);
-  scripts.set("add_session.py", addSessionScript);
-  scripts.set("knowledge.py", knowledgeScript);
-
+  for (const scriptPath of SCRIPT_PATHS) {
+    scripts.set(scriptPath, readRuntimeTemplate(`scripts/${scriptPath}`));
+  }
   return scripts;
 }

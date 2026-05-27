@@ -1,0 +1,16 @@
+# 前端开发规范
+
+> 本目录记录本项目真实采用的前端开发约定。
+
+## 规范索引
+
+| 文档 | 说明 | 状态 |
+|---|---|---|
+| [目录结构](./directory-structure.md) | 页面、组件和模块布局 | 待填写 |
+| [组件规范](./component-guidelines.md) | 组件设计和 props 约定 | 待填写 |
+| [Hook 规范](./hook-guidelines.md) | 自定义 hook 和副作用 | 待填写 |
+| [状态管理](./state-management.md) | 本地和全局状态 | 待填写 |
+| [类型安全](./type-safety.md) | TypeScript 和 schema 约定 | 待填写 |
+| [质量规范](./quality-guidelines.md) | 测试、lint 和可访问性 | 待填写 |
+
+**Language**: 本项目文档使用中文。

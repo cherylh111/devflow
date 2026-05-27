@@ -6,15 +6,16 @@
  * platform's hooks directory.
  */
 
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { readdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readLocalizedTemplate } from "../language.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 function readTemplate(relativePath: string): string {
-  return readFileSync(join(__dirname, relativePath), "utf-8");
+  return readLocalizedTemplate(import.meta.url, relativePath);
 }
 
 export interface HookScript {

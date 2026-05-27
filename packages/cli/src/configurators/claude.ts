@@ -1,7 +1,8 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { AI_TOOLS } from "../types/ai-tools.js";
 import { getClaudeTemplatePath } from "../templates/extract.js";
+import { readLocalizedTemplateFile } from "../templates/language.js";
 import { ensureDir, writeFile } from "../utils/file-writer.js";
 import {
   resolvePlaceholders,
@@ -54,7 +55,7 @@ async function copyDirFiltered(
     if (stat.isDirectory()) {
       await copyDirFiltered(srcPath, destPath);
     } else {
-      let content = readFileSync(srcPath, "utf-8");
+      let content = readLocalizedTemplateFile(srcPath);
       if (entry === "settings.json") {
         content = resolvePlaceholders(content);
       }

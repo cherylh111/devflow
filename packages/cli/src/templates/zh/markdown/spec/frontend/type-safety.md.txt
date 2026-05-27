@@ -1,0 +1,3 @@
+# 类型安全
+
+记录 TypeScript、schema、边界解析和禁止使用 any 的规则。

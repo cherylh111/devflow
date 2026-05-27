@@ -1,0 +1,2 @@
+# DevFlow worktree configuration
+# 按需记录工作树相关配置。

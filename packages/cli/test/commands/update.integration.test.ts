@@ -37,6 +37,7 @@ import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
 import { computeHash } from "../../src/utils/template-hash.js";
 import { workflowMdTemplate } from "../../src/templates/devflow/index.js";
 import { replacePythonCommandLiterals } from "../../src/configurators/shared.js";
+import { setTemplateLanguage } from "../../src/templates/language.js";
 
 // A managed template file that update always handles (Python script)
 const MANAGED_FILE = `${PATHS.SCRIPTS}/get_context.py`;
@@ -157,6 +158,7 @@ describe("update() integration", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    setTemplateLanguage("en");
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -217,6 +219,24 @@ describe("update() integration", () => {
     // No backup directory created
     const entries = fs.readdirSync(path.join(tmpDir, DIR_NAMES.WORKFLOW));
     expect(entries.filter((e) => e.startsWith(".backup-")).length).toBe(0);
+  });
+
+  it("uses project language config when updating managed templates", async () => {
+    await setupProject();
+
+    const configPath = projectFile(`${DIR_NAMES.WORKFLOW}/config.yaml`);
+    fs.writeFileSync(
+      configPath,
+      `${fs.readFileSync(configPath, "utf-8").trimEnd()}\n\nlanguage: zh\n`,
+      "utf-8",
+    );
+
+    await update({ force: true });
+
+    expect(readProjectFile(FILE_NAMES.AGENTS)).toContain("Trellis 使用说明");
+    expect(readProjectFile(".claude/agents/devflow-implement.md")).toContain(
+      "实现 Agent",
+    );
   });
 
   it("#2 dry run makes no file changes even when changes exist", async () => {
@@ -567,9 +587,7 @@ describe("update() integration", () => {
     expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).toContain(
       "[codex-inline, Kilo, Antigravity, Windsurf]",
     );
-    expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).not.toContain(
-      "[Codex]",
-    );
+    expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).not.toContain("[Codex]");
 
     // Version-specific additive config sections still apply to a user-modified
     // config.yaml, while preserving the local content around the append.
@@ -582,9 +600,7 @@ describe("update() integration", () => {
 
     // User-modified template files are skipped under skipAll and their hashes
     // are not rewritten to bless the local modification as a template.
-    expect(readProjectFile(userModifiedScript)).toBe(
-      userModifiedScriptContent,
-    );
+    expect(readProjectFile(userModifiedScript)).toBe(userModifiedScriptContent);
     const hashes = readHashesV2(hashFilePath());
     expect(hashes[PATHS.WORKFLOW_GUIDE_FILE]).toBe(
       computeHash(expectedWorkflow),

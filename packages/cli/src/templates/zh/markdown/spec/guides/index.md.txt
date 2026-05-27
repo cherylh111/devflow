@@ -1,0 +1,10 @@
+# 思考指南
+
+这些指南帮助你在编码前检查跨层数据流、复用机会和边界风险。
+
+## 可用指南
+
+- [代码复用思考指南](./code-reuse-thinking-guide.md)
+- [跨层思考指南](./cross-layer-thinking-guide.md)
+- [跨平台思考指南](./cross-platform-thinking-guide.md)
+- [经验沉淀](./learnings.md)

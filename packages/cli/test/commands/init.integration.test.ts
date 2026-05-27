@@ -32,6 +32,7 @@ import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
 import { collectPlatformTemplates } from "../../src/configurators/index.js";
 import { computeHash } from "../../src/utils/template-hash.js";
 import { execSync } from "node:child_process";
+import { setTemplateLanguage } from "../../src/templates/language.js";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
@@ -58,6 +59,7 @@ describe("init() integration", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    setTemplateLanguage("en");
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -121,6 +123,37 @@ describe("init() integration", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  it("creates Chinese templates when --lang zh is selected", async () => {
+    await init({ yes: true, codex: true, lang: "zh" });
+
+    const config = fs.readFileSync(
+      path.join(tmpDir, DIR_NAMES.WORKFLOW, "config.yaml"),
+      "utf-8",
+    );
+    expect(config).toContain("language: zh");
+
+    const agentsMd = fs.readFileSync(path.join(tmpDir, "AGENTS.md"), "utf-8");
+    expect(agentsMd).toContain("Trellis 使用说明");
+
+    const specIndex = fs.readFileSync(
+      path.join(tmpDir, PATHS.SPEC, "backend", "index.md"),
+      "utf-8",
+    );
+    expect(specIndex).toContain("后端开发规范");
+
+    const codexAgent = fs.readFileSync(
+      path.join(tmpDir, ".codex", "agents", "devflow-implement.toml"),
+      "utf-8",
+    );
+    expect(codexAgent).toContain("实现 Agent");
+
+    const sharedSkill = fs.readFileSync(
+      path.join(tmpDir, ".agents", "skills", "devflow-before-dev", "SKILL.md"),
+      "utf-8",
+    );
+    expect(sharedSkill).toContain("写代码前");
   });
 
   it("#1b does not print the promotional pain-point block", async () => {
