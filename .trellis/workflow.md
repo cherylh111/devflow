@@ -193,7 +193,7 @@ Complex task: ask the user if you can create a Trellis task and enter the planni
 Load `trellis-brainstorm`; stay in planning.
 Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Sub-agent mode: curate `implement.jsonl` and `check.jsonl` as spec/research manifests before start.
+Sub-agent mode: curate `implement.jsonl` and `check.jsonl` as spec/research/knowledge manifests before start.
 [/workflow-state:planning]
 
 <!-- Per-turn breadcrumb: shown throughout Phase 1 when codex.dispatch_mode=inline.
@@ -385,11 +385,20 @@ Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the rig
 
 **Location**: `{TASK_DIR}/implement.jsonl` and `{TASK_DIR}/check.jsonl` (already exist).
 
-**Format**: one JSON object per line — `{"file": "<path>", "reason": "<why>"}`. Paths are repo-root relative.
+**Format**: one JSON object per line. Supported context entries:
+
+```jsonl
+{"file": "<repo-relative path>", "reason": "<why>"}
+{"file": "<repo-relative dir>/", "type": "directory", "reason": "<why>"}
+{"knowledge": "<entry-id>", "type": "knowledge", "reason": "<why>"}
+```
+
+`file` paths are repo-root relative. `knowledge` ids are structured entries searchable via `python ./.trellis/scripts/knowledge.py search`, including wiki entries under `.trellis/spec/wiki/` and learnings under `.trellis/spec/guides/learnings.md`.
 
 **What to put in**:
 - **Spec files** — `.trellis/spec/<package>/<layer>/index.md` and any specific guideline files (`error-handling.md`, `conventions.md`, etc.) relevant to this task
 - **Research files** — `{TASK_DIR}/research/*.md` that the sub-agent will need to consult
+- **Knowledge entries** — specific reusable learnings, wiki notes, knowhow references, or spec entries that should be injected without loading an entire markdown file
 
 **What NOT to put in**:
 - Code files (`src/**`, `packages/**/*.ts`, etc.) — those are read by the sub-agent during implementation, not pre-registered here
@@ -399,15 +408,17 @@ Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the rig
 - `implement.jsonl` → specs + research the implement sub-agent needs to write code correctly
 - `check.jsonl` → specs for the check sub-agent (quality guidelines, check conventions, same research if needed)
 
-These manifests do not replace `implement.md`. `implement.md` is the human-readable execution plan for a complex task; jsonl files only list context files to inject or load.
+These manifests do not replace `implement.md`. `implement.md` is the human-readable execution plan for a complex task; jsonl files only list context files or knowledge entries to inject or load.
 
 **How to discover relevant specs**:
 
 ```bash
 python ./.trellis/scripts/get_context.py --mode packages
+python ./.trellis/scripts/knowledge.py search "<query>"
+python ./.trellis/scripts/knowledge.py load <id>
 ```
 
-Lists every package + its spec layers with paths. Pick the entries that match this task's domain.
+The context script lists every package + its spec layers with paths. `knowledge.py search` finds focused structured entries; `knowledge.py load` shows the exact content before you add its id to JSONL.
 
 **How to append entries**:
 
@@ -416,6 +427,8 @@ Either edit the jsonl file directly in your editor, or use:
 ```bash
 python ./.trellis/scripts/task.py add-context "$TASK_DIR" implement "<path>" "<reason>"
 python ./.trellis/scripts/task.py add-context "$TASK_DIR" check "<path>" "<reason>"
+python ./.trellis/scripts/task.py add-context "$TASK_DIR" implement "knowledge:<id>" "<reason>"
+python ./.trellis/scripts/task.py add-context "$TASK_DIR" check "wiki:<id>" "<reason>"
 ```
 
 Delete the seed `_example` line once real entries exist (optional — it's skipped automatically by consumers).
@@ -478,7 +491,7 @@ Spawn the implement sub-agent:
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `trellis-implement` sub-agent and must implement directly, not spawn another `trellis-implement` / `trellis-check`.
 
 The platform hook/plugin auto-handles:
-- Reads `implement.jsonl` and injects referenced spec/research files into the agent prompt
+- Reads `implement.jsonl` and injects referenced spec/research files and knowledge entries into the agent prompt
 - Injects `prd.md`, `design.md` if present, and `implement.md` if present
 
 [/Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
@@ -493,7 +506,7 @@ Spawn the implement sub-agent:
 
 The Codex sub-agent definition auto-handles the context load requirement:
 - Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
-- Reads `implement.jsonl` and requires the agent to load each referenced spec/research file before coding
+- Reads `implement.jsonl` and requires the agent to load each referenced spec/research file or knowledge entry before coding
 
 [/codex-sub-agent]
 
@@ -506,7 +519,7 @@ Spawn the implement sub-agent:
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `trellis-implement` sub-agent and must implement directly, not spawn another `trellis-implement` / `trellis-check`.
 
 The platform prelude auto-handles the context load requirement:
-- Reads `implement.jsonl` and injects referenced spec/research files into the agent prompt
+- Reads `implement.jsonl` and injects referenced spec/research files and knowledge entries into the agent prompt
 - Injects `prd.md`, `design.md` if present, and `implement.md` if present
 
 [/Kiro]

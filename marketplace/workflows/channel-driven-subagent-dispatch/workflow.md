@@ -85,7 +85,7 @@ Phase 3: Finish  -> verify, update spec, commit, and wrap up
 - `prd.md` — requirements, constraints, and acceptance criteria.
 - `design.md` — technical design for complex tasks.
 - `implement.md` — execution plan, validation commands, review gates, and rollback points for complex tasks.
-- `implement.jsonl` / `check.jsonl` — worker context manifests. Put spec and research files here, not code files.
+- `implement.jsonl` / `check.jsonl` — worker context manifests. Put spec/research files and focused knowledge entries here, not code files.
 
 Lightweight tasks may be PRD-only. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
 
@@ -112,7 +112,7 @@ Complex task: ask the user if you can create a DevFlow task and enter the planni
 Load `devflow-brainstorm`; stay in planning.
 Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Channel-worker mode: curate `implement.jsonl` and `check.jsonl` as spec/research manifests before start.
+Channel-worker mode: curate `implement.jsonl` and `check.jsonl` as spec/research/knowledge manifests before start.
 [/workflow-state:planning]
 
 [workflow-state:planning-inline]
@@ -139,7 +139,7 @@ Worker context order: jsonl entries -> `prd.md` -> `design.md if present` -> `im
 [workflow-state:in_progress-inline]
 Flow: `devflow-before-dev` -> edit -> channel-driven `check` worker -> validation -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
 Inline implementation is allowed only when the user asked for it or the change is too small to justify a worker. After editing, prefer `devflow channel spawn --agent check` for independent review.
-Read context before editing: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
+Read context before editing: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research/knowledge loaded by skills.
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
@@ -220,8 +220,8 @@ When research is needed, write results to `{TASK_DIR}/research/`. Research files
 
 Curate worker context manifests:
 
-- `implement.jsonl` — specs and research needed by the implementation worker.
-- `check.jsonl` — quality specs, test specs, and research needed by the check worker.
+- `implement.jsonl` — specs, research, and knowledge entries needed by the implementation worker.
+- `check.jsonl` — quality specs, test specs, research, and knowledge entries needed by the check worker.
 
 Do not put code files in jsonl. Workers read code during execution.
 

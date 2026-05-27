@@ -8,8 +8,8 @@ Trellis context injection aims to make AI read the right files at the right time
 | --- | --- | --- |
 | session context | `.trellis/scripts/get_context.py` | Current developer, git status, active task, active tasks, journal, packages. |
 | workflow context | `.trellis/workflow.md` | Current Trellis flow and next action. |
-| spec context | `.trellis/spec/` + task JSONL | Specs that must be followed during implementation/checking. |
-| task context | `.trellis/tasks/<task>/prd.md`, `design.md`, `implement.md`, `research/` | Current task requirements, design, execution plan, and research. |
+| spec context | `.trellis/spec/` + task JSONL | Specs and structured knowledge that must be followed during implementation/checking. |
+| task context | `.trellis/tasks/<task>/prd.md`, `design.md`, `implement.md`, `research/` | Current task requirements, design, execution plan, research, and selected knowledge entries. |
 | platform context | Platform hooks/settings/agents | Lets different AI tools read the files above through their own mechanisms. |
 
 ## session-start
@@ -34,10 +34,10 @@ If the user wants to change "what the AI should do next in a given state," edit 
 
 Implement and check agents need task context. Trellis has two loading modes:
 
-1. **hook push**: a platform hook injects jsonl-referenced files plus `prd.md`, `design.md` if present, and `implement.md` if present before the agent starts.
-2. **agent pull**: the agent definition instructs the agent to read the active task, jsonl context, and task artifacts after startup.
+1. **hook push**: a platform hook injects jsonl-referenced files/knowledge plus `prd.md`, `design.md` if present, and `implement.md` if present before the agent starts.
+2. **agent pull**: the agent definition instructs the agent to read the active task, jsonl context, knowledge entries, and task artifacts after startup.
 
-In both modes, JSONL files in the task directory are the manifest for spec/research context. Task artifacts are read separately in this order: `prd.md` -> `design.md if present` -> `implement.md if present`.
+In both modes, JSONL files in the task directory are the manifest for spec/research/knowledge context. Task artifacts are read separately in this order: `prd.md` -> `design.md if present` -> `implement.md if present`.
 
 ## JSONL Reading Rules
 
@@ -45,9 +45,11 @@ In both modes, JSONL files in the task directory are the manifest for spec/resea
 
 ```jsonl
 {"file": ".trellis/spec/backend/index.md", "reason": "Backend rules"}
+{"file": ".trellis/spec/backend/", "type": "directory", "reason": "Backend docs"}
+{"knowledge": "DFL-20260526-example", "type": "knowledge", "reason": "Relevant learning"}
 ```
 
-Readers should skip seed rows without a `file` field. When configuring JSONL, the AI should include only spec/research files, not pre-register code files that will be modified.
+Readers should skip seed rows without a context field. `file` entries load repo-relative files/directories. `knowledge`, `wiki`, or `{"type":"knowledge","id":"..."}` entries load focused structured knowledge by id from `.trellis/spec`, `.trellis/tasks`, or `.trellis/workspace`. When configuring JSONL, the AI should include only spec/research/knowledge context, not pre-register code files that will be modified.
 
 ## Active Task And Context Key
 
@@ -65,4 +67,4 @@ If shell commands cannot see the same context key, `task.py current --source` ma
 | Change JSONL validation/display | `.trellis/scripts/common/task_context.py`. |
 | Change active task resolution | `.trellis/scripts/common/active_task.py`. |
 
-When modifying context injection, verify two things: new sessions can see the correct task, and sub-agents can see the correct task artifacts/spec/research.
+When modifying context injection, verify two things: new sessions can see the correct task, and sub-agents can see the correct task artifacts/spec/research/knowledge.

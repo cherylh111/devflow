@@ -10,18 +10,48 @@
  */
 
 import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { AI_TOOLS } from "../src/types/ai-tools.js";
 import {
   PLATFORM_IDS,
 } from "../src/configurators/index.js";
 
 const COMMANDER_RESERVED_FLAGS = ["help", "version", "V", "h"];
+const __filename = fileURLToPath(import.meta.url);
+const CLI_ROOT = path.join(path.dirname(__filename), "..");
 
 // =============================================================================
 // Internal Consistency (SQLite-style invariant checks)
 // =============================================================================
 
 describe("registry internal consistency", () => {
+  it("all command registrars are wired into the CLI entrypoint", () => {
+    const commandsDir = path.join(CLI_ROOT, "src", "commands");
+    const cliEntrypoint = fs.readFileSync(
+      path.join(CLI_ROOT, "src", "cli", "index.ts"),
+      "utf-8",
+    );
+
+    for (const entry of fs.readdirSync(commandsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+
+      const indexPath = path.join(commandsDir, entry.name, "index.ts");
+      if (!fs.existsSync(indexPath)) continue;
+
+      const source = fs.readFileSync(indexPath, "utf-8");
+      const registrarNames = [...source.matchAll(
+        /export function (register[A-Za-z0-9]+Command)\(/g,
+      )].map((match) => match[1]);
+
+      for (const registrarName of registrarNames) {
+        expect(cliEntrypoint).toContain(registrarName);
+        expect(cliEntrypoint).toContain(`${registrarName}(program)`);
+      }
+    }
+  });
+
   it("PLATFORM_IDS length matches AI_TOOLS keys", () => {
     expect(PLATFORM_IDS.length).toBe(Object.keys(AI_TOOLS).length);
   });

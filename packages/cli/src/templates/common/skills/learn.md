@@ -1,22 +1,17 @@
 Use this skill when a task produces reusable knowledge that should remain available after the conversation is compacted.
 
-DevFlow stores lightweight learnings as `<spec-entry>` blocks in `.devflow/spec/guides/learnings.md`. The CLI owns the file format and search behavior; this skill is only the workflow wrapper.
+DevFlow stores lightweight learnings as `<spec-entry>` blocks in `.devflow/spec/guides/learnings.md`. Installed projects use the local Python script for routine knowledge capture, search, and load; the global `devflow` CLI is only needed for advanced maintenance commands not listed here.
 
 ## Capture
 
-Use `devflow learn` for observations that are useful later but are not yet stable enough to become a mandatory coding rule. `devflow knowledge learn` is the equivalent grouped form.
+Use the installed Python script for observations that are useful later but are not yet stable enough to become a mandatory coding rule.
 
 ```bash
-devflow learn "<insight>" --category learning --keywords keyword1,keyword2 --task current
-devflow learn tip "<small useful note>" --keywords keyword1,keyword2
-devflow learn list --keywords keyword1
-devflow learn search "<query>"
-devflow learn show <id>
-devflow spec add --layer <layer> --file <file.md> --title "<title>" --body "<rule>" --keywords keyword1,keyword2
-devflow knowhow add --type recipe --title "<title>" --body "<markdown>" --keywords keyword1,keyword2
-devflow knowhow list --type recipe
-devflow knowhow search "<query>"
-devflow knowhow get <id>
+python3 ./.devflow/scripts/knowledge.py learn "<insight>" --category learning --keywords keyword1,keyword2 --task current
+python3 ./.devflow/scripts/knowledge.py learn "<small useful note>" --category tip --keywords keyword1,keyword2
+python3 ./.devflow/scripts/knowledge.py list --keyword keyword1
+python3 ./.devflow/scripts/knowledge.py search "<query>"
+python3 ./.devflow/scripts/knowledge.py show <id>
 ```
 
 Good candidates:
@@ -26,42 +21,36 @@ Good candidates:
 - A project-specific caveat that should be searchable later
 - A compact lesson that does not belong in a stricter package/layer spec yet
 - A hard implementation or review rule that belongs in a specific `.devflow/spec/` markdown file
-- A longer recipe, reference, decision, template, asset, or session handoff that belongs in `devflow knowhow`
+- A longer recipe, reference, decision, template, asset, or session handoff that belongs in structured knowledge
 
-If the learning is a hard convention agents must obey during implementation, use `devflow-update-spec` or `devflow spec add` to write it into the relevant `.devflow/spec/` guide.
+If the learning is a hard convention agents must obey during implementation, use `devflow-update-spec` or edit the relevant `.devflow/spec/` guide directly. The local script is for reusable knowledge entries, not broad spec rewrites.
 
 ## Query
 
 Use these commands before relying on memory:
 
 ```bash
-devflow knowledge list --keyword <word>
-devflow knowledge search "<query>"
-devflow knowledge show <id>
-devflow knowledge health
-devflow knowledge stats
-devflow spec init
-devflow spec list
-devflow spec status
-devflow spec --category <name> --keyword <word>
-devflow knowledge list --type knowhow
-devflow knowledge search "<query>" --type knowhow
-devflow wiki create --type note --slug <slug> --title "<title>" --body "<body>"
-devflow wiki update <id> --title "<title>" --body "<body>"
-devflow wiki append <container-id> --title "<title>" --body "<body>"
-devflow wiki remove-entry <id>
-devflow wiki delete <id>
-devflow wiki graph
-devflow wiki backlinks <id>
-devflow wiki forward <id>
-devflow wiki hubs
-devflow wiki graph-health
-devflow wiki connect --dry-run --report
-devflow wiki connect --fix --report --learn
-devflow wiki cleanup
-devflow wiki cleanup --fix --report
-devflow wiki digest <topic> --report --learn
-devflow wiki digest <topic> --create-issues --report --learn
+python3 ./.devflow/scripts/knowledge.py list --keyword <word>
+python3 ./.devflow/scripts/knowledge.py search "<query>"
+python3 ./.devflow/scripts/knowledge.py show <id>
+python3 ./.devflow/scripts/knowledge.py load <id>
+python3 ./.devflow/scripts/knowledge.py health
+python3 ./.devflow/scripts/knowledge.py stats
+python3 ./.devflow/scripts/knowledge.py list --type knowhow
+python3 ./.devflow/scripts/knowledge.py search "<query>" --type knowhow
 ```
 
-Prefer focused searches over loading whole files into context. Use `health` when malformed entries or duplicate IDs could explain missing search results, use `devflow knowhow add` for longer reusable recipes/references/decisions/templates, use `wiki create/update/append/remove-entry/delete` for deliberate structured knowledge edits, use the `wiki` graph commands when you need to inspect relationships between entries, run `wiki connect --dry-run` before `wiki connect --fix` applies `related` links to structured entries, run `wiki cleanup --fix` only to remove broken structured `related` metadata, use `wiki digest --report` when a task needs a persisted synthesis under its `research/` directory, add `--create-issues` when digest gaps should become searchable `issue` entries under `.devflow/spec/wiki/issue/`, and add `--learn` when connect or digest synthesis should be recorded as a reusable learning.
+Prefer focused searches over loading whole files into context. Use `health` when malformed entries or duplicate IDs could explain missing search results. Advanced wiki CRUD, graph connection, cleanup, digest, and spec-add operations are CLI-only maintenance surfaces; use them deliberately only when the installed Python script is insufficient.
+
+## Inject Into Tasks
+
+When a search result is required context for an implementation or check sub-agent, add the entry id to the task JSONL manifest instead of copying the whole markdown file:
+
+```bash
+python3 ./.devflow/scripts/knowledge.py search "<query>"
+python3 ./.devflow/scripts/knowledge.py load <id>
+python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "knowledge:<id>" "<reason>"
+python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "knowledge:<id>" "<reason>"
+```
+
+Use `wiki:<id>` as an equivalent shorthand when the selected entry came from wiki knowledge. Hook-based platforms inject these entries automatically; pull-based platforms must run `python3 ./.devflow/scripts/knowledge.py load <id>` for each JSONL knowledge entry before continuing.

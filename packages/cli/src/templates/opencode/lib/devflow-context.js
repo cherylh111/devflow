@@ -310,11 +310,76 @@ export class DevFlowContext {
     return results
   }
 
+  readKnowledgeEntry(id) {
+    const roots = [
+      ".devflow/spec",
+      ".devflow/tasks",
+      ".devflow/workspace",
+    ]
+
+    for (const root of roots) {
+      const rootFull = join(this.directory, root)
+      if (!existsSync(rootFull)) continue
+      const found = this.findMarkdownKnowledgeEntry(root, id)
+      if (found) return found
+    }
+    return null
+  }
+
+  findMarkdownKnowledgeEntry(relativeDir, id) {
+    const fullDir = join(this.directory, relativeDir)
+    let entries
+    try {
+      entries = readdirSync(fullDir, { withFileTypes: true })
+    } catch {
+      return null
+    }
+
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const relativePath = join(relativeDir, entry.name).replace(/\\/g, "/")
+      if (entry.isDirectory()) {
+        const found = this.findMarkdownKnowledgeEntry(relativePath, id)
+        if (found) return found
+        continue
+      }
+      if (!entry.isFile() || !entry.name.endsWith(".md")) continue
+
+      const content = this.readProjectFile(relativePath)
+      if (!content) continue
+      if (`file:${relativePath}` === id) {
+        return {
+          path: `knowledge:${id}`,
+          content: `Source: ${relativePath}:1\n\n${content.trim()}`,
+        }
+      }
+
+      const specEntry = this.extractSpecEntry(content, id)
+      if (specEntry) {
+        return {
+          path: `knowledge:${id}`,
+          content: `Source: ${relativePath}\n\n${specEntry.trim()}`,
+        }
+      }
+    }
+    return null
+  }
+
+  extractSpecEntry(content, id) {
+    const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const pattern = new RegExp(
+      `<spec-entry\\b(?=[^>]*\\bid=["']${escaped}["'])[^>]*>[\\s\\S]*?<\\/spec-entry>`,
+      "i",
+    )
+    const match = content.match(pattern)
+    return match ? match[0] : null
+  }
+
   /**
-   * Read a JSONL file and load referenced files/directories
+   * Read a JSONL file and load referenced files/directories/knowledge entries.
    * Supports:
    *   {"file": "path/to/file.md", "reason": "..."}
    *   {"file": "path/to/dir/", "type": "directory", "reason": "..."}
+   *   {"knowledge": "entry-id", "type": "knowledge", "reason": "..."}
    */
   readJsonlWithFiles(jsonlPath) {
     const results = []
@@ -326,7 +391,14 @@ export class DevFlowContext {
       try {
         const item = JSON.parse(line)
         const file = item.file || item.path
+        const knowledge = item.knowledge || item.wiki || (item.type === "knowledge" ? item.id : null)
         const entryType = item.type || "file"
+
+        if (knowledge) {
+          const entry = this.readKnowledgeEntry(String(knowledge))
+          if (entry) results.push(entry)
+          continue
+        }
 
         if (!file) continue
 

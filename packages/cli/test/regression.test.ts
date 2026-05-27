@@ -3117,6 +3117,127 @@ print(len(entries))
     expect(result.trim()).toBe("0");
   });
 
+  it("[knowledge-context] inject-subagent-context.py loads knowledge entries from JSONL", () => {
+    const hookContent = getSharedHookScripts().find(
+      (h) => h.name === "inject-subagent-context.py",
+    )?.content;
+    expect(hookContent).toBeDefined();
+    const hookPath = path.join(tmpDir, "hook.py");
+    fs.writeFileSync(hookPath, hookContent as string, "utf-8");
+
+    const repoDir = path.join(tmpDir, "repo");
+    fs.mkdirSync(path.join(repoDir, ".devflow", "spec", "guides"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(repoDir, ".devflow", "spec", "guides", "learnings.md"),
+      [
+        "# Learnings",
+        "",
+        '<spec-entry id="KNOW-HOOK-1" type="learning" keywords="hook">',
+        "Hook knowledge body marker.",
+        "</spec-entry>",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+    fs.writeFileSync(
+      path.join(repoDir, "implement.jsonl"),
+      JSON.stringify({
+        knowledge: "KNOW-HOOK-1",
+        type: "knowledge",
+        reason: "test",
+      }) + "\n",
+      "utf-8",
+    );
+
+    const probeScript = `
+import importlib.util
+spec = importlib.util.spec_from_file_location("h", ${JSON.stringify(hookPath)})
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+entries = mod.read_jsonl_entries(${JSON.stringify(repoDir)}, "implement.jsonl")
+print(entries[0][0])
+print(entries[0][1])
+`;
+    const probePath = path.join(tmpDir, "probe-knowledge.py");
+    fs.writeFileSync(probePath, probeScript, "utf-8");
+    const result = execSync(`${pythonCmd} ${JSON.stringify(probePath)}`, {
+      cwd: tmpDir,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    expect(result).toContain("knowledge:KNOW-HOOK-1");
+    expect(result).toContain("Source: .devflow/spec/guides/learnings.md");
+    expect(result).toContain("Hook knowledge body marker.");
+  });
+
+  it("[knowledge-context] task.py add-context writes and validates knowledge entries", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const relTaskDir = ".devflow/tasks/issue-106";
+    writeProjectFile(path.join("src", "example.ts"), "export const ok = true;\n");
+    writeProjectFile(
+      path.join(".devflow", "spec", "guides", "learnings.md"),
+      [
+        "# Learnings",
+        "",
+        '<spec-entry id="KNOW-TASK-1" type="learning" keywords="task">',
+        "Task context knowledge marker.",
+        "</spec-entry>",
+        "",
+      ].join("\n"),
+    );
+    writeProjectFile(
+      path.join(".devflow", "tasks", "issue-106", "check.jsonl"),
+      "",
+    );
+
+    execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} add-context ${relTaskDir} implement knowledge:KNOW-TASK-1 "required learning"`,
+      { cwd: tmpDir, encoding: "utf-8" },
+    );
+
+    const implementJsonl = fs.readFileSync(
+      path.join(tmpDir, ".devflow", "tasks", "issue-106", "implement.jsonl"),
+      "utf-8",
+    );
+    expect(implementJsonl).toContain('"knowledge": "KNOW-TASK-1"');
+    expect(implementJsonl).toContain('"type": "knowledge"');
+
+    const listOutput = execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} list-context ${relTaskDir}`,
+      { cwd: tmpDir, encoding: "utf-8" },
+    );
+    expect(listOutput).toContain("[KNOWLEDGE] KNOW-TASK-1");
+
+    const validateOutput = execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} validate ${relTaskDir}`,
+      { cwd: tmpDir, encoding: "utf-8" },
+    );
+    expect(validateOutput).toContain("All validations passed");
+
+    fs.writeFileSync(
+      path.join(tmpDir, ".devflow", "tasks", "issue-106", "check.jsonl"),
+      JSON.stringify({ wiki: "MISSING-KNOWLEDGE", reason: "missing" }) + "\n",
+      "utf-8",
+    );
+    let failed = false;
+    try {
+      execSync(
+        `${pythonCmd} ${JSON.stringify(taskScriptPath)} validate ${relTaskDir}`,
+        { cwd: tmpDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+      );
+    } catch (err) {
+      failed = true;
+      const e = err as { stdout?: string };
+      expect(e.stdout ?? "").toContain(
+        "Knowledge entry not found: MISSING-KNOWLEDGE",
+      );
+    }
+    expect(failed).toBe(true);
+  });
+
   it("[init-context-removal] task.py validate treats seed-only jsonl as 0 errors", () => {
     setupTaskRepo();
     fs.mkdirSync(path.join(tmpDir, ".claude"), { recursive: true });
@@ -5036,6 +5157,9 @@ describe("regression: class-2 platforms use pull-based sub-agent context", () =>
           const content = fs.readFileSync(path.join(tmpDir, file), "utf-8");
           expect(content).toContain("Required: Load DevFlow Context First");
           expect(content).toContain("task.py current --source");
+          expect(content).toContain(".devflow/scripts/knowledge.py load <id>");
+          expect(content).toContain('"knowledge"');
+          expect(content).toContain('"wiki"');
         }
       });
 

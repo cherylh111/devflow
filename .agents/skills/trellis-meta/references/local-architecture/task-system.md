@@ -24,8 +24,8 @@ The Trellis task system is stored entirely under `.trellis/tasks/` in the user p
 | `prd.md` | Requirements, constraints, and acceptance criteria. Lightweight tasks may be PRD-only. |
 | `design.md` | Technical design for complex tasks: boundaries, contracts, data flow, compatibility, tradeoffs. |
 | `implement.md` | Execution plan for complex tasks: ordered checklist, validation commands, review gates, rollback points. |
-| `implement.jsonl` | List of spec/research files the implement agent must read first. |
-| `check.jsonl` | List of spec/research files the check agent must read first. |
+| `implement.jsonl` | List of spec/research files and knowledge entries the implement agent must read first. |
+| `check.jsonl` | List of spec/research files and knowledge entries the check agent must read first. |
 | `research/` | Research artifacts. Complex findings should not live only in chat. |
 
 ## `task.json`
@@ -94,14 +94,15 @@ Format:
 ```jsonl
 {"file": ".trellis/spec/cli/backend/index.md", "reason": "Backend conventions"}
 {"file": ".trellis/tasks/04-28-example/research/api.md", "reason": "API research"}
+{"knowledge": "DFL-20260526-example", "type": "knowledge", "reason": "Relevant learning"}
 ```
 
 Rules:
 
-- Include spec and research files.
+- Include spec/research files and focused knowledge entries.
 - Do not include code files that are about to be modified.
 - Do not treat temporary conclusions in chat as the only context.
-- Seed rows have no `file` field; they only prompt the AI to fill in real entries.
+- Seed rows have no context field; they only prompt the AI to fill in real entries.
 
 ## Common Commands
 
@@ -110,6 +111,7 @@ python ./.trellis/scripts/task.py create "<title>" --slug <slug>
 python ./.trellis/scripts/task.py start <task>
 python ./.trellis/scripts/task.py current --source
 python ./.trellis/scripts/task.py add-context <task> implement <file> <reason>
+python ./.trellis/scripts/task.py add-context <task> implement knowledge:<id> <reason>
 python ./.trellis/scripts/task.py validate <task>
 python ./.trellis/scripts/task.py finish
 python ./.trellis/scripts/task.py archive <task>

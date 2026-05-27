@@ -17,6 +17,7 @@ import {
   taskScript,
   getContextScript,
   addSessionScript,
+  knowledgeScript,
   workflowMdTemplate,
   gitignoreTemplate,
   getAllScripts,
@@ -43,6 +44,7 @@ describe("devflow template constants", () => {
     taskScript,
     getContextScript,
     addSessionScript,
+    knowledgeScript,
     workflowMdTemplate,
     gitignoreTemplate,
   };
@@ -92,6 +94,7 @@ describe("devflow template constants", () => {
       commonActiveTask,
       getDeveloperScript,
       taskScript,
+      knowledgeScript,
     ];
     for (const script of pyScripts) {
       expect(
@@ -109,6 +112,15 @@ describe("devflow template constants", () => {
 
   it("workflowMdTemplate is markdown", () => {
     expect(workflowMdTemplate).toContain("#");
+  });
+
+  it("workflow.md documents knowledge entries in task context JSONL", () => {
+    const step = stepSection("1.3");
+    expect(step).toContain('"knowledge": "<entry-id>"');
+    expect(step).toContain("python3 ./.devflow/scripts/knowledge.py search");
+    expect(step).toContain("python3 ./.devflow/scripts/knowledge.py load <id>");
+    expect(step).toContain('add-context "$TASK_DIR" implement "knowledge:<id>"');
+    expect(step).toContain('add-context "$TASK_DIR" check "wiki:<id>"');
   });
 
   it("marketplace native workflow mirror matches the bundled workflow", () => {
@@ -245,6 +257,7 @@ describe("getAllScripts", () => {
     expect(scripts.has("common/active_task.py")).toBe(true);
     expect(scripts.has("common/trace.py")).toBe(true);
     expect(scripts.has("task.py")).toBe(true);
+    expect(scripts.has("knowledge.py")).toBe(true);
     expect(scripts.has("get_developer.py")).toBe(true);
   });
 
@@ -266,6 +279,7 @@ describe("getAllScripts", () => {
     expect(scripts.get("common/__init__.py")).toBe(commonInit);
     expect(scripts.get("common/trace.py")).toBe(commonTrace);
     expect(scripts.get("task.py")).toBe(taskScript);
+    expect(scripts.get("knowledge.py")).toBe(knowledgeScript);
   });
 
   it("does not contain multi_agent entries", () => {

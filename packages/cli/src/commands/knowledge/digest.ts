@@ -385,7 +385,7 @@ function detectThemeGaps(
       theme: titleCase(theme),
       kind: "missing-perspective",
       detail: "Spec knowledge exists without linked implementation learnings",
-      suggestedAction: "Capture a devflow knowledge learn entry when the spec is applied.",
+      suggestedAction: "Capture a local knowledge.py learn entry when the spec is applied.",
     });
   }
   if (kinds.has("learning") && !kinds.has("spec")) {

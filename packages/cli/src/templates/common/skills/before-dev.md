@@ -16,6 +16,11 @@ Execute these steps:
    - Which package you're modifying (e.g., `cli/`, `docs-site/`)
    - What type of work (backend, frontend, unit-test, docs, etc.)
    - Any spec/research paths referenced by the task artifacts
+   - Any relevant structured knowledge found by focused search:
+     ```bash
+     python3 ./.devflow/scripts/knowledge.py search "<task topic>"
+     python3 ./.devflow/scripts/knowledge.py load <id>
+     ```
 
 4. **Read the spec index** for each relevant module:
    ```bash
@@ -30,6 +35,12 @@ Execute these steps:
    cat .devflow/spec/guides/index.md
    ```
 
-7. Understand the coding standards and patterns you need to follow, then proceed with your development plan.
+7. If a loaded knowledge entry is required for this task and sub-agents will run later, add it to the task context manifest:
+   ```bash
+   python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "knowledge:<id>" "<reason>"
+   python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "knowledge:<id>" "<reason>"
+   ```
+
+8. Understand the coding standards and patterns you need to follow, then proceed with your development plan.
 
 This step is **mandatory** before writing any code.

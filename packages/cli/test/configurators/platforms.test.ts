@@ -317,6 +317,9 @@ describe("configurePlatform", () => {
       if (needsPrelude) {
         expect(written).toContain("Required: Load DevFlow Context First");
         expect(written).toContain("task.py current --source");
+        expect(written).toContain(".devflow/scripts/knowledge.py load <id>");
+        expect(written).toContain('"knowledge"');
+        expect(written).toContain('"wiki"');
         // Original body must still be present (prepend, not replace)
         const originalBody = agent.content
           .split("developer_instructions")[1]

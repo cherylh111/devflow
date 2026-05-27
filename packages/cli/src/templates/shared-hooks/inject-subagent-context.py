@@ -28,6 +28,7 @@ warnings.filterwarnings("ignore")
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -187,27 +188,55 @@ def read_directory_contents(
     return results
 
 
+def read_knowledge_content(base_path: str, knowledge_id: str) -> tuple[str, str] | None:
+    """Read a structured knowledge entry by id from local markdown stores."""
+    base = Path(base_path)
+    for root in (
+        base / DIR_WORKFLOW / DIR_SPEC,
+        base / DIR_WORKFLOW / "tasks",
+        base / DIR_WORKFLOW / "workspace",
+    ):
+        if not root.is_dir():
+            continue
+        for file_path in sorted(root.rglob("*.md")):
+            try:
+                content = file_path.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            rel_path = file_path.relative_to(base).as_posix()
+            if f"file:{rel_path}" == knowledge_id:
+                return f"knowledge:{knowledge_id}", f"Source: {rel_path}:1\n\n{content.strip()}"
+
+            entry = extract_spec_entry(content, knowledge_id)
+            if entry:
+                return f"knowledge:{knowledge_id}", f"Source: {rel_path}\n\n{entry.strip()}"
+    return None
+
+
+def extract_spec_entry(content: str, knowledge_id: str) -> str | None:
+    escaped = re.escape(knowledge_id)
+    pattern = re.compile(
+        rf"<spec-entry\b(?=[^>]*\bid=[\"']{escaped}[\"'])[^>]*>[\s\S]*?</spec-entry>",
+        re.IGNORECASE,
+    )
+    match = pattern.search(content)
+    return match.group(0) if match else None
+
+
 def read_jsonl_entries(base_path: str, jsonl_path: str) -> list[tuple[str, str]]:
     """
-    Read all file/directory contents referenced in jsonl file
+    Read all file/directory/knowledge contents referenced in jsonl file.
 
     Schema:
         {"file": "path/to/file.md", "reason": "..."}
         {"file": "path/to/dir/", "type": "directory", "reason": "..."}
-        {"_example": "..."}          # seed row — skipped (no `file` field)
-
-    Rows without a ``file`` field (e.g. the self-describing seed line written
-    by ``task.py create`` before the agent has curated entries) are skipped
-    silently. If the resulting entry list is empty, a stderr warning is
-    emitted so the operator can debug missing context.
-
-    Returns:
-        [(path, content), ...]
+        {"knowledge": "entry-id", "type": "knowledge", "reason": "..."}
+        {"_example": "..."}          # seed row skipped (no context field)
     """
     full_path = os.path.join(base_path, jsonl_path)
     if not os.path.exists(full_path):
         print(
-            f"[inject-subagent-context] WARN: {jsonl_path} not found — "
+            f"[inject-subagent-context] WARN: {jsonl_path} not found - "
             f"sub-agent will receive only task artifacts",
             file=sys.stderr,
         )
@@ -224,19 +253,30 @@ def read_jsonl_entries(base_path: str, jsonl_path: str) -> list[tuple[str, str]]
                 try:
                     item = json.loads(line)
                     file_path = item.get("file") or item.get("path")
+                    knowledge_id = item.get("knowledge") or item.get("wiki")
                     entry_type = item.get("type", "file")
+                    if entry_type == "knowledge" and not knowledge_id:
+                        knowledge_id = item.get("id")
+
+                    if knowledge_id:
+                        saw_real_entry = True
+                        knowledge = read_knowledge_content(base_path, str(knowledge_id))
+                        if knowledge:
+                            results.append(knowledge)
+                        else:
+                            print(
+                                f"[inject-subagent-context] WARN: knowledge entry not found: {knowledge_id}",
+                                file=sys.stderr,
+                            )
+                        continue
 
                     if not file_path:
-                        # Seed / comment row — skip silently
                         continue
 
                     saw_real_entry = True
                     if entry_type == "directory":
-                        # Read all .md files in directory
-                        dir_contents = read_directory_contents(base_path, file_path)
-                        results.extend(dir_contents)
+                        results.extend(read_directory_contents(base_path, file_path))
                     else:
-                        # Read single file
                         content = read_file_content(base_path, file_path)
                         if content:
                             results.append((file_path, content))
@@ -248,15 +288,12 @@ def read_jsonl_entries(base_path: str, jsonl_path: str) -> list[tuple[str, str]]
     if not saw_real_entry:
         print(
             f"[inject-subagent-context] WARN: {jsonl_path} has no curated "
-            f"entries (only seed / empty) — sub-agent will receive only "
+            f"entries (only seed / empty) - sub-agent will receive only "
             f"task artifacts. See workflow.md planning artifact guidance.",
             file=sys.stderr,
         )
 
     return results
-
-
-
 
 def get_agent_context(repo_root: str, task_dir: str, agent_type: str) -> str:
     """
@@ -277,7 +314,7 @@ def get_implement_context(repo_root: str, task_dir: str) -> str:
     Complete context for Implement Agent
 
     Read order:
-    1. All files in implement.jsonl (spec/research manifests)
+    1. All files and knowledge entries in implement.jsonl
     2. prd.md (requirements)
     3. design.md if present (technical design)
     4. implement.md if present (execution plan)

@@ -132,8 +132,9 @@ _SUBAGENT_CONFIG_DIRS: tuple[str, ...] = (
 
 _SEED_EXAMPLE = (
     "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. "
-    "Put spec/research files only — no code paths. "
-    "Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. "
+    "You may also use {\"knowledge\": \"<id>\", \"type\": \"knowledge\", \"reason\": \"<why>\"}. "
+    "Put spec/research/knowledge context only — no code paths. "
+    "Run `python .trellis/scripts/get_context.py --mode packages` to list specs and `python .trellis/scripts/knowledge.py search <query>` to find knowledge. "
     "Delete this line once real entries are added."
 )
 
@@ -355,7 +356,7 @@ def cmd_create(args: argparse.Namespace) -> int:
     print("  - Complex task: add design.md and implement.md before task.py start", file=sys.stderr)
     if seeded_jsonl:
         print(
-            "  - Curate implement.jsonl / check.jsonl as spec/research manifests when sub-agents need context",
+            "  - Curate implement.jsonl / check.jsonl as spec/research/knowledge manifests when sub-agents need context",
             file=sys.stderr,
         )
     print("  - Use /trellis:continue or phase context to decide the next step", file=sys.stderr)

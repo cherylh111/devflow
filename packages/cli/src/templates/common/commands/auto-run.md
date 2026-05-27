@@ -94,7 +94,7 @@ Run the Phase 3.3 judgment:
 {{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase --step 3.3 --platform {{CLI_FLAG}}
 ```
 
-Capture reusable knowledge with `devflow-update-spec`, `devflow learn`, or wiki/knowhow commands when warranted. If there is nothing to record, state that conclusion briefly.
+Capture reusable knowledge with `devflow-update-spec`, `python3 ./.devflow/scripts/knowledge.py learn`, or local knowledge entries when warranted. If there is nothing to record, state that conclusion briefly.
 
 ### E. Commit Work
 

@@ -563,6 +563,51 @@ describe("opencode inject-subagent-context (issue #264)", () => {
     expect(output.args.prompt).toContain("Demo PRD");
   });
 
+  it("inlines JSONL-referenced knowledge content into the implement prompt", async () => {
+    const knowledgeDir = join(dir, ".devflow", "spec", "guides");
+    mkdirSync(knowledgeDir, { recursive: true });
+    writeFileSync(
+      join(knowledgeDir, "learnings.md"),
+      [
+        "# Learnings",
+        "",
+        '<spec-entry id="KNOW-OPENCODE-1" type="learning" keywords="opencode">',
+        "OpenCode knowledge marker.",
+        "</spec-entry>",
+        "",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(dir, ".devflow", "tasks", "demo-task", "implement.jsonl"),
+      JSON.stringify({
+        knowledge: "KNOW-OPENCODE-1",
+        type: "knowledge",
+        reason: "test",
+      }) + "\n",
+    );
+    writeSessionFile(dir, "opencode_sole", ".devflow/tasks/demo-task");
+
+    const output: TaskToolOutput = {
+      args: {
+        subagent_type: "devflow-implement",
+        prompt: "do the implementation",
+      },
+    };
+
+    await hooks["tool.execute.before"](
+      { tool: "task", sessionID: "stranger" },
+      output,
+    );
+
+    expect(output.args.prompt).toContain("<!-- devflow-hook-injected -->");
+    expect(output.args.prompt).toContain("=== knowledge:KNOW-OPENCODE-1 ===");
+    expect(output.args.prompt).toContain(
+      "Source: .devflow/spec/guides/learnings.md",
+    );
+    expect(output.args.prompt).toContain("OpenCode knowledge marker.");
+    expect(output.args.prompt).toContain("Demo PRD");
+  });
+
   it("mutates check prompt using Active task hint when runtime resolution fails", async () => {
     // No session file → both session lookup and single-session fallback miss.
     // Hint is the only resolver.

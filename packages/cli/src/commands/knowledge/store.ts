@@ -124,7 +124,7 @@ const MARKDOWN_EXT = ".md";
 export function learningScaffold(): string {
   return `# Project Learnings
 
-Append-only reusable insights captured by \`devflow knowledge learn\`.
+Append-only reusable insights captured by \`python3 ./.devflow/scripts/knowledge.py learn\`.
 
 Entries use closed \`&lt;spec-entry&gt;\` blocks so they can live inside normal
 markdown while still being searchable and loadable as structured knowledge.
