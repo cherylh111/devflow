@@ -131,6 +131,11 @@ In Trellis, command templates (e.g., `record-session.md`) exist in **multiple pl
 
 - [ ] Find all platforms with the same command: `find src/templates/*/commands/trellis/ -name "<command>.*"`
 - [ ] Update all platform copies (Markdown `.md` and TOML `.toml`)
+- [ ] If localized overlays exist under `src/templates/zh/`, keep each overlay
+      structurally aligned with the English source: same file path, line shape,
+      fenced code blocks, placeholder tokens, and heading levels. A shortened
+      translation silently replaces the full English runtime template during
+      install/update.
 - [ ] For Gemini TOML: adapt line continuations (`\\` vs `\`) and triple-quoted strings
 - [ ] Run `/trellis:check-cross-layer` to verify nothing was missed
 

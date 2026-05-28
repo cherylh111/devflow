@@ -1,2 +1,32 @@
+# 开发者身份（仅本地）
+.developer
+
+# 当前任务指针（每个开发者处理不同任务）
+.current-task
+
+# 会话 / 窗口作用域的 runtime state
 .runtime/
+
+# Ralph Loop 状态文件
+.ralph-state.json
+
+# Agent runtime 文件
+.agents/
+.agent-log
+.session-id
+
+# 任务目录 runtime 文件
+.plan-log
+
+# 原子更新临时文件
 *.tmp
+
+# 更新备份目录
+.backup-*
+
+# 冲突解决临时文件
+*.new
+
+# Python 缓存
+**/__pycache__/
+**/*.pyc

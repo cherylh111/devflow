@@ -1,25 +1,56 @@
-# 捕获可复用知识
+当任务产生了可复用知识，且这些知识应在对话压缩后继续可用时，使用此 skill。
 
-当一次实现、调试、评审或讨论产生了未来值得搜索的经验时，记录为项目知识。
+DevFlow 会把轻量学习内容以 `<spec-entry>` block 形式存入 `.devflow/spec/guides/learnings.md`。已安装项目使用本地 Python 脚本完成常规知识捕获、搜索和加载；全局 `devflow` CLI 只在需要这里未列出的高级维护命令时使用。
 
-适合记录：
+## 捕获
 
-- 非显而易见的 bug 根因
-- 工具链、平台或环境限制
-- 重要设计决策及取舍
-- 可复用的排查步骤
-- 某个代码区域的稳定约定
+对于以后有用、但尚不足以成为强制编码规则的观察，使用已安装的 Python 脚本记录。
 
-不适合记录：
+```bash
+python3 ./.devflow/scripts/knowledge.py learn "<insight>" --category learning --keywords keyword1,keyword2 --task current
+python3 ./.devflow/scripts/knowledge.py learn "<small useful note>" --category tip --keywords keyword1,keyword2
+python3 ./.devflow/scripts/knowledge.py list --keyword keyword1
+python3 ./.devflow/scripts/knowledge.py search "<query>"
+python3 ./.devflow/scripts/knowledge.py show <id>
+```
 
-- 一次性状态更新
-- 尚未验证的猜测
-- 与项目无关的通用常识
+适合记录的内容：
 
-建议流程：
+- 实现或调试期间发现的坑
+- 反复出现的工作流决策
+- 后续应能搜索到的项目特定注意事项
+- 尚不适合进入更严格 package/layer spec 的精简经验
+- 应进入特定 `.devflow/spec/` markdown 文件的硬性实现或评审规则
+- 应进入结构化知识的较长 recipe、reference、decision、template、asset 或 session handoff
 
-1. 用一句话写清核心知识。
-2. 记录证据：文件路径、命令输出、失败现象或决策背景。
-3. 说明影响：未来什么时候应该想起这条知识。
-4. 如果知识属于稳定编码约定，考虑同步到 `.devflow/spec/`。
-5. 如果有 `devflow knowledge learn` 可用，优先用 CLI 记录结构化条目。
+如果学习内容是 agent 在实现期间必须遵守的硬性约定，使用 `devflow-update-spec` 或直接编辑相关 `.devflow/spec/` guide。本地脚本用于可复用知识条目，不用于大范围改写 spec。
+
+## 查询
+
+依赖记忆前先使用这些命令：
+
+```bash
+python3 ./.devflow/scripts/knowledge.py list --keyword <word>
+python3 ./.devflow/scripts/knowledge.py search "<query>"
+python3 ./.devflow/scripts/knowledge.py show <id>
+python3 ./.devflow/scripts/knowledge.py load <id>
+python3 ./.devflow/scripts/knowledge.py health
+python3 ./.devflow/scripts/knowledge.py stats
+python3 ./.devflow/scripts/knowledge.py list --type knowhow
+python3 ./.devflow/scripts/knowledge.py search "<query>" --type knowhow
+```
+
+优先做聚焦搜索，而不是把整份文件加载进上下文。当条目格式错误或重复 ID 可能导致搜索结果缺失时，使用 `health`。高级 wiki CRUD、graph connection、cleanup、digest 和 spec-add 操作是仅 CLI 提供的维护界面；只有在已安装 Python 脚本不够用时才谨慎使用。
+
+## 注入任务
+
+当某个搜索结果是 implementation 或 check sub-agent 的必需上下文时，把 entry id 加入任务 JSONL manifest，而不是复制整份 markdown 文件：
+
+```bash
+python3 ./.devflow/scripts/knowledge.py search "<query>"
+python3 ./.devflow/scripts/knowledge.py load <id>
+python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "knowledge:<id>" "<reason>"
+python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "knowledge:<id>" "<reason>"
+```
+
+当选中的条目来自 wiki knowledge 时，可以使用 `wiki:<id>` 作为等价简写。基于 hook 的平台会自动注入这些条目；pull-based 平台继续前必须对每个 JSONL knowledge entry 运行 `python3 ./.devflow/scripts/knowledge.py load <id>`。

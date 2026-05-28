@@ -1,3 +1,6 @@
-# 经验沉淀
+# 项目经验
 
-把调试中学到的可复用约定、陷阱和决策记录在这里。
+由 `python3 ./.devflow/scripts/knowledge.py learn` 捕获的 append-only 可复用洞察。
+
+条目使用闭合的 `&lt;spec-entry&gt;` blocks，因此可以放在普通
+markdown 中，同时仍能作为结构化知识被搜索和加载。

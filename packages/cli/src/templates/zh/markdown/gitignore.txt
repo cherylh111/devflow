@@ -1,2 +1,15 @@
+# DevFlow workflow gitignore
+# 不应提交的 runtime files
+
+# 开发者身份（每个开发者本地独有）
+.developer
+
+# 当前任务指针（本地状态）
+.current-task
+
+# 会话 / 窗口作用域的 runtime state
 .runtime/
-*.tmp
+
+# Agent runtime 文件（位于 worktree）
+.agent-log
+.session-id

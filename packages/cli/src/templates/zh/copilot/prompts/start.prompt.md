@@ -1,14 +1,63 @@
 ---
-description: "DevFlow Copilot 提示：start"
+description: "DevFlow Copilot prompt: Start Session"
 ---
 
-# start
+# Start Session
 
-开始 DevFlow 会话：加载当前状态、工作流阶段、任务和 spec 索引，再决定下一步。
+初始化一个由 DevFlow 管理的开发会话。此平台没有 session-start hook，因此请按以下步骤手动加载等价上下文（每一步都对应 hook 原本会注入的一个 section）。
 
-## 步骤
+---
 
-1. 读取当前任务和相关 spec。
-2. 对照用户请求确认范围。
-3. 执行该提示对应的工作。
-4. 记录输出、风险和后续动作。
+## 步骤 1：当前状态
+身份、git 状态、当前任务、活动任务和 journal 位置。
+
+```bash
+{{PYTHON_CMD}} ./.devflow/scripts/get_context.py
+```
+
+如果输出包含以 `DevFlow update available:` 开头的行，在总结会话上下文时逐字复制整行。不要缩短可执行的命令提示。
+
+## 步骤 2：工作流概览
+Phase Index + skill 路由表 + 不得跳过的规则。
+
+```bash
+{{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase
+```
+
+完整指南位于 `.devflow/workflow.md`（按需读取）。
+
+## 步骤 3：规范索引
+发现 packages 和 spec layers，然后读取每个相关的 index 文件。
+
+```bash
+{{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode packages
+cat .devflow/spec/guides/index.md
+cat .devflow/spec/<package>/<layer>/index.md   # for each relevant layer
+```
+
+index 文件会列出真正开始编码时需要读取的具体规范文档。
+
+## 步骤 4：决定下一步动作
+通过步骤 1 可以知道当前任务和状态。检查任务目录：
+
+- **活动任务状态为 `planning` 且没有 `prd.md`** → Phase 1.1。加载 `devflow-brainstorm` skill。
+- **活动任务状态为 `planning` 且 `prd.md` 已存在** → 保持在 Phase 1。轻量任务可以只有 PRD；复杂任务需要 `design.md` + `implement.md`。在 `task.py start` 前加载相关 Phase 1 步骤详情。
+- **活动任务状态为 `in_progress`** → Phase 2 step 2.1。加载步骤详情：
+  ```bash
+  {{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase --step 2.1 --platform {{CLI_FLAG}}
+  ```
+- **没有活动任务** → 先分类。简单对话 / 小任务只询问本轮是否需要创建 DevFlow task。复杂工作则询问是否可以创建 DevFlow task 并进入规划。如果用户拒绝，本会话跳过 DevFlow。
+
+---
+
+## Skill 路由（速查）
+
+| 用户意图 | Skill |
+|---|---|
+| 新功能 / 需求不清 | `devflow-brainstorm` |
+| 准备写代码 | `devflow-before-dev` |
+| 已完成编码 / 质量检查 | `devflow-check` |
+| 卡住 / 多次修同一类 bug | `devflow-break-loop` |
+| 学到值得沉淀的内容 | `devflow-update-spec` |
+
+完整规则和反合理化表位于 `.devflow/workflow.md`。

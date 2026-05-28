@@ -1,22 +1,45 @@
 # DevFlow 配置
-# 项目级 DevFlow 工作流设置。只覆盖你确实需要调整的选项。
-
-# 生成模板语言。可选：en / zh
-language: zh
+# DevFlow 工作流系统的项目级设置
+#
+# 所有值都有合理默认值。只覆盖你需要调整的内容。
 
 #-------------------------------------------------------------------------------
 # 会话记录
 #-------------------------------------------------------------------------------
 
+# 运行 add_session.py 后自动提交 journal/index 变更时
+# 使用的提交信息
 session_commit_message: "chore: record journal"
+
+# 每个 journal 文件轮转到新文件前的最大行数
 max_journal_lines: 2000
 
+#-------------------------------------------------------------------------------
+# 会话自动提交
+#-------------------------------------------------------------------------------
+
+# session journal + task archive 操作的自动提交行为。
+# - true（默认）：add_session.py / task.py archive 运行后，脚本会自动 stage
+#   并自动提交 journal / task 变更。
+# - false：脚本不触碰 git。文件（journal-*.md、task archive 移动）
+#   仍会写入磁盘；由你决定是否 git add / commit。
+#
+# 如果项目的 .gitignore 有意排除 `.devflow/`，
+# 且你希望 session data 仅保留在本地，或你希望
+# 每次提交前手动 review staged changes，请使用 `false`。
+#
+# 接受：true / false / yes / no / 1 / 0 / on / off（大小写不敏感）。
+#
 # session_auto_commit: true
 
 #-------------------------------------------------------------------------------
-# 任务生命周期 Hook
+# 任务生命周期 Hooks
 #-------------------------------------------------------------------------------
 
+# 在任务生命周期事件后运行的 shell 命令。
+# 每个 hook 都会收到指向 task.json 的 TASK_JSON_PATH 环境变量。
+# Hook 失败会打印 warning，但不会阻塞主操作。
+#
 # hooks:
 #   after_create:
 #     - "echo 'Task created'"
@@ -31,18 +54,57 @@ max_journal_lines: 2000
 # Monorepo / Packages
 #-------------------------------------------------------------------------------
 
+# 为 monorepo 项目声明 packages。
+# DevFlow 会在 `devflow init` 期间自动检测 workspaces，但你也可以
+# 在这里手动配置。
+#
 # packages:
 #   frontend:
 #     path: packages/frontend
 #   backend:
 #     path: packages/backend
-#
+#   docs:
+#     path: docs-site
+#     type: submodule
+#   # 对于 polyrepo / meta-repo 布局（每个子目录都有独立 .git），
+#   # 用 `git: true` 标记 package。runtime 会把它当作独立仓库处理，
+#   # 用于 git-context display 等场景。
+#   webapp:
+#     path: ./webapp
+#     git: true
+
+# 未指定 --package 时使用的默认 package。
 # default_package: frontend
 
+#-------------------------------------------------------------------------------
+# Channel worker OOM 防护
+#-------------------------------------------------------------------------------
+# `devflow channel spawn` workers 的默认保护。guard 会在 spawn 时运行
+#（清理过期 idle workers，然后执行 live-worker 预算），
+# 也会在每个 supervisor 内运行（持续 idle 超过
+# `idle_timeout` 的 worker 会自终止）。
+#
+# 优先级：CLI flag > env var（DEVFLOW_CHANNEL_WORKER_IDLE_TIMEOUT /
+# DEVFLOW_CHANNEL_MAX_LIVE_WORKERS）> 此配置 > 内置默认值。
+#
+# `idle_timeout: 0` 禁用 idle cleanup（除非显式 kill 或给定 `--timeout`，
+# workers 可以永久 idle）。
+# `max_live_workers: 0` 禁用 spawn-time 预算检查。
+#
 channel:
   worker_guard:
     idle_timeout: 5m
     max_live_workers: 6
 
+#-------------------------------------------------------------------------------
+# Codex（分派行为）
+#-------------------------------------------------------------------------------
+# 仅 Codex 使用的开关；其他平台会忽略。默认值（"inline"）
+# 让主 Codex agent 直接编辑代码，因为 Codex sub-agents
+# 以 `fork_turns="none"` 隔离运行，无法继承父会话的
+# task context。设为 "sub-agent" 可选择旧分派模型
+#（主 agent 生成 devflow-implement / devflow-check / devflow-research
+# sub-agents）。
+#
 # codex:
-#   dispatch_mode: inline  # 或 "sub-agent"
+#   dispatch_mode: inline  # or "sub-agent" to dispatch devflow-* sub-agents

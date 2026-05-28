@@ -21,14 +21,14 @@ describe("template language selection", () => {
     expect(getTemplateLanguage()).toBe("en");
     expect(getWorkflowMdTemplate()).toBe(workflowMdTemplate);
     expect(getAgentsMdContent()).toContain("DevFlow Instructions");
-    expect(getAgentsMdContent()).not.toContain("Trellis 使用说明");
+    expect(getAgentsMdContent()).not.toContain("DevFlow 使用说明");
   });
 
   it("reads Chinese overlays when language is zh", () => {
     setTemplateLanguage("zh");
 
     expect(getWorkflowMdTemplate()).toContain("DevFlow 工作流");
-    expect(getAgentsMdContent()).toContain("Trellis 使用说明");
+    expect(getAgentsMdContent()).toContain("DevFlow 使用说明");
     expect(
       getSkillTemplates().find((skill) => skill.name === "before-dev")?.content,
     ).toContain("写代码前");

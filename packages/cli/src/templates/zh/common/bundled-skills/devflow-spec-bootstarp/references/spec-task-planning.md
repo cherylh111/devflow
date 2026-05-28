@@ -1,10 +1,61 @@
-# spec-task-planning
+# 规范任务规划
 
-本文档说明 DevFlow 本地架构、平台文件或自定义入口中的 `spec-task-planning` 主题。
+默认使用单一代理作为执行模型。代理可以创建 DevFlow 任务以便追踪，但此技能不应要求特定平台、CLI 或并行 worker 模型。
 
-## 要点
+## 拆分方式
 
-- 以用户项目内的 `.devflow/` 和平台目录为准。
-- 修改前先搜索相关模板、hook、agent、skill、command、prompt 和配置。
-- 运行时文件和生成模板可能存在双路径，更新时必须确认 init 与 update 都能得到一致结果。
-- 对团队约定或项目私有规则，优先写入 `.devflow/spec/` 或项目本地 skill。
+围绕真实所有权边界创建规范工作单元：
+
+- 当某个包有自己的约定时，以一个包为单位。
+- 当同一个包有不同的前端、后端、CLI、worker 或共享库规则时，以一个层级为单位。
+- 当某个模式跨越多个包且不归属单一层级时，创建一份横切指南。
+
+避免人为拆分。小型库通常只需要一次聚焦的规范梳理，而不是多个任务。
+
+## 任务形态
+
+当 DevFlow 任务有价值时，编写包含以下章节的简洁 PRD：
+
+```markdown
+# Fill <package-or-layer> DevFlow Specs
+
+## Goal
+Write project-specific `.devflow/spec/` guidance for <scope>.
+
+## Scope
+- Spec directory:
+- Source directories to inspect:
+- Tests to inspect:
+- Out of scope:
+
+## Architecture Context
+Summarize the concrete findings from repository analysis.
+
+## Files To Create Or Update
+- `.devflow/spec/.../index.md`
+- `.devflow/spec/.../<topic>.md`
+
+## Rules
+- Adapt the spec file set to the real codebase.
+- Use real source examples with file paths.
+- Remove template-only sections that do not apply.
+- Do not modify product source code unless the task explicitly asks for it.
+
+## Acceptance Criteria
+- [ ] Specs contain concrete examples and anti-patterns from the repository.
+- [ ] No placeholder text remains.
+- [ ] Index files match the final spec files.
+- [ ] Claims are backed by source files, tests, or project docs.
+```
+
+## 可选辅助代理
+
+如果宿主支持子代理，辅助代理可以检查独立包或运行验证。它们是可选的；主代理仍负责集成和最终质量。
+
+辅助任务必须有清晰所有权：
+
+- 只读研究任务可以检查分配范围所需的任何源码。
+- 写入任务应拥有互不重叠的规范目录。
+- 验证任务应检查占位符移除、断链和一致性。
+
+不要在技能中写入辅助代理名称、厂商专属命令或平台专属路由。任务里只放必要工作和验收标准。

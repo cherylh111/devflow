@@ -1,22 +1,21 @@
 <!-- DEVFLOW:START -->
-# Trellis 使用说明
+# DevFlow 使用说明
 
-这些说明提供给在本项目中工作的 AI assistant。
+These instructions are for AI assistants working in this project.
 
-本项目由 DevFlow 管理。你需要的工作知识位于 `.devflow/`：
+This project is managed by DevFlow. The working knowledge you need lives under `.devflow/`:
 
-- `.devflow/workflow.md` - 开发阶段、任务创建时机、skill 路由
-- `.devflow/spec/` - 按 package 和 layer 组织的编码规范，写代码前必须读取
-- `.devflow/workspace/` - 每个开发者的 journal 和会话记录
-- `.devflow/tasks/` - 活跃和归档任务，包含 PRD、research、jsonl context
+- `.devflow/workflow.md` — development phases, when to create tasks, skill routing
+- `.devflow/spec/` — package- and layer-scoped coding guidelines (read before writing code in a given layer)
+- `.devflow/workspace/` — per-developer journals and session traces
+- `.devflow/tasks/` — active and archived tasks (PRDs, research, jsonl context)
 
-如果当前平台提供 DevFlow 命令，例如 `/devflow:finish-work` 或 `/devflow:continue`，优先使用命令，不要手动重复步骤。并非每个平台都会暴露所有命令。
+If a DevFlow command is available on your platform (e.g. `/devflow:finish-work`, `/devflow:continue`), prefer it over manual steps. Not every platform exposes every command.
 
-如果你使用 Codex 或其他支持 agent 的工具，项目级辅助文件也可能位于：
+If you're using Codex or another agent-capable tool, additional project-scoped helpers may live in:
+- `.agents/skills/` — reusable DevFlow skills
+- `.codex/agents/` — optional custom subagents
 
-- `.agents/skills/` - 可复用 DevFlow skills
-- `.codex/agents/` - 可选自定义 subagents
-
-由 DevFlow 管理。此块外的编辑会保留；此块内的内容可能在未来 `devflow update` 时被覆盖。
+Managed by DevFlow. Edits outside this block are preserved; edits inside may be overwritten by a future `devflow update`.
 
 <!-- DEVFLOW:END -->

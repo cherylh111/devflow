@@ -1,3 +1,51 @@
 # 类型安全
 
-记录 TypeScript、schema、边界解析和禁止使用 any 的规则。
+> 本项目的类型安全模式。
+
+---
+
+## Overview
+
+<!--
+在这里记录项目的类型安全约定。
+
+需要回答的问题：
+- 使用什么 type system？
+- types 如何组织？
+- 使用什么 validation library？
+- type inference 如何处理？
+-->
+
+（由团队填写）
+
+---
+
+## 类型组织
+
+<!-- types 定义在哪里，shared types vs local types -->
+
+（由团队填写）
+
+---
+
+## 校验
+
+<!-- Runtime validation patterns（Zod、Yup、io-ts 等） -->
+
+（由团队填写）
+
+---
+
+## 常见模式
+
+<!-- Type utilities、generics、type guards -->
+
+（由团队填写）
+
+---
+
+## 禁止模式
+
+<!-- any、type assertions 等 -->
+
+（由团队填写）
