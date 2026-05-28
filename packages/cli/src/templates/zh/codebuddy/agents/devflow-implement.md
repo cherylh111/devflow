@@ -1,7 +1,6 @@
 ---
 name: devflow-implement
-description: |
-  代码实现专家。理解 specs 和 requirements，然后实现 features。禁止 git commit。
+description: "代码实现专家。理解 specs 和 requirements，然后实现 features。禁止 git commit。"
 tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
 ---
 # Implement Agent

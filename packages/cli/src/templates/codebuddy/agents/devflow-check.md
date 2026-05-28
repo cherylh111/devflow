@@ -1,7 +1,6 @@
 ---
 name: devflow-check
-description: |
-  Code quality check expert. Reviews code changes against specs and self-fixes issues.
+description: "Code quality check expert. Reviews code changes against specs and self-fixes issues."
 tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
 ---
 # Check Agent
