@@ -46,3 +46,36 @@ Forked Trellis into the DevFlow branded CLI, added the Auto runner command path,
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: 汉化 zh 平台模板
+
+**Date**: 2026-05-28
+**Task**: 汉化 zh 平台模板
+**Branch**: `main`
+
+### Summary
+
+完成 zh 模板中 Codex 与公共 devflow/common 部分汉化，补充中文 skill 执行规范，验证语言模板一致性、类型检查和 lint。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dfffb53` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
