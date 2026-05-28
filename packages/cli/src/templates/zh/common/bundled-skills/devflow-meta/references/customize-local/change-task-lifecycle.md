@@ -25,7 +25,7 @@
 
 ## 生命周期 hooks
 
-`.devflow/config.yaml` supports:
+`.devflow/config.yaml` 支持：
 
 ```yaml
 hooks:

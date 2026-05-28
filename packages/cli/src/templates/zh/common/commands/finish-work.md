@@ -35,11 +35,11 @@ git status --porcelain
 然后按以下方式处理：
 
 - **任一剩余路径看起来像当前任务工作** — 退出并提示：
-  > "Working tree has uncommitted code changes from this task: `<list>`. Return to workflow Phase 3.4 to commit them before running `{{CMD_REF:finish-work}}`."
+  > "工作区中有来自本任务的未提交代码变更：`<list>`。请先回到 workflow Phase 3.4 提交它们，再运行 `{{CMD_REF:finish-work}}`。"
 
   不要在这里运行 `git commit`。不要提示用户提交。用户回到 Phase 3.4，由 AI 在那里驱动批量提交。
 - **所有剩余路径看起来都无关**（其他并行窗口的工作）— 报告一次并继续步骤 3：
-  > "FYI, dirty files outside this task's scope — leaving them for the other window: `<list>`."
+  > "提示：任务范围外存在 dirty 文件，将它们留给另一个窗口处理：`<list>`。"
 - **确实不确定** — 询问用户一次：“Are `<list>` this task's work I forgot to commit, or another window's? (commit / ignore)” — 然后按回答处理。
 
 ## 步骤 3：归档任务

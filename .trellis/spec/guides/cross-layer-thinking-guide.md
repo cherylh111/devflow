@@ -136,6 +136,15 @@ In Trellis, command templates (e.g., `record-session.md`) exist in **multiple pl
       fenced code blocks, placeholder tokens, and heading levels. A shortened
       translation silently replaces the full English runtime template during
       install/update.
+- [ ] Chinese skill/agent instruction text is acceptable, but preserve all
+      machine-readable and protocol identifiers verbatim: frontmatter/TOML/YAML
+      keys, tool names, command names, paths, placeholders, environment
+      variables, `workflow-state` tags, and dispatch sentinels such as
+      `Active task:`. Translate human-facing operational prose, but keep the
+      execution constraints explicit (`MUST`, no-spawn recursion guards,
+      no-commit rules, context-loading order). Verify with
+      `test/templates/language-parity.test.ts` so localization cannot break
+      line count, fenced blocks, placeholders, or heading shape.
 - [ ] For Gemini TOML: adapt line continuations (`\\` vs `\`) and triple-quoted strings
 - [ ] Run `/trellis:check-cross-layer` to verify nothing was missed
 

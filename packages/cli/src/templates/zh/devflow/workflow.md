@@ -2,390 +2,390 @@
 
 ---
 
-## Core Principles
+## 核心原则
 
-1. **Plan before code** — figure out what to do before you start
-2. **Specs injected, not remembered** — guidelines are injected via hook/skill, not recalled from memory
-3. **Persist everything** — research, decisions, and lessons all go to files; conversations get compacted, files don't
-4. **Incremental development** — one task at a time
-5. **Capture learnings** — after each task, review and write new knowledge back to spec
+1. **先计划，再编码**：开始前先弄清要做什么。
+2. **规范靠注入，不靠记忆**：指南通过 hook/skill 注入，而不是让 AI 凭记忆回想。
+3. **一切持久化**：研究、决策和经验都写入文件；对话会被压缩，文件不会。
+4. **增量开发**：一次只推进一个任务。
+5. **沉淀经验**：每个任务结束后复盘，把新知识写回 spec。
 
 ---
 
-## DevFlow System
+## DevFlow 系统
 
-### Developer Identity
+### 开发者身份
 
-On first use, initialize your identity:
+首次使用时，初始化你的身份：
 
 ```bash
 python3 ./.devflow/scripts/init_developer.py <your-name>
 ```
 
-Creates `.devflow/.developer` (gitignored) + `.devflow/workspace/<your-name>/`.
+这会创建 `.devflow/.developer`（已加入 gitignore）和 `.devflow/workspace/<your-name>/`。
 
-### Spec System
+### Spec 系统
 
-`.devflow/spec/` holds coding guidelines organized by package and layer.
+`.devflow/spec/` 存放按 package 和 layer 组织的编码指南。
 
-- `.devflow/spec/<package>/<layer>/index.md` — entry point with **Pre-Development Checklist** + **Quality Check**. Actual guidelines live in the `.md` files it points to.
-- `.devflow/spec/guides/index.md` — cross-package thinking guides.
+- `.devflow/spec/<package>/<layer>/index.md`：入口文件，包含 **Pre-Development Checklist** 和 **Quality Check**；
+  实际指南位于它指向的 `.md` 文件中。
+- `.devflow/spec/guides/index.md`：跨 package 的思考指南。
 
 ```bash
-python3 ./.devflow/scripts/get_context.py --mode packages   # list packages / layers
+python3 ./.devflow/scripts/get_context.py --mode packages   # 列出 packages / layers
 ```
 
-**When to update spec**: new pattern/convention found · bug-fix prevention to codify · new technical decision.
+**何时更新 spec**：发现新的模式/约定、需要固化 bug 修复预防措施、产生新的技术决策。
 
-### Task System
+### 任务系统
 
-Every task has its own directory under `.devflow/tasks/{MM-DD-name}/` holding `task.json`, `prd.md`, optional `design.md`, optional `implement.md`, optional `research/`, and context manifests (`implement.jsonl`, `check.jsonl`) for sub-agent-capable platforms.
+每个任务在 `.devflow/tasks/{MM-DD-name}/` 下都有自己的目录，包含 `task.json`、`prd.md`、可选的 `design.md`、可选的 `implement.md`、可选的 `research/`，
+以及供支持子代理的平台使用的上下文清单（`implement.jsonl`、`check.jsonl`）。
 
 ```bash
-# Task lifecycle
+# 任务生命周期
 python3 ./.devflow/scripts/task.py create "<title>" [--slug <name>] [--parent <dir>]
-python3 ./.devflow/scripts/task.py start <name>          # set active task (session-scoped when available)
-python3 ./.devflow/scripts/task.py current --source      # show active task and source
-python3 ./.devflow/scripts/task.py finish                # clear active task (triggers after_finish hooks)
-python3 ./.devflow/scripts/task.py archive <name>        # move to archive/{year-month}/
+python3 ./.devflow/scripts/task.py start <name>          # 设置活动任务（可用时按会话隔离）
+python3 ./.devflow/scripts/task.py current --source      # 显示活动任务和来源
+python3 ./.devflow/scripts/task.py finish                # 清除活动任务（触发 after_finish hooks）
+python3 ./.devflow/scripts/task.py archive <name>        # 移动到 archive/{year-month}/
 python3 ./.devflow/scripts/task.py list [--mine] [--status <s>]
 python3 ./.devflow/scripts/task.py list-archive
 
-# Code-spec context (injected into implement/check agents via JSONL).
-# `implement.jsonl` / `check.jsonl` are seeded on `task create` for sub-agent-capable
-# platforms; the AI curates real spec + research entries during planning when needed.
+# Code-spec 上下文（通过 JSONL 注入 implement/check agents）。
+# 对支持子代理的平台，`task create` 会初始化 `implement.jsonl` / `check.jsonl`；
+# 需要时 AI 会在规划期间整理真实的 spec + research 条目。
 python3 ./.devflow/scripts/task.py add-context <name> <action> <file> <reason>
 python3 ./.devflow/scripts/task.py list-context <name> [action]
 python3 ./.devflow/scripts/task.py validate <name>
 
-# Task metadata
+# 任务元数据
 python3 ./.devflow/scripts/task.py set-branch <name> <branch>
-python3 ./.devflow/scripts/task.py set-base-branch <name> <branch>    # PR target
+python3 ./.devflow/scripts/task.py set-base-branch <name> <branch>    # PR 目标分支
 python3 ./.devflow/scripts/task.py set-scope <name> <scope>
 
-# Hierarchy (parent/child)
+# 层级关系（parent/child）
 python3 ./.devflow/scripts/task.py add-subtask <parent> <child>
 python3 ./.devflow/scripts/task.py remove-subtask <parent> <child>
 
-# PR creation
+# 创建 PR
 python3 ./.devflow/scripts/task.py create-pr [name] [--dry-run]
 ```
 
-> Run `python3 ./.devflow/scripts/task.py --help` to see the authoritative, up-to-date list.
+> 运行 `python3 ./.devflow/scripts/task.py --help` 查看权威的最新命令列表。
 
-**Current-task mechanism**: `task.py create` creates the task directory and (when session identity is available) auto-sets the per-session active-task pointer so the planning breadcrumb fires immediately. `task.py start` writes the same pointer (idempotent if already set) and flips `task.json.status` from `planning` to `in_progress`. State is stored under `.devflow/.runtime/sessions/`. If no context key is available from hook input, `DEVFLOW_CONTEXT_ID`, or a platform-native session environment variable, there is no active task and `task.py start` fails with a session identity hint. `task.py finish` deletes the current session file (status unchanged). `task.py archive <task>` writes `status=completed`, moves the directory to `archive/`, and deletes any runtime session files that still point at the archived task.
+**当前任务机制**：`task.py create` 会创建任务目录，并在存在会话身份时自动设置当前会话的活动任务指针，让 planning 面包屑立即生效。
+`task.py start` 写入同一个指针（已设置时是幂等操作），并把 `task.json.status` 从 `planning` 切到 `in_progress`。
+状态存放在 `.devflow/.runtime/sessions/` 下。如果 hook 输入、`DEVFLOW_CONTEXT_ID` 或平台原生会话环境变量都没有提供 context key，
+则没有活动任务，`task.py start` 会带着会话身份提示失败。`task.py finish` 删除当前会话文件（不改变状态）。
+`task.py archive <task>` 写入 `status=completed`，把目录移动到 `archive/`，并删除仍指向已归档任务的运行时会话文件。
 
-### Workspace System
+### Workspace 系统
 
-Records every AI session for cross-session tracking under `.devflow/workspace/<developer>/`.
+在 `.devflow/workspace/<developer>/` 下记录每次 AI 会话，便于跨会话追踪。
 
-- `journal-N.md` — session log. **Max 2000 lines per file**; a new `journal-(N+1).md` is auto-created when exceeded.
-- `index.md` — personal index (total sessions, last active).
+- `journal-N.md`：会话日志。**每个文件最多 2000 行**；超过后会自动创建新的 `journal-(N+1).md`。
+- `index.md`：个人索引（总会话数、最近活跃时间）。
 
 ```bash
 python3 ./.devflow/scripts/add_session.py --title "Title" --commit "hash" --summary "Summary"
 ```
 
-### Context Script
+### 上下文脚本
 
 ```bash
-python3 ./.devflow/scripts/get_context.py                            # full session runtime
-python3 ./.devflow/scripts/get_context.py --mode packages            # available packages + spec layers
-python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>  # detailed guide for a workflow step
+python3 ./.devflow/scripts/get_context.py                            # 完整会话运行时信息
+python3 ./.devflow/scripts/get_context.py --mode packages            # 可用 packages + spec layers
+python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>  # 某个工作流步骤的详细指南
 ```
 
 ---
 
 <!--
-  WORKFLOW-STATE BREADCRUMB CONTRACT (read this before editing the tag blocks below)
+  WORKFLOW-STATE 面包屑契约（编辑下方标签块前先读这里）
 
-  The [workflow-state:STATUS] blocks embedded in the ## Phase Index section
-  below are the SINGLE source of truth for the per-turn `<workflow-state>`
-  breadcrumb that every supported AI platform's UserPromptSubmit hook
-  reads. inject-workflow-state.py (Python platforms) and
-  inject-workflow-state.js (OpenCode plugin) only parse them — there is no
-  fallback dict baked into the scripts after v0.5.0-rc.0.
+  下方 ## Phase Index 章节中的 [workflow-state:STATUS] 块，是每回合
+  `<workflow-state>` 面包屑的唯一事实来源。每个受支持 AI 平台的
+  UserPromptSubmit hook 都会读取这些块。inject-workflow-state.py
+  （Python 平台）和 inject-workflow-state.js（OpenCode 插件）只负责解析；
+  v0.5.0-rc.0 之后脚本中没有内置 fallback 字典。
 
-  STATUS charset: [A-Za-z0-9_-]+. When the hook can't find a tag, it
-  degrades to a generic "Refer to workflow.md for current step." line —
-  intentionally visible so users notice and fix a broken workflow.md.
+  STATUS 字符集：[A-Za-z0-9_-]+。当 hook 找不到标签时，会降级为通用的
+  "Refer to workflow.md for current step." 行；这是故意可见的，方便用户发现并修复
+  损坏的 workflow.md。
 
-  INVARIANT (test/regression.test.ts):
-    Every workflow-walkthrough step marked `[required · once]` must have a
-    matching enforcement line in its phase's [workflow-state:*] block. The
-    breadcrumb is the only per-turn channel; if a mandatory step isn't
-    mentioned there, the AI silently skips it (Phase 1 planning gate
-    skip and Phase 3.4 commit skip both manifested via this gap).
+  不变量（test/regression.test.ts）：
+    每个标记为 `[required · once]` 的 workflow walkthrough 步骤，都必须在对应
+    phase 的 [workflow-state:*] 块中有匹配的强制执行说明。面包屑是唯一的每回合通道；
+    如果必需步骤没有在这里提到，AI 会静默跳过它（Phase 1 planning gate 跳过和
+    Phase 3.4 commit 跳过都曾经由这个缺口触发）。
 
-  TAG ↔ PHASE scoping:
-    [workflow-state:no_task]      → no active task; before Phase 1
-    [workflow-state:planning]     → all of Phase 1 (status='planning')
-    [workflow-state:planning-inline] → Codex inline variant of Phase 1
+  TAG ↔ PHASE 作用域：
+    [workflow-state:no_task]      → 无活动任务；Phase 1 之前
+    [workflow-state:planning]     → 整个 Phase 1（status='planning'）
+    [workflow-state:planning-inline] → Phase 1 的 Codex inline 变体
     [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.4
-                                    (status stays 'in_progress' from
-                                    task.py start until task.py archive)
-    [workflow-state:in_progress-inline] → Codex inline variant of Phase 2/3
-    [workflow-state:completed]    → currently DEAD: cmd_archive flips
-                                    status and moves the dir in the same
-                                    call, so the resolver loses the
-                                    pointer (block kept for a future
-                                    explicit in_progress→completed
-                                    transition)
+                                    （从 task.py start 到 task.py archive 之前，
+                                    status 都保持 'in_progress'）
+    [workflow-state:in_progress-inline] → Phase 2/3 的 Codex inline 变体
+    [workflow-state:completed]    → 当前在正常流程中不会触发：cmd_archive 在同一次调用中
+                                    翻转 status 并移动目录，所以 resolver 会丢失指针
+                                    （保留该块供未来显式 in_progress→completed 状态转换使用）
 
-  Editing checklist:
-    - When you change a [workflow-state:STATUS] block, also check the
-      matching phase's `[required · once]` walkthrough steps for sync
-    - Run `devflow update` after editing to push the new bodies to
-      downstream user projects (block-level managed replacement)
-    - Full runtime contract:
+  编辑检查清单：
+    - 修改 [workflow-state:STATUS] 块时，同时检查对应 phase 中的
+      `[required · once]` walkthrough 步骤是否同步
+    - 编辑后运行 `devflow update`，把新块体推送到下游用户项目
+      （按块进行 managed replacement）
+    - 完整运行时契约：
       .devflow/spec/cli/backend/workflow-state-contract.md
 -->
 
-## Phase Index
+## 阶段索引
 
 ```
-Phase 1: Plan    → classify, get task-creation consent, then write planning artifacts
-Phase 2: Execute → implement only after task status is in_progress
-Phase 3: Finish  → verify, update spec, commit, and wrap up
+Phase 1: Plan    → 分类请求，取得任务创建许可，然后写规划产物
+Phase 2: Execute → 只有任务状态为 in_progress 后才实现
+Phase 3: Finish  → 验证、更新 spec、提交并收尾
 ```
 
-### Request Triage
+### 请求分流
 
-- Simple conversation or small task: ask only whether this turn should create a DevFlow task. If the user says no, skip DevFlow for this session.
-- Complex task: ask whether you may create a DevFlow task and enter planning. If the user says no, do not do broad inline implementation; explain, clarify scope, or suggest a smaller split.
-- User approval to create a task is not approval to start implementation. Planning still happens first.
+- 简单对话或小任务：只询问本回合是否要创建 DevFlow 任务。如果用户说不创建，本会话跳过 DevFlow。
+- 复杂任务：询问是否可以创建 DevFlow 任务并进入规划。如果用户不同意，不要做大范围 inline 实现；改为解释、澄清范围，或建议拆成更小的任务。
+- 用户批准创建任务并不等于批准开始实现。仍然必须先完成规划。
 
-### Planning Artifacts
+### 规划产物
 
-- `prd.md` — requirements, constraints, and acceptance criteria. Do not put technical design or execution checklists here.
-- `design.md` — technical design for complex tasks: boundaries, contracts, data flow, tradeoffs, compatibility, rollout / rollback shape.
-- `implement.md` — execution plan for complex tasks: ordered checklist, validation commands, review gates, and rollback points.
-- `implement.jsonl` / `check.jsonl` — spec and research manifests for sub-agent context. They do not replace `implement.md`.
-- Lightweight tasks may be PRD-only. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
+- `prd.md`：需求、约束和验收标准。不要把技术设计或执行清单放在这里。
+- `design.md`：复杂任务的技术设计，包括边界、契约、数据流、取舍、兼容性、发布/回滚形态。
+- `implement.md`：复杂任务的执行计划，包括有序清单、验证命令、评审门和回滚点。
+- `implement.jsonl` / `check.jsonl`：子代理上下文使用的 spec 和 research 清单。它们不能替代 `implement.md`。
+- 轻量任务可以只有 PRD。复杂任务必须在 `task.py start` 前具备 `prd.md`、`design.md` 和 `implement.md`。
 
-### Parent / Child Task Trees
+### 父子任务树
 
-Use a parent task when one user request contains several independently verifiable deliverables. The parent task owns the source requirement set, the task map, cross-child acceptance criteria, and final integration review; it normally should not be the implementation target unless it also has direct work.
+当一个用户请求包含多个可独立验证的交付物时，使用父任务。父任务负责源需求集、任务地图、跨子任务验收标准和最终集成评审；除非父任务本身也有直接工作，否则通常不应作为实现目标。
 
-Use child tasks for deliverables that can be planned, implemented, checked, and archived independently. Parent/child structure is not a dependency system: if one child must wait for another, write that ordering in the child `prd.md` / `implement.md` and keep each child's acceptance criteria testable.
+对子交付物使用子任务；子任务应能独立规划、实现、检查和归档。父子结构不是依赖系统：如果某个子任务必须等待另一个子任务，请把顺序写进子任务的 `prd.md` / `implement.md`，并保持每个子任务的验收标准可测试。
 
-Create new children with `task.py create "<title>" --slug <name> --parent <parent-dir>`. Link existing tasks with `task.py add-subtask <parent> <child>`, and unlink mistakes with `task.py remove-subtask <parent> <child>`.
+用 `task.py create "<title>" --slug <name> --parent <parent-dir>` 创建新的子任务。
+用 `task.py add-subtask <parent> <child>` 关联已有任务，用 `task.py remove-subtask <parent> <child>` 解除错误关联。
 
-<!-- Per-turn breadcrumb: shown when there is no active task (before Phase 1) -->
+<!-- 每回合面包屑：无活动任务时显示（Phase 1 之前） -->
 
 [workflow-state:no_task]
-No active task. First classify the current turn and ask for task-creation consent before creating any DevFlow task.
-Simple conversation / small task: ask only whether this turn should create a DevFlow task. If the user says no, skip DevFlow for this session.
-Complex task: ask the user if you can create a DevFlow task and enter the planning phase. If the user says no, explain, clarify scope, or suggest a smaller split.
+没有活动任务。先分类当前回合；创建任何 DevFlow 任务前，必须先请求任务创建许可。
+简单对话 / 小任务：只询问本回合是否应创建 DevFlow 任务。如果用户说不创建，本会话跳过 DevFlow。
+复杂任务：询问用户是否可以创建 DevFlow 任务并进入规划阶段。如果用户说不可以，解释情况、澄清范围，或建议拆成更小的任务。
 [/workflow-state:no_task]
 
-### Phase 1: Plan
-- 1.0 Create task `[required · once]` (only after task-creation consent)
-- 1.1 Requirement exploration `[required · repeatable]` (`prd.md`; complex tasks also need `design.md` + `implement.md`)
-- 1.2 Research `[optional · repeatable]`
-- 1.3 Configure context `[conditional · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi
-- 1.4 Activate task `[required · once]` (review gate, then `task.py start`; status → in_progress)
-- 1.5 Completion criteria
+### Phase 1: 规划
+- 1.0 创建任务 `[required · once]`（仅在取得任务创建许可后）
+- 1.1 需求探索 `[required · repeatable]`（`prd.md`；复杂任务还需要 `design.md` + `implement.md`）
+- 1.2 研究 `[optional · repeatable]`
+- 1.3 配置上下文 `[conditional · once]` — Claude Code、Cursor、OpenCode、Codex、Kiro、Gemini、Qoder、CodeBuddy、Copilot、Droid、Pi
+- 1.4 激活任务 `[required · once]`（评审门之后运行 `task.py start`；状态 → in_progress）
+- 1.5 完成标准
 
-<!-- Per-turn breadcrumb: shown throughout Phase 1 (status='planning') -->
+<!-- 每回合面包屑：整个 Phase 1 显示（status='planning'） -->
 
 [workflow-state:planning]
-Load `devflow-brainstorm`; stay in planning.
-Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
-Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Sub-agent mode: curate `implement.jsonl` and `check.jsonl` as spec/research/knowledge manifests before start.
+加载 `devflow-brainstorm`；保持在规划阶段。
+轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`；在 `task.py start` 前请求评审。
+多交付物范围：考虑使用一个父任务加多个可独立验证的子任务；依赖关系必须写入子任务产物，不能由树结构暗示。
+子代理模式：启动前整理 `implement.jsonl` 和 `check.jsonl`，作为 spec/research/knowledge 清单。
 [/workflow-state:planning]
 
-<!-- Per-turn breadcrumb: shown throughout Phase 1 when codex.dispatch_mode=inline.
-     Codex-only opt-in alternate to [workflow-state:planning]. The main agent
-     edits code directly in Phase 2, so jsonl curation is skipped —
-     the inline workflow loads `devflow-before-dev` instead of injecting JSONL
-     into a sub-agent. -->
+<!-- 每回合面包屑：codex.dispatch_mode=inline 时在整个 Phase 1 显示。
+     这是 Codex 专用的 [workflow-state:planning] 可选替代。主代理会在 Phase 2
+     直接编辑代码，因此跳过 jsonl 整理；inline 工作流加载 `devflow-before-dev`，
+     而不是把 JSONL 注入子代理。 -->
 
 [workflow-state:planning-inline]
-Load `devflow-brainstorm`; stay in planning.
-Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
-Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `devflow-before-dev`.
+加载 `devflow-brainstorm`；保持在规划阶段。
+轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`；在 `task.py start` 前请求评审。
+多交付物范围：考虑使用一个父任务加多个可独立验证的子任务；依赖关系必须写入子任务产物，不能由树结构暗示。
+Inline 模式：跳过 jsonl 整理；Phase 2 通过 `devflow-before-dev` 读取产物和 specs。
 [/workflow-state:planning-inline]
 
-### Phase 2: Execute
-- 2.1 Implement `[required · repeatable]`
-- 2.2 Quality check `[required · repeatable]`
-- 2.3 Rollback `[on demand]`
+### Phase 2: 执行
+- 2.1 实现 `[required · repeatable]`
+- 2.2 质量检查 `[required · repeatable]`
+- 2.3 回滚 `[on demand]`
 
-<!-- Per-turn breadcrumb: shown while status='in_progress'.
-     Scope: all of Phase 2 + Phase 3.1-3.4 (status stays 'in_progress' from
-     task.py start until task.py archive; only archive flips it). The body
-     therefore must cover every required step from implementation through
-     commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
+<!-- 每回合面包屑：status='in_progress' 时显示。
+     范围：整个 Phase 2 + Phase 3.1-3.4（从 task.py start 到 task.py archive 前，
+     status 都保持 'in_progress'；只有 archive 会翻转它）。因此块体必须覆盖从实现到提交的
+     每个必需步骤，包括 Phase 3.3 spec update 和 Phase 3.4 commit。 -->
 
-Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Copilot/Gemini/Qoder and `devflow-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
+子代理派发协议适用于所有平台和所有子代理，包括 class-2 Codex/Copilot/Gemini/Qoder 以及 `devflow-research`：
+每个派发提示都必须先以 `Active task: <task path from task.py current>` 开头，然后再写角色专属指令。
 
 [workflow-state:in_progress]
-Tools: `devflow-implement` / `devflow-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `devflow-update-spec` is a skill. `devflow-check` exists as both; prefer the Agent form when verifying after code changes.
-Flow: `devflow-implement` -> `devflow-check` -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
-Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `devflow-implement`, do NOT spawn another `devflow-implement` or `devflow-check`; if already running as `devflow-check`, do NOT spawn another `devflow-check` or `devflow-implement`. Dispatch is main session only.
-Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
+工具：`devflow-implement` / `devflow-research` 只是子代理类型（Task/Agent tool，不是 Skill；没有同名 skill）。
+`devflow-update-spec` 是 skill。`devflow-check` 两种形态都存在；代码变更后的验证优先使用 Agent 形态。
+流程：`devflow-implement` -> `devflow-check` -> `devflow-update-spec` -> commit（Phase 3.4）-> `/devflow:finish-work`。
+主会话默认：派发 implement/check 子代理。子代理自豁免：如果已经作为 `devflow-implement` 运行，不要再 spawn 另一个 `devflow-implement` 或 `devflow-check`；
+如果已经作为 `devflow-check` 运行，不要再 spawn 另一个 `devflow-check` 或 `devflow-implement`。只有主会话可以派发。
+派发提示以 `Active task: <task path from task.py current>` 开头。读取上下文顺序：jsonl 条目 -> `prd.md` -> `design.md if present` -> `implement.md if present`。
 [/workflow-state:in_progress]
 
-<!-- Per-turn breadcrumb: shown while status='in_progress' when
-     codex.dispatch_mode=inline. Codex-only opt-in alternate to
-     [workflow-state:in_progress]. The main session edits code directly
-     instead of dispatching sub-agents. -->
+<!-- 每回合面包屑：codex.dispatch_mode=inline 且 status='in_progress' 时显示。
+     这是 Codex 专用的 [workflow-state:in_progress] 可选替代。主会话会直接编辑代码，
+     而不是派发子代理。 -->
 
 [workflow-state:in_progress-inline]
-Flow: `devflow-before-dev` -> edit -> `devflow-check` -> validation -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
-Do not dispatch implement/check sub-agents in inline mode.
-Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
+流程：`devflow-before-dev` -> 编辑 -> `devflow-check` -> 验证 -> `devflow-update-spec` -> commit（Phase 3.4）-> `/devflow:finish-work`。
+Inline 模式不要派发 implement/check 子代理。
+读取上下文：`prd.md` -> `design.md if present` -> `implement.md if present`，再加上由 skills 加载的相关 spec/research。
 [/workflow-state:in_progress-inline]
 
-### Phase 3: Finish
-- 3.1 Quality verification `[required · repeatable]`
-- 3.2 Debug retrospective `[on demand]`
-- 3.3 Spec update `[required · once]`
-- 3.4 Commit changes `[required · once]`
-- 3.5 Wrap-up reminder
+### Phase 3: 收尾
+- 3.1 质量验证 `[required · repeatable]`
+- 3.2 调试复盘 `[on demand]`
+- 3.3 更新 spec `[required · once]`
+- 3.4 提交变更 `[required · once]`
+- 3.5 收尾提醒
 
-<!-- Per-turn breadcrumb: shown while status='completed'.
-     Currently DEAD in normal flow: cmd_archive writes status='completed' in
-     the same call that moves the task dir to archive/, so the active-task
-     resolver loses the pointer and the hook never fires on archived tasks.
-     Block preserved for a future status-transition redesign (e.g. an
-     explicit in_progress→completed command). Edit through the same spec
-     channel as the live blocks. -->
+<!-- 每回合面包屑：status='completed' 时显示。
+     当前在正常流程中不会触发：cmd_archive 在同一次调用中写入 status='completed'
+     并把任务目录移动到 archive/，所以 active-task resolver 会丢失指针，hook 永远不会在
+     已归档任务上触发。保留该块供未来状态转换重设计使用（例如显式
+     in_progress→completed 命令）。和 live blocks 通过同一个 spec 通道编辑。 -->
 
 [workflow-state:completed]
-Code committed. Run `/devflow:finish-work`; if dirty, return to Phase 3.4 first.
+代码已提交。运行 `/devflow:finish-work`；如果工作区仍有脏文件，先回到 Phase 3.4。
 [/workflow-state:completed]
 
-### Rules
+### 规则
 
-1. Identify which Phase you're in, then continue from the next step there
-2. Run steps in order inside each Phase; `[required]` steps can't be skipped
-3. Phases can roll back (e.g., Execute reveals a prd defect → return to Plan to fix, then re-enter Execute)
-4. Steps tagged `[once]` are skipped if the output already exists; don't re-run
-5. Artifact presence informs the next step; missing `design.md` / `implement.md` is valid for lightweight tasks and incomplete planning for complex tasks.
+1. 先判断当前处于哪个 Phase，然后从该 Phase 的下一步继续。
+2. 每个 Phase 内按顺序执行步骤；`[required]` 步骤不能跳过。
+3. Phase 可以回滚（例如 Execute 发现 prd 缺陷 → 回到 Plan 修复，再重新进入 Execute）。
+4. 标记为 `[once]` 的步骤，如果输出已经存在，就跳过；不要重复运行。
+5. 产物是否存在会决定下一步；轻量任务缺少 `design.md` / `implement.md` 是有效的，复杂任务缺少它们则表示规划未完成。
 
-### Active Task Routing
+### 活动任务路由
 
-When a user request matches one of these intents inside an active task, route first, then load the detailed phase step if needed.
+当用户请求在活动任务中匹配以下意图时，先路由；需要时再加载详细 phase 步骤。
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-- Planning or unclear requirements -> `devflow-brainstorm`.
-- `in_progress` implementation/check -> dispatch `devflow-implement` / `devflow-check`.
-- Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
+- 规划或需求不清 -> `devflow-brainstorm`。
+- `in_progress` 实现/检查 -> 派发 `devflow-implement` / `devflow-check`。
+- 反复调试 -> `devflow-break-loop`；spec 更新 -> `devflow-update-spec`。
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 [codex-inline, Kilo, Antigravity, Windsurf]
 
-- Planning or unclear requirements -> `devflow-brainstorm`.
-- Before editing -> `devflow-before-dev`; after editing -> `devflow-check`.
-- Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
+- 规划或需求不清 -> `devflow-brainstorm`。
+- 编辑前 -> `devflow-before-dev`；编辑后 -> `devflow-check`。
+- 反复调试 -> `devflow-break-loop`；spec 更新 -> `devflow-update-spec`。
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
-### Guardrails
+### 护栏
 
-- Task creation approval is not implementation approval; implementation waits for `task.py start` after artifact review.
-- PRD-only is valid for lightweight tasks; complex tasks need `design.md` + `implement.md`.
-- Planning must be persisted to task artifacts; checks must run before reporting completion.
+- 批准创建任务不等于批准实现；实现必须等产物评审后运行 `task.py start`。
+- 轻量任务可以只有 PRD；复杂任务需要 `design.md` + `implement.md`。
+- 规划必须持久化到任务产物；报告完成前必须运行检查。
 
-### Loading Step Detail
+### 加载步骤详情
 
-At each step, run this to fetch detailed guidance:
+每个步骤中，运行下面的命令获取详细指南：
 
 ```bash
 python3 ./.devflow/scripts/get_context.py --mode phase --step <step>
-# e.g. python3 ./.devflow/scripts/get_context.py --mode phase --step 1.1
+# 例如：python3 ./.devflow/scripts/get_context.py --mode phase --step 1.1
 ```
 
 ---
 
-## Phase 1: Plan
+## Phase 1: 规划
 
-Goal: classify the request, get task-creation consent when a task is needed, and produce the planning artifacts required before implementation.
+目标：分类请求，在需要任务时取得任务创建许可，并产出实现前所需的规划产物。
 
-#### 1.0 Create task `[required · once]`
+#### 1.0 创建任务 `[required · once]`
 
-Create the task directory only after task-creation consent. The command sets status to `planning`, writes `task.json`, creates a default `prd.md`, and auto-targets the new task when session identity is available:
+仅在取得任务创建许可后创建任务目录。该命令会把状态设为 `planning`，写入 `task.json`，创建默认 `prd.md`，并在存在会话身份时自动把新任务设为目标：
 
 ```bash
 python3 ./.devflow/scripts/task.py create "<task title>" --slug <name>
 ```
 
-`--slug` is the human-readable name only. Do **not** include the `MM-DD-` date prefix; `task.py create` adds that prefix automatically.
+`--slug` 只填写人类可读名称。**不要**包含 `MM-DD-` 日期前缀；`task.py create` 会自动添加该前缀。
 
-For task trees, create the parent task first and then create each child with `--parent <parent-dir>`. Do not start the parent just because children exist; start the child that owns the next independently verifiable deliverable.
+对于任务树，先创建父任务，再用 `--parent <parent-dir>` 创建每个子任务。不要因为存在子任务就启动父任务；应启动拥有下一个可独立验证交付物的子任务。
 
-After this command succeeds, the per-turn breadcrumb auto-switches to `[workflow-state:planning]`, telling the AI to stay in planning.
+该命令成功后，每回合面包屑会自动切换到 `[workflow-state:planning]`，提示 AI 保持在规划阶段。
 
-Run only `create` here — do not also run `start`. `start` flips status to `in_progress`, which switches the breadcrumb to the implementation phase before planning artifacts are reviewed. Save `start` for step 1.4.
+这里只运行 `create`，不要同时运行 `start`。`start` 会把状态切到 `in_progress`，导致规划产物评审前面包屑就进入实现阶段。把 `start` 留到步骤 1.4。
 
-Skip when `python3 ./.devflow/scripts/task.py current --source` already points to a task.
+如果 `python3 ./.devflow/scripts/task.py current --source` 已经指向一个任务，则跳过。
 
-#### 1.1 Requirement exploration `[required · repeatable]`
+#### 1.1 需求探索 `[required · repeatable]`
 
-Load the `devflow-brainstorm` skill and explore requirements interactively with the user per the skill's guidance.
+加载 `devflow-brainstorm` skill，并按该 skill 的指导与用户交互式探索需求。
 
-The brainstorm skill will guide you to:
-- Ask one question at a time
-- Prefer researching over asking the user
-- Prefer offering options over open-ended questions
-- Update `prd.md` immediately after each user answer
-- Split large scopes into a parent task plus child tasks when the deliverables can be verified independently
-- Keep `prd.md` focused on requirements and acceptance criteria
-- For complex tasks, produce `design.md` and `implement.md` before implementation starts
+brainstorm skill 会指导你：
+- 一次只问一个问题。
+- 能通过研究回答的，不要问用户。
+- 优先提供选项，而不是问开放式问题。
+- 每次用户回答后立即更新 `prd.md`。
+- 当交付物可独立验证时，把大范围拆成父任务加子任务。
+- 让 `prd.md` 聚焦需求和验收标准。
+- 对复杂任务，在实现开始前产出 `design.md` 和 `implement.md`。
 
-When considering a parent/child split:
-- Use a parent task when one request contains several independently verifiable deliverables.
-- Parent tasks own source requirements, child-task mapping, cross-child acceptance criteria, and final integration review.
-- Child tasks own actual deliverables that can be planned, implemented, checked, and archived independently.
-- Parent/child structure is not a dependency system. If child B depends on child A, write that ordering in child B's `prd.md` / `implement.md`.
-- Start the child task that owns the next deliverable. Do not start the parent unless the parent itself has direct implementation work.
+考虑父子拆分时：
+- 当一个请求包含多个可独立验证的交付物时，使用父任务。
+- 父任务负责源需求、子任务映射、跨子任务验收标准和最终集成评审。
+- 子任务负责能独立规划、实现、检查和归档的实际交付物。
+- 父子结构不是依赖系统。如果子任务 B 依赖子任务 A，请把顺序写入子任务的 `prd.md` / `implement.md`。
+- 启动拥有下一个交付物的子任务。除非父任务本身有直接实现工作，否则不要启动父任务。
 
-Return to this step whenever requirements change and revise the relevant artifact.
+每当需求变化时，回到此步骤并修订相关产物。
 
-#### 1.2 Research `[optional · repeatable]`
+#### 1.2 研究 `[optional · repeatable]`
 
-Research can happen at any time during requirement exploration. It isn't limited to local code — you can use any available tool (MCP servers, skills, web search, etc.) to look up external information, including third-party library docs, industry practices, API references, etc.
+研究可以在需求探索期间随时发生。它不限于本地代码；你可以使用任何可用工具（MCP server、skill、web search 等）查找外部信息，包括第三方库文档、行业实践、API reference 等。
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-Spawn the research sub-agent:
+派发 research 子代理：
 
 - **Agent type**: `devflow-research`
 - **Task description**: Research <specific question>
-- **Key requirement**: Research output MUST be persisted to `{TASK_DIR}/research/`
+- **关键要求**：研究输出必须持久化到 `{TASK_DIR}/research/`
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 [codex-inline, Kilo, Antigravity, Windsurf]
 
-Do the research in the main session directly and write findings into `{TASK_DIR}/research/`. (For `codex-inline` this avoids the `fork_turns="none"` isolation that prevents `devflow-research` sub-agents from resolving the active task path.)
+在主会话中直接研究，并把发现写入 `{TASK_DIR}/research/`。（对 `codex-inline` 而言，这可以避开 `fork_turns="none"` 隔离导致 `devflow-research` 子代理无法解析活动任务路径的问题。）
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
-**Research artifact conventions**:
-- One file per research topic (e.g. `research/auth-library-comparison.md`)
-- Record third-party library usage examples, API references, version constraints in files
-- Note relevant spec file paths you discovered for later reference
+**研究产物约定**：
+- 每个研究主题一个文件（例如 `research/auth-library-comparison.md`）。
+- 在文件中记录第三方库用法示例、API reference、版本约束。
+- 记录你发现的相关 spec 文件路径，供后续引用。
 
-Brainstorm and research can interleave freely — pause to research a technical question, then return to talk with the user.
+Brainstorm 和研究可以自由交错：可以暂停去研究技术问题，然后回到与用户讨论。
 
-**Key principle**: Research output must be written to files, not left only in the chat. Conversations get compacted; files don't.
+**关键原则**：研究输出必须写入文件，不能只留在聊天中。对话会被压缩，文件不会。
 
-#### 1.3 Configure context `[required · once]`
+#### 1.3 配置上下文 `[required · once]`
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the right spec/research context. These files were seeded on `task create` with a single self-describing `_example` line; your job here is to fill in real entries.
+整理 `implement.jsonl` 和 `check.jsonl`，让 Phase 2 子代理拿到正确的 spec/research 上下文。这些文件在 `task create` 时会带一个自描述 `_example` 种子行；这里的工作是填入真实条目。
 
-**Location**: `{TASK_DIR}/implement.jsonl` and `{TASK_DIR}/check.jsonl` (already exist).
+**位置**：`{TASK_DIR}/implement.jsonl` 和 `{TASK_DIR}/check.jsonl`（已经存在）。
 
-**Format**: one JSON object per line. Supported context entries:
+**格式**：每行一个 JSON 对象。支持的上下文条目：
 
 ```jsonl
 {"file": "<repo-relative path>", "reason": "<why>"}
@@ -393,24 +393,24 @@ Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the rig
 {"knowledge": "<entry-id>", "type": "knowledge", "reason": "<why>"}
 ```
 
-`file` paths are repo-root relative. `knowledge` ids are structured entries searchable via `python3 ./.devflow/scripts/knowledge.py search`, including wiki entries under `.devflow/spec/wiki/` and learnings under `.devflow/spec/guides/learnings.md`.
+`file` 路径相对于 repo root。`knowledge` id 是可通过 `python3 ./.devflow/scripts/knowledge.py search` 搜索的结构化条目，包括 `.devflow/spec/wiki/` 下的 wiki 条目和 `.devflow/spec/guides/learnings.md` 下的经验。
 
-**What to put in**:
-- **Spec files** — `.devflow/spec/<package>/<layer>/index.md` and any specific guideline files (`error-handling.md`, `conventions.md`, etc.) relevant to this task
-- **Research files** — `{TASK_DIR}/research/*.md` that the sub-agent will need to consult
-- **Knowledge entries** — specific reusable learnings, wiki notes, knowhow references, or spec entries that should be injected without loading an entire markdown file
+**应放入**：
+- **Spec 文件**：`.devflow/spec/<package>/<layer>/index.md` 以及与本任务相关的具体指南文件（`error-handling.md`、`conventions.md` 等）。
+- **Research 文件**：子代理需要参考的 `{TASK_DIR}/research/*.md`。
+- **Knowledge 条目**：应注入但不需要加载整个 markdown 文件的可复用经验、wiki notes、knowhow references 或 spec entries。
 
-**What NOT to put in**:
-- Code files (`src/**`, `packages/**/*.ts`, etc.) — those are read by the sub-agent during implementation, not pre-registered here
-- Files you're about to modify — same reason
+**不应放入**：
+- 代码文件（`src/**`、`packages/**/*.ts` 等）：这些由子代理在实现期间读取，不在这里预注册。
+- 你即将修改的文件：原因相同。
 
-**Split between the two files**:
-- `implement.jsonl` → specs + research the implement sub-agent needs to write code correctly
-- `check.jsonl` → specs for the check sub-agent (quality guidelines, check conventions, same research if needed)
+**两个文件的分工**：
+- `implement.jsonl` → implement 子代理正确写代码所需的 specs + research。
+- `check.jsonl` → check 子代理所需的 specs（质量指南、检查约定，必要时同样包含 research）。
 
-These manifests do not replace `implement.md`. `implement.md` is the human-readable execution plan for a complex task; jsonl files only list context files or knowledge entries to inject or load.
+这些清单不能替代 `implement.md`。`implement.md` 是复杂任务的人类可读执行计划；jsonl 文件只列出要注入或加载的上下文文件/knowledge 条目。
 
-**How to discover relevant specs**:
+**如何发现相关 specs**：
 
 ```bash
 python3 ./.devflow/scripts/get_context.py --mode packages
@@ -418,11 +418,11 @@ python3 ./.devflow/scripts/knowledge.py search "<query>"
 python3 ./.devflow/scripts/knowledge.py load <id>
 ```
 
-The context script lists every package + its spec layers with paths. `knowledge.py search` finds focused structured entries; `knowledge.py load` shows the exact content before you add its id to JSONL.
+上下文脚本会列出每个 package 及其 spec layers 和路径。`knowledge.py search` 会查找聚焦的结构化条目；`knowledge.py load` 会在你把 id 加入 JSONL 前显示确切内容。
 
-**How to append entries**:
+**如何追加条目**：
 
-Either edit the jsonl file directly in your editor, or use:
+可以直接在编辑器中修改 jsonl 文件，也可以使用：
 
 ```bash
 python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "<path>" "<reason>"
@@ -431,202 +431,202 @@ python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "knowledge:
 python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "wiki:<id>" "<reason>"
 ```
 
-Delete the seed `_example` line once real entries exist (optional — it's skipped automatically by consumers).
+真实条目存在后可以删除 `_example` 种子行（可选；消费者会自动跳过它）。
 
-Skip when: `implement.jsonl` and `check.jsonl` have agent-curated entries (the seed row alone doesn't count).
+跳过条件：`implement.jsonl` 和 `check.jsonl` 已经有代理整理过的条目（只有种子行不算）。
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 [codex-inline, Kilo, Antigravity, Windsurf]
 
-Skip this step. Context is loaded directly by the `devflow-before-dev` skill in Phase 2.
+跳过此步骤。Phase 2 中由 `devflow-before-dev` skill 直接加载上下文。
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
-#### 1.4 Activate task `[required · once]`
+#### 1.4 激活任务 `[required · once]`
 
-After artifact review, flip the task status to `in_progress`:
+产物评审后，把任务状态切换为 `in_progress`：
 
 ```bash
 python3 ./.devflow/scripts/task.py start <task-dir>
 ```
 
-For lightweight tasks, `prd.md` can be enough. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist and be reviewed before start. On sub-agent-capable platforms, curate jsonl manifests when extra spec or research context is needed; seed-only manifests are tolerated by consumers.
+对轻量任务，`prd.md` 可以足够。对复杂任务，启动前必须存在并评审 `prd.md`、`design.md` 和 `implement.md`。在支持子代理的平台上，如果需要额外 spec 或 research 上下文，则整理 jsonl 清单；只有种子行的清单会被消费者容忍。
 
-After this command succeeds, the breadcrumb auto-switches to `[workflow-state:in_progress]`, and the rest of Phase 2 / 3 follows.
+该命令成功后，面包屑会自动切换为 `[workflow-state:in_progress]`，随后执行 Phase 2 / 3 的其余步骤。
 
-If `task.py start` errors with a session-identity message (no context key from hook input, `DEVFLOW_CONTEXT_ID`, or platform-native session env), follow the hint in the error to set up session identity, then retry.
+如果 `task.py start` 报出会话身份错误（hook 输入、`DEVFLOW_CONTEXT_ID` 或平台原生 session env 都没有 context key），按错误提示设置会话身份后重试。
 
-#### 1.5 Completion criteria
+#### 1.5 完成标准
 
-| Condition | Required |
+| 条件 | 必需 |
 |------|:---:|
-| `prd.md` exists | ✅ |
-| User confirms task should enter implementation | ✅ |
-| `task.py start` has been run (status = in_progress) | ✅ |
-| `research/` has artifacts (complex tasks) | recommended |
-| `design.md` exists (complex tasks) | ✅ |
-| `implement.md` exists (complex tasks) | ✅ |
+| `prd.md` 存在 | ✅ |
+| 用户确认任务应进入实现 | ✅ |
+| 已运行 `task.py start`（status = in_progress） | ✅ |
+| `research/` 有产物（复杂任务） | 建议 |
+| `design.md` 存在（复杂任务） | ✅ |
+| `implement.md` 存在（复杂任务） | ✅ |
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-| `implement.jsonl` / `check.jsonl` curated when extra spec or research context is needed | recommended |
+| 需要额外 spec 或 research 上下文时已整理 `implement.jsonl` / `check.jsonl` | 建议 |
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 ---
 
-## Phase 2: Execute
+## Phase 2: 执行
 
-Goal: turn reviewed planning artifacts into code that passes quality checks.
+目标：把已评审的规划产物转化为能通过质量检查的代码。
 
-#### 2.1 Implement `[required · repeatable]`
+#### 2.1 实现 `[required · repeatable]`
 
 [Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-Spawn the implement sub-agent:
+派发 implement 子代理：
 
 - **Agent type**: `devflow-implement`
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
-- **Dispatch prompt guard**: Tell the spawned agent it is already the `devflow-implement` sub-agent and must implement directly, not spawn another `devflow-implement` / `devflow-check`.
+- **派发提示护栏**：告诉被派发的 agent 它已经是 `devflow-implement` 子代理，必须直接实现，不要再 spawn 另一个 `devflow-implement` / `devflow-check`。
 
-The platform hook/plugin auto-handles:
-- Reads `implement.jsonl` and injects referenced spec/research files and knowledge entries into the agent prompt
-- Injects `prd.md`, `design.md` if present, and `implement.md` if present
+平台 hook/plugin 会自动处理：
+- 读取 `implement.jsonl`，并把引用的 spec/research 文件和 knowledge 条目注入 agent prompt。
+- 注入 `prd.md`、存在的 `design.md` 和存在的 `implement.md`。
 
 [/Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 [codex-sub-agent]
 
-Spawn the implement sub-agent:
+派发 implement 子代理：
 
 - **Agent type**: `devflow-implement`
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
-- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then explicitly say the spawned agent is already `devflow-implement` and must implement directly without spawning another `devflow-implement` / `devflow-check`.
+- **派发提示护栏**：prompt 必须以 `Active task: <task path>` 开头，然后明确说明被派发的 agent 已经是 `devflow-implement`，必须直接实现，不要再 spawn 另一个 `devflow-implement` / `devflow-check`。
 
-The Codex sub-agent definition auto-handles the context load requirement:
-- Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
-- Reads `implement.jsonl` and requires the agent to load each referenced spec/research file or knowledge entry before coding
+Codex 子代理定义会自动处理上下文加载要求：
+- 通过 `task.py current --source` 解析活动任务，然后读取 `prd.md`、存在的 `design.md` 和存在的 `implement.md`。
+- 读取 `implement.jsonl`，并要求 agent 在编码前加载每个被引用的 spec/research 文件或 knowledge 条目。
 
 [/codex-sub-agent]
 
 [Kiro]
 
-Spawn the implement sub-agent:
+派发 implement 子代理：
 
 - **Agent type**: `devflow-implement`
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
-- **Dispatch prompt guard**: Tell the spawned agent it is already the `devflow-implement` sub-agent and must implement directly, not spawn another `devflow-implement` / `devflow-check`.
+- **派发提示护栏**：告诉被派发的 agent 它已经是 `devflow-implement` 子代理，必须直接实现，不要再 spawn 另一个 `devflow-implement` / `devflow-check`。
 
-The platform prelude auto-handles the context load requirement:
-- Reads `implement.jsonl` and injects referenced spec/research files and knowledge entries into the agent prompt
-- Injects `prd.md`, `design.md` if present, and `implement.md` if present
+平台 prelude 会自动处理上下文加载要求：
+- 读取 `implement.jsonl`，并把引用的 spec/research 文件和 knowledge 条目注入 agent prompt。
+- 注入 `prd.md`、存在的 `design.md` 和存在的 `implement.md`。
 
 [/Kiro]
 
 [codex-inline, Kilo, Antigravity, Windsurf]
 
-1. Load the `devflow-before-dev` skill to read project guidelines
-2. Read `{TASK_DIR}/prd.md`, then `design.md` if present, then `implement.md` if present
-3. Consult materials under `{TASK_DIR}/research/`
-4. Implement the code per reviewed artifacts
-5. Run project lint and type-check
+1. 加载 `devflow-before-dev` skill 读取项目指南。
+2. 读取 `{TASK_DIR}/prd.md`，然后读取存在的 `design.md` 和存在的 `implement.md`。
+3. 查阅 `{TASK_DIR}/research/` 下的材料。
+4. 按已评审产物实现代码。
+5. 运行项目 lint 和 type-check。
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
-#### 2.2 Quality check `[required · repeatable]`
+#### 2.2 质量检查 `[required · repeatable]`
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-Spawn the check sub-agent:
+派发 check 子代理：
 
 - **Agent type**: `devflow-check`
 - **Task description**: Review all code changes against specs and task artifacts; fix any findings directly; ensure lint and type-check pass
-- **Dispatch prompt guard**: Tell the spawned agent it is already the `devflow-check` sub-agent and must review/fix directly, not spawn another `devflow-check` / `devflow-implement`.
+- **派发提示护栏**：告诉被派发的 agent 它已经是 `devflow-check` 子代理，必须直接 review/fix，不要再 spawn 另一个 `devflow-check` / `devflow-implement`。
 
-The check agent's job:
-- Review code changes against specs
-- Review code changes against `prd.md`, `design.md` if present, and `implement.md` if present
-- Auto-fix issues it finds
-- Run lint and typecheck to verify
+check agent 的职责：
+- 根据 specs review 代码变更。
+- 根据 `prd.md`、存在的 `design.md` 和存在的 `implement.md` review 代码变更。
+- 自动修复发现的问题。
+- 运行 lint 和 typecheck 验证。
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 [codex-inline, Kilo, Antigravity, Windsurf]
 
-Load the `devflow-check` skill and verify the code per its guidance:
-- Spec compliance
-- lint / type-check / tests
-- Cross-layer consistency (when changes span layers)
+加载 `devflow-check` skill，并按其指导验证代码：
+- Spec 合规。
+- lint / type-check / tests。
+- 跨层一致性（当变更跨越多个层时）。
 
-If issues are found → fix → re-check, until green.
+如果发现问题 → 修复 → 重新检查，直到通过。
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
-#### 2.3 Rollback `[on demand]`
+#### 2.3 回滚 `[on demand]`
 
-- `check` reveals a prd defect → return to Phase 1, fix `prd.md`, then redo 2.1
-- Implementation went wrong → revert code, redo 2.1
-- Need more research → research (same as Phase 1.2), write findings into `research/`
+- `check` 暴露 prd 缺陷 → 回到 Phase 1，修复 `prd.md`，然后重做 2.1。
+- 实现方向错误 → 回滚代码，重做 2.1。
+- 需要更多研究 → 研究（同 Phase 1.2），把发现写入 `research/`。
 
 ---
 
-## Phase 3: Finish
+## Phase 3: 收尾
 
-Goal: ensure code quality, capture lessons, record the work.
+目标：确保代码质量，沉淀经验，记录工作。
 
-#### 3.1 Quality verification `[required · repeatable]`
+#### 3.1 质量验证 `[required · repeatable]`
 
-Load the `devflow-check` skill and do a final verification:
-- Spec compliance
-- lint / type-check / tests
-- Cross-layer consistency (when changes span layers)
+加载 `devflow-check` skill 并进行最终验证：
+- Spec 合规。
+- lint / type-check / tests。
+- 跨层一致性（当变更跨越多个层时）。
 
-If issues are found → fix → re-check, until green.
+如果发现问题 → 修复 → 重新检查，直到通过。
 
-#### 3.2 Debug retrospective `[on demand]`
+#### 3.2 调试复盘 `[on demand]`
 
-If this task involved repeated debugging (the same issue was fixed multiple times), load the `devflow-break-loop` skill to:
-- Classify the root cause
-- Explain why earlier fixes failed
-- Propose prevention
+如果本任务涉及反复调试（同一个问题被修复多次），加载 `devflow-break-loop` skill：
+- 分类根因。
+- 解释之前的修复为什么失败。
+- 提出预防措施。
 
-The goal is to capture debugging lessons so the same class of issue doesn't recur.
+目标是沉淀调试经验，避免同类问题再次发生。
 
-#### 3.3 Spec update `[required · once]`
+#### 3.3 更新 spec `[required · once]`
 
-Load the `devflow-update-spec` skill and review whether this task produced new knowledge worth recording:
-- Newly discovered patterns or conventions
-- Pitfalls you hit
-- New technical decisions
+加载 `devflow-update-spec` skill，并判断本任务是否产生值得记录的新知识：
+- 新发现的模式或约定。
+- 遇到的坑。
+- 新的技术决策。
 
-Update the docs under `.devflow/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment.
+据此更新 `.devflow/spec/` 下的文档。即使结论是“无需更新”，也要走完判断过程。
 
-#### 3.4 Commit changes `[required · once]`
+#### 3.4 提交变更 `[required · once]`
 
-The AI drives a batched commit of this task's code changes so `/finish-work` can run cleanly afterwards. Goal: produce work commits FIRST, then bookkeeping (archive + journal) commits land after — never interleaved.
+AI 驱动本任务代码变更的批量提交，以便之后 `/finish-work` 能干净运行。目标：先产生工作提交，再产生 bookkeeping（archive + journal）提交；不要交错。
 
-**Step-by-step**:
+**步骤**：
 
-1. **Inspect dirty state**:
+1. **检查脏状态**：
    ```bash
    git status --porcelain
    ```
-   Snapshot every dirty path. If the working tree is clean, skip to 3.5.
+   快照每个脏路径。如果工作区干净，跳到 3.5。
 
-2. **Learn commit style** from recent history (so drafted messages blend in):
+2. **从最近历史学习 commit 风格**（让草拟消息风格一致）：
    ```bash
    git log --oneline -5
    ```
-   Note the prefix convention (`feat:` / `fix:` / `chore:` / `docs:` ...), language (中文/English), and length style.
+   注意前缀约定（`feat:` / `fix:` / `chore:` / `docs:` ...）、语言（中文/English）和长度风格。
 
-3. **Classify dirty files into two groups**:
-   - **AI-edited this session** — files you wrote/edited via Edit/Write/Bash tool calls in this session. You know what changed and why.
-   - **Unrecognized** — dirty files you did NOT touch this session (could be the user's manual edits, leftover WIP from a previous session, or unrelated work). Do NOT silently include these.
+3. **把脏文件分成两组**：
+   - **本会话 AI 编辑**：你在本会话中通过 Edit/Write/Bash 工具调用写入/编辑过的文件。你知道改了什么以及原因。
+   - **未识别**：本会话中你没有触碰过的脏文件（可能是用户手动编辑、上次会话遗留 WIP 或无关工作）。不要静默纳入。
 
-4. **Draft a commit plan**. Group AI-edited files into logical commits (1 commit per coherent change unit, not 1 commit per file). Each entry: `<commit message>` + file list. List unrecognized files separately at the bottom.
+4. **草拟提交计划**。把 AI 编辑的文件按逻辑提交分组（每个内聚变更单元一个 commit，不是每个文件一个 commit）。每项包含：`<commit message>` + 文件列表。把未识别文件单独列在底部。
 
-5. **Present the plan once, ask for one-shot confirmation**. Format:
+5. **只展示一次计划，并请求一次性确认**。格式：
    ```
    Proposed commits (in order):
      1. <message>
@@ -642,66 +642,66 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    Reply 'ok' / '行' to execute. Reply with edits, or '我自己来' / 'manual' to abort.
    ```
 
-6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. Do not amend. Do not push.
+6. **确认后**：按顺序对每批运行 `git add <files>` + `git commit -m "<msg>"`。不要 amend。不要 push。
 
-7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.5 once they confirm.
+7. **被拒绝时**（用户回复“不行” / “我自己来” / “manual” / 对计划有任何反对）：停止。不要尝试第二版计划。用户将手动提交；用户确认后再跳到 3.5。
 
-**Rules**:
-- No `git commit --amend` anywhere — three-stage three-commit flow (work commits → archive commit → journal commit).
-- Never push to remote in this step.
-- If the user wants different message wording but accepts the file grouping, edit the message and re-confirm once — but if they reject the grouping, exit to manual mode.
-- The batched plan is one prompt; do not prompt per commit.
+**规则**：
+- 任何地方都不要 `git commit --amend`：三阶段三提交流（工作提交 → archive commit → journal commit）。
+- 此步骤绝不 push 到远端。
+- 如果用户只想调整消息措辞但接受文件分组，修改消息并再确认一次；如果用户拒绝分组，退出到手动模式。
+- 批量计划只提示一次；不要每个 commit 都提示一次。
 
-#### 3.5 Wrap-up reminder
+#### 3.5 收尾提醒
 
-After the above, remind the user they can run `/finish-work` to wrap up (archive the task, record the session).
+完成上述步骤后，提醒用户可以运行 `/finish-work` 收尾（归档任务、记录会话）。
 
 ---
 
-## Customizing DevFlow (for forks)
+## 自定义 DevFlow（供 fork 使用）
 
-This section is for developers who want to modify the DevFlow workflow itself. All customization is done by editing this file; the scripts are parsers only.
+本节面向想修改 DevFlow 工作流本身的开发者。所有自定义都通过编辑此文件完成；脚本只负责解析。
 
-### Changing what a step means
+### 更改步骤含义
 
-Edit the corresponding step's walkthrough body in the Phase 1 / 2 / 3 sections above. Critical invariants:
-- No active task must triage first and ask for task-creation consent before creating a DevFlow task.
-- Planning must distinguish lightweight PRD-only tasks from complex tasks that require `prd.md`, `design.md`, and `implement.md` before start.
-- Every required execution path must keep the Phase 3.4 commit reminder reachable before `/devflow:finish-work`.
+编辑上方 Phase 1 / 2 / 3 章节中对应步骤的 walkthrough 正文。关键不变量：
+- 无活动任务时必须先分流，并在创建 DevFlow 任务前请求任务创建许可。
+- 规划必须区分轻量 PRD-only 任务和启动前需要 `prd.md`、`design.md`、`implement.md` 的复杂任务。
+- 每条必需执行路径都必须保证在 `/devflow:finish-work` 前能到达 Phase 3.4 commit 提醒。
 
-All tag blocks live in the `## Phase Index` section above, immediately after each phase summary:
+所有标签块都位于上方 `## Phase Index` 章节中，紧跟在各 phase 摘要之后：
 
-| Scope | Corresponding tag |
+| 范围 | 对应标签 |
 |---|---|
-| No active task (before Phase 1) | `[workflow-state:no_task]` (after the Phase Index ASCII art) |
-| All of Phase 1 (task created → ready for implementation) | `[workflow-state:planning]` (after Phase 1 summary) |
+| 无活动任务（Phase 1 之前） | `[workflow-state:no_task]`（Phase Index ASCII 图之后） |
+| 整个 Phase 1（任务已创建 → 可进入实现） | `[workflow-state:planning]`（Phase 1 摘要之后） |
 | Codex inline Phase 1 | `[workflow-state:planning-inline]` |
-| Phase 2 + Phase 3.1–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
-| Codex inline Phase 2 + Phase 3.1–3.4 | `[workflow-state:in_progress-inline]` |
-| After Phase 3.5 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
+| Phase 2 + Phase 3.1-3.4（实现 + 检查 + 收尾） | `[workflow-state:in_progress]`（Phase 2 摘要之后） |
+| Codex inline Phase 2 + Phase 3.1-3.4 | `[workflow-state:in_progress-inline]` |
+| Phase 3.5 之后（已归档） | `[workflow-state:completed]`（Phase 3 摘要之后；**当前不会触发**） |
 
-### Changing the per-turn prompt text
+### 更改每回合提示文本
 
-Directly edit the body of the corresponding `[workflow-state:STATUS]` block. After editing, run `devflow update` (if you're a template maintainer) or restart your AI session (if you're customizing your own project) — no script changes required.
+直接编辑对应 `[workflow-state:STATUS]` 块的正文。编辑后，运行 `devflow update`（如果你是模板维护者），或重启 AI 会话（如果你是在自定义自己的项目）；不需要修改脚本。
 
-### Adding a custom status
+### 添加自定义状态
 
-Add a new block:
+添加新块：
 
 ```
 [workflow-state:my-status]
-your per-turn prompt text
+你的每回合提示文本
 [/workflow-state:my-status]
 ```
 
-Constraints:
-- STATUS charset: `[A-Za-z0-9_-]+` (underscores and hyphens allowed, e.g. `in-review`, `blocked-by-team`)
-- A lifecycle hook must write `task.json.status` to your custom value, otherwise the tag is never read
-- Lifecycle hooks live in `task.json.hooks.after_*` and bind to one of `after_create / after_start / after_finish / after_archive`
+约束：
+- STATUS 字符集：`[A-Za-z0-9_-]+`（允许下划线和连字符，例如 `in-review`、`blocked-by-team`）。
+- 必须有生命周期 hook 把 `task.json.status` 写成你的自定义值，否则该标签永远不会被读取。
+- 生命周期 hooks 位于 `task.json.hooks.after_*`，并绑定到 `after_create / after_start / after_finish / after_archive` 之一。
 
-### Adding a lifecycle hook
+### 添加生命周期 hook
 
-Add a `hooks` field to your `task.json`:
+在 `task.json` 中添加 `hooks` 字段：
 
 ```json
 {
@@ -713,11 +713,11 @@ Add a `hooks` field to your `task.json`:
 }
 ```
 
-Supported events: `after_create / after_start / after_finish / after_archive`. Note that `after_finish` ≠ a status change (it only clears the active-task pointer); use `after_archive` for "task is done" notifications.
+支持的事件：`after_create / after_start / after_finish / after_archive`。注意 `after_finish` 不等于状态变化（它只清除活动任务指针）；如需“任务已完成”通知，请使用 `after_archive`。
 
-### Full contract
+### 完整契约
 
-For the workflow state machine's runtime contract, the locations of all status writers, pseudo-statuses (`no_task` / `stale_<source_type>`), the hook reachability matrix, and other deep details, see:
+关于工作流状态机的运行时契约、所有状态写入点位置、伪状态（`no_task` / `stale_<source_type>`）、hook 可达性矩阵以及其他深入细节，请参阅：
 
-- `.devflow/spec/cli/backend/workflow-state-contract.md` — runtime contract + writer table + test invariants
-- `.devflow/scripts/inject-workflow-state.py` — actual parser (reads workflow.md only, no embedded text)
+- `.devflow/spec/cli/backend/workflow-state-contract.md`：运行时契约 + writer 表 + 测试不变量。
+- `.devflow/scripts/inject-workflow-state.py`：实际解析器（只读取 workflow.md，没有内置文本）。
