@@ -233,9 +233,9 @@ describe("update() integration", () => {
 
     await update({ force: true });
 
-    expect(readProjectFile(FILE_NAMES.AGENTS)).toContain("Trellis 使用说明");
+    expect(readProjectFile(FILE_NAMES.AGENTS)).toContain("DevFlow 使用说明");
     expect(readProjectFile(".claude/agents/devflow-implement.md")).toContain(
-      "实现 Agent",
+      "代码实现专家",
     );
   });
 

@@ -92,53 +92,16 @@ program
       "在当前项目初始化 DevFlow",
     ),
   )
-  .option("--cursor", localized("Include Cursor commands", "包含 Cursor 命令"))
-  .option(
-    "--claude",
-    localized("Include Claude Code commands", "包含 Claude Code 命令"),
-  )
-  .option(
-    "--opencode",
-    localized("Include OpenCode commands", "包含 OpenCode 命令"),
-  )
-  .option("--codex", localized("Include Codex skills", "包含 Codex skill"))
-  .option(
-    "--kilo",
-    localized("Include Kilo CLI commands", "包含 Kilo CLI 命令"),
-  )
-  .option(
-    "--kiro",
-    localized("Include Kiro Code skills", "包含 Kiro Code skill"),
-  )
-  .option(
-    "--gemini",
-    localized("Include Gemini CLI commands", "包含 Gemini CLI 命令"),
-  )
-  .option(
-    "--antigravity",
-    localized("Include Antigravity workflows", "包含 Antigravity 工作流"),
-  )
-  .option(
-    "--windsurf",
-    localized("Include Windsurf workflows", "包含 Windsurf 工作流"),
-  )
-  .option("--qoder", localized("Include Qoder commands", "包含 Qoder 命令"))
   .option(
     "--codebuddy",
     localized("Include CodeBuddy commands", "包含 CodeBuddy 命令"),
   )
   .option(
-    "--copilot",
-    localized("Include GitHub Copilot hooks", "包含 GitHub Copilot hook"),
+    "--claude",
+    localized("Include Claude Code commands", "包含 Claude Code 命令"),
   )
-  .option(
-    "--droid",
-    localized("Include Factory Droid commands", "包含 Factory Droid 命令"),
-  )
-  .option(
-    "--pi",
-    localized("Include Pi Agent extension assets", "包含 Pi Agent 扩展资源"),
-  )
+  .option("--qoder", localized("Include Qoder commands", "包含 Qoder 命令"))
+  .option("--codex", localized("Include Codex skills", "包含 Codex skill"))
   .option(
     "--lang <lang>",
     localized("Template language: en or zh", "模板语言：en 或 zh"),

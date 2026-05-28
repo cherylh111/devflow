@@ -14,7 +14,7 @@ import {
   AI_TOOLS,
   getManagedPaths,
   type AITool,
-  type CliFlag,
+  type InitCliFlag,
 } from "../types/ai-tools.js";
 
 // Platform configurators
@@ -456,6 +456,19 @@ const PLATFORM_FUNCTIONS: Record<AITool, PlatformFunctions> = {
 /** All platform IDs */
 export const PLATFORM_IDS = Object.keys(AI_TOOLS) as AITool[];
 
+/** Platforms exposed by `devflow init` registration. */
+const INIT_PLATFORM_CHOICES = [
+  { platformId: "codebuddy", key: "codebuddy" },
+  { platformId: "claude-code", key: "claude" },
+  { platformId: "qoder", key: "qoder" },
+  { platformId: "codex", key: "codex" },
+] as const satisfies readonly { platformId: AITool; key: InitCliFlag }[];
+
+/** Platform IDs exposed by `devflow init` registration. */
+export const INIT_PLATFORM_IDS = INIT_PLATFORM_CHOICES.map(
+  (choice) => choice.platformId,
+);
+
 /** All platform config directory names (e.g., [".claude", ".cursor", ".opencode"]) */
 export const CONFIG_DIRS = PLATFORM_IDS.map((id) => AI_TOOLS[id].configDir);
 
@@ -541,16 +554,16 @@ export function collectPlatformTemplates(
  * Build TOOLS array for interactive init prompt, derived from AI_TOOLS registry
  */
 export function getInitToolChoices(): {
-  key: CliFlag;
+  key: InitCliFlag;
   name: string;
   defaultChecked: boolean;
   platformId: AITool;
 }[] {
-  return PLATFORM_IDS.map((id) => ({
-    key: AI_TOOLS[id].cliFlag,
-    name: AI_TOOLS[id].name,
-    defaultChecked: AI_TOOLS[id].defaultChecked,
-    platformId: id,
+  return INIT_PLATFORM_CHOICES.map(({ key, platformId }) => ({
+    key,
+    name: AI_TOOLS[platformId].name,
+    defaultChecked: AI_TOOLS[platformId].defaultChecked,
+    platformId,
   }));
 }
 

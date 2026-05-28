@@ -64,6 +64,15 @@ export type CliFlag =
   | "pi";
 
 /**
+ * CLI flag names exposed by `devflow init`.
+ *
+ * The broader registry still contains historical/platform template support so
+ * update/uninstall can service existing projects, but new init registration is
+ * intentionally limited to these platforms.
+ */
+export type InitCliFlag = "codebuddy" | "claude" | "qoder" | "codex";
+
+/**
  * Template context for placeholder resolution.
  * Controls how common templates are rendered per platform.
  */
@@ -128,8 +137,8 @@ export interface AIToolConfig {
  * 1. src/configurators/{platform}.ts — configure function
  * 2. src/templates/{platform}/ — template files
  * 3. Register in src/configurators/index.ts — PLATFORM_FUNCTIONS
- * 4. Add CLI flag in src/cli/index.ts
- * 5. Add to InitOptions in src/commands/init.ts
+ * 4. If exposed by `devflow init`, add its CLI flag in src/cli/index.ts
+ * 5. If exposed by `devflow init`, add to InitOptions in src/commands/init.ts
  */
 export const AI_TOOLS: Record<AITool, AIToolConfig> = {
   "claude-code": {

@@ -14,9 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { AI_TOOLS } from "../src/types/ai-tools.js";
-import {
-  PLATFORM_IDS,
-} from "../src/configurators/index.js";
+import { INIT_PLATFORM_IDS, PLATFORM_IDS } from "../src/configurators/index.js";
 
 const COMMANDER_RESERVED_FLAGS = ["help", "version", "V", "h"];
 const __filename = fileURLToPath(import.meta.url);
@@ -92,6 +90,27 @@ describe("registry internal consistency", () => {
     for (const id of PLATFORM_IDS) {
       expect(COMMANDER_RESERVED_FLAGS).not.toContain(AI_TOOLS[id].cliFlag);
     }
+  });
+
+  it("init command registers only init-supported platform flags", () => {
+    const cliEntrypoint = fs.readFileSync(
+      path.join(CLI_ROOT, "src", "cli", "index.ts"),
+      "utf-8",
+    );
+    const initStart = cliEntrypoint.indexOf('.command("init")');
+    const initEnd = cliEntrypoint.indexOf('.command("update")', initStart);
+    const initBlock = cliEntrypoint.slice(initStart, initEnd);
+    const registeredPlatformFlags = [
+      ...initBlock.matchAll(/\.option\(\s*"([^"]+)"/g),
+    ]
+      .map((match) => match[1])
+      .filter((flag) =>
+        PLATFORM_IDS.some((id) => flag === `--${AI_TOOLS[id].cliFlag}`),
+      );
+
+    expect(registeredPlatformFlags).toEqual(
+      INIT_PLATFORM_IDS.map((id) => `--${AI_TOOLS[id].cliFlag}`),
+    );
   });
 
   it("every platform has non-empty name", () => {

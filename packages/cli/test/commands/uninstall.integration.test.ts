@@ -28,14 +28,30 @@ vi.mock("node:child_process", () => ({
 
 import { init } from "../../src/commands/init.js";
 import { uninstall } from "../../src/commands/uninstall.js";
+import { configurePlatform } from "../../src/configurators/index.js";
 import { DIR_NAMES } from "../../src/constants/paths.js";
-import { loadHashes } from "../../src/utils/template-hash.js";
+import { loadHashes, initializeHashes } from "../../src/utils/template-hash.js";
+import {
+  startRecordingWrites,
+  stopRecordingWrites,
+} from "../../src/utils/file-writer.js";
+import type { AITool } from "../../src/types/ai-tools.js";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
 
 describe("uninstall() integration", () => {
   let tmpDir: string;
+
+  async function addLegacyPlatform(platform: AITool): Promise<void> {
+    const writtenPaths = startRecordingWrites(tmpDir);
+    try {
+      await configurePlatform(platform, tmpDir);
+    } finally {
+      stopRecordingWrites();
+    }
+    initializeHashes(tmpDir, { trackedPaths: writtenPaths, merge: true });
+  }
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-uninstall-int-"));
@@ -76,12 +92,12 @@ describe("uninstall() integration", () => {
   });
 
   it("#3 init → uninstall → project is clean", async () => {
-    await init({ yes: true, claude: true, cursor: true, force: true });
+    await init({ yes: true, claude: true, codebuddy: true, force: true });
 
     // Sanity: init wrote things.
     expect(fs.existsSync(path.join(tmpDir, ".devflow"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(true);
 
     const hashesBefore = loadHashes(tmpDir);
     expect(Object.keys(hashesBefore).length).toBeGreaterThan(0);
@@ -164,7 +180,8 @@ describe("uninstall() integration", () => {
   });
 
   it("#6 user-modified devflow file is still deleted (manifest defines scope)", async () => {
-    await init({ yes: true, cursor: true, force: true });
+    await init({ yes: true, claude: true, force: true });
+    await addLegacyPlatform("cursor");
 
     // Pick any manifest-tracked file under .cursor/ and overwrite it.
     const hashesBefore = loadHashes(tmpDir);
@@ -206,12 +223,13 @@ describe("uninstall() integration", () => {
     // manifest file is opaque and gets deleted, so the entire .kilocode/
     // tree should disappear, demonstrating both nested-subdir cleanup and
     // empty-platform-root cleanup.
-    await init({ yes: true, kilo: true, force: true });
+    await init({ yes: true, claude: true, force: true });
+    await addLegacyPlatform("kilo");
 
     // Detect kilo's actual config dir from manifest entries.
     const hashesBefore = loadHashes(tmpDir);
     const kiloEntry = Object.keys(hashesBefore).find(
-      (p) => !p.startsWith(".devflow/") && p !== "AGENTS.md",
+      (p) => p.startsWith(".kilocode/"),
     );
     if (!kiloEntry) throw new Error("test fixture: no kilo entries found");
     const kiloRoot = kiloEntry.split("/")[0];
@@ -228,7 +246,8 @@ describe("uninstall() integration", () => {
     // After devflow hooks are stripped, `{ version: 1 }` remains — not fully
     // empty per the scrubber, so the file (and therefore .cursor/) survive.
     // This documents the boundary of the cleanup contract.
-    await init({ yes: true, cursor: true, force: true });
+    await init({ yes: true, claude: true, force: true });
+    await addLegacyPlatform("cursor");
     await uninstall({ yes: true });
 
     // Sub-directories under .cursor/ that became empty should be gone.

@@ -29,7 +29,6 @@ vi.mock("node:child_process", () => ({
 import { init } from "../../src/commands/init.js";
 import { VERSION } from "../../src/constants/version.js";
 import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
-import { collectPlatformTemplates } from "../../src/configurators/index.js";
 import { computeHash } from "../../src/utils/template-hash.js";
 import { execSync } from "node:child_process";
 import { setTemplateLanguage } from "../../src/templates/language.js";
@@ -73,8 +72,8 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, PATHS.TASKS))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, PATHS.SPEC))).toBe(true);
 
-    // Default platforms: cursor + claude
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(true);
+    // Default platform: claude
+    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".codex"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".agents", "skills"))).toBe(false);
@@ -110,19 +109,6 @@ describe("init() integration", () => {
         ),
       ),
     ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(
-          tmpDir,
-          ".cursor",
-          "skills",
-          "devflow-meta",
-          "references",
-          "local-architecture",
-          "overview.md",
-        ),
-      ),
-    ).toBe(true);
   });
 
   it("creates Chinese templates when --lang zh is selected", async () => {
@@ -135,7 +121,7 @@ describe("init() integration", () => {
     expect(config).toContain("language: zh");
 
     const agentsMd = fs.readFileSync(path.join(tmpDir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("Trellis 使用说明");
+    expect(agentsMd).toContain("DevFlow 使用说明");
 
     const specIndex = fs.readFileSync(
       path.join(tmpDir, PATHS.SPEC, "backend", "index.md"),
@@ -196,23 +182,30 @@ describe("init() integration", () => {
     ).toBe(true);
   });
 
-  it("#3 multi platform creates all selected platform directories", async () => {
-    await init({ yes: true, claude: true, cursor: true, opencode: true });
+  it("#3 multi platform creates all selected init-supported platform directories", async () => {
+    await init({
+      yes: true,
+      codebuddy: true,
+      claude: true,
+      qoder: true,
+      codex: true,
+    });
 
+    expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".opencode"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".codex"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".agents", "skills"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".codex"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".agents", "skills"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".opencode"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".agent", "workflows"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".kiro", "skills"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
       false,
     );
     expect(fs.existsSync(path.join(tmpDir, ".github", "copilot"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".factory"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".pi"))).toBe(false);
   });
 
@@ -307,62 +300,6 @@ describe("init() integration", () => {
     );
   });
 
-  it("#3c kiro platform creates .kiro/skills", async () => {
-    await init({ yes: true, kiro: true });
-
-    expect(fs.existsSync(path.join(tmpDir, ".kiro", "skills"))).toBe(true);
-    // Kiro is agent-capable → devflow-start skill not emitted.
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".kiro", "skills", "devflow-start", "SKILL.md"),
-      ),
-    ).toBe(false);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".kiro", "skills", "devflow-finish-work", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".kiro", "skills", "devflow-continue", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".kiro", "skills", "devflow-check", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-  });
-
-  it("#3d antigravity platform creates .agent/workflows", async () => {
-    await init({ yes: true, antigravity: true });
-
-    expect(fs.existsSync(path.join(tmpDir, ".agent", "workflows"))).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, ".agent", "workflows", "start.md")),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
-  });
-
-  it("#3f windsurf platform creates .windsurf/workflows", async () => {
-    await init({ yes: true, windsurf: true });
-
-    expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
-      true,
-    );
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".windsurf", "workflows", "devflow-start.md"),
-      ),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-  });
-
   it("#3g qoder platform creates .qoder/commands + .qoder/skills", async () => {
     await init({ yes: true, qoder: true });
 
@@ -412,164 +349,34 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
   });
 
-  it("#3i copilot platform creates .github/copilot hooks and discovery config", async () => {
-    await init({ yes: true, copilot: true });
+  it("#3i ignores legacy platform option keys that are not init choices", async () => {
+    await init({
+      yes: true,
+      cursor: true,
+      opencode: true,
+      kilo: true,
+      kiro: true,
+      gemini: true,
+      antigravity: true,
+      windsurf: true,
+      copilot: true,
+      droid: true,
+      pi: true,
+    } as unknown as Parameters<typeof init>[0]);
 
-    expect(fs.existsSync(path.join(tmpDir, ".github", "prompts"))).toBe(true);
-    // Copilot is agent-capable → start.prompt.md not emitted.
-    expect(
-      fs.existsSync(path.join(tmpDir, ".github", "prompts", "start.prompt.md")),
-    ).toBe(false);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".github", "prompts", "finish-work.prompt.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".github", "prompts", "continue.prompt.md"),
-      ),
-    ).toBe(true);
-
-    expect(
-      fs.existsSync(path.join(tmpDir, ".github", "copilot", "hooks")),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".github", "copilot", "hooks", "session-start.py"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, ".github", "copilot", "hooks.json")),
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, ".github", "hooks", "devflow.json")),
-    ).toBe(true);
-
-    const hashFile = path.join(
-      tmpDir,
-      DIR_NAMES.WORKFLOW,
-      ".template-hashes.json",
+    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".opencode"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".kilocode"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".kiro", "skills"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".agent", "workflows"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
+      false,
     );
-    const hashesFile = JSON.parse(fs.readFileSync(hashFile, "utf-8")) as {
-      __version?: number;
-      hashes?: Record<string, string>;
-    };
-    const hashes = hashesFile.hashes ?? {};
-    const trackedPaths = Object.keys(hashes).map((p) => p.replace(/\\/g, "/"));
-    expect(trackedPaths).not.toContain(".github/prompts/start.prompt.md");
-    expect(trackedPaths).toContain(".github/prompts/finish-work.prompt.md");
-    expect(trackedPaths).toContain(".github/prompts/continue.prompt.md");
-    expect(trackedPaths).toContain(".github/copilot/hooks.json");
-    expect(trackedPaths).toContain(".github/hooks/devflow.json");
-
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-  });
-
-  it("#3e gemini platform creates .gemini/commands/devflow", async () => {
-    await init({ yes: true, gemini: true });
-    expect(
-      fs.existsSync(path.join(tmpDir, ".gemini", "commands", "devflow")),
-    ).toBe(true);
-    // Gemini is agent-capable → start.toml not emitted.
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".gemini", "commands", "devflow", "start.toml"),
-      ),
-    ).toBe(false);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".gemini", "commands", "devflow", "finish-work.toml"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".gemini", "commands", "devflow", "continue.toml"),
-      ),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-  });
-
-  it("#3j droid platform creates commands + skills", async () => {
-    await init({ yes: true, droid: true });
-    // Droid is agent-capable → start.md not emitted.
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".factory", "commands", "devflow", "start.md"),
-      ),
-    ).toBe(false);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".factory", "commands", "devflow", "finish-work.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".factory", "commands", "devflow", "continue.md"),
-      ),
-    ).toBe(true);
-    // Skills (devflow- prefix)
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".factory", "skills", "devflow-check", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-  });
-
-  it("#3k pi platform creates extension-backed prompts, skills, and agents", async () => {
-    await init({ yes: true, pi: true });
-
-    expect(fs.existsSync(path.join(tmpDir, ".pi", "settings.json"))).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, ".pi", "prompts", "devflow-start.md")),
-    ).toBe(false);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".pi", "prompts", "devflow-finish-work.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, ".pi", "prompts", "devflow-continue.md")),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".pi", "skills", "devflow-check", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, ".pi", "agents", "devflow-implement.md")),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".pi", "extensions", "devflow", "index.ts"),
-      ),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".pi", "hooks"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-
-    const hashFile = path.join(
-      tmpDir,
-      DIR_NAMES.WORKFLOW,
-      ".template-hashes.json",
-    );
-    const hashesFile = JSON.parse(fs.readFileSync(hashFile, "utf-8")) as {
-      __version?: number;
-      hashes?: Record<string, string>;
-    };
-    const hashes = hashesFile.hashes ?? {};
-    const trackedPaths = Object.keys(hashes).map((p) => p.replace(/\\/g, "/"));
-    const piTemplates = collectPlatformTemplates("pi");
-    expect(piTemplates).toBeInstanceOf(Map);
-    if (!piTemplates) {
-      throw new Error("Expected Pi templates to be collectable");
-    }
-    const expectedPiPaths = [...piTemplates.keys()];
-    expect(trackedPaths).toEqual(expect.arrayContaining(expectedPiPaths));
+    expect(fs.existsSync(path.join(tmpDir, ".github", "copilot"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".factory"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".pi"))).toBe(false);
   });
 
   it("#4 force mode overwrites previously modified files", async () => {

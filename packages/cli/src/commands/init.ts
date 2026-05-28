@@ -17,7 +17,7 @@ import {
   getPythonCommandForPlatform,
   setResolvedPythonCommand,
 } from "../configurators/shared.js";
-import { AI_TOOLS, type CliFlag } from "../types/ai-tools.js";
+import { AI_TOOLS, type CliFlag, type InitCliFlag } from "../types/ai-tools.js";
 import { DIR_NAMES, FILE_NAMES, PATHS } from "../constants/paths.js";
 import { VERSION } from "../constants/version.js";
 import { getAgentsMdContent } from "../templates/markdown/index.js";
@@ -999,20 +999,10 @@ async function handleReinit(
 }
 
 interface InitOptions {
-  cursor?: boolean;
   claude?: boolean;
-  opencode?: boolean;
   codex?: boolean;
-  kilo?: boolean;
-  kiro?: boolean;
-  gemini?: boolean;
-  antigravity?: boolean;
-  windsurf?: boolean;
   qoder?: boolean;
   codebuddy?: boolean;
-  copilot?: boolean;
-  droid?: boolean;
-  pi?: boolean;
   yes?: boolean;
   user?: string;
   force?: boolean;
@@ -1027,13 +1017,14 @@ interface InitOptions {
   lang?: string;
 }
 
-// Compile-time check: every CliFlag must be a key of InitOptions.
-// If a new platform is added to CliFlag but not to InitOptions, this line errors.
+// Compile-time check: every init-exposed CliFlag must be a key of InitOptions.
+// The broader CliFlag union includes platforms still supported by update/uninstall
+// for existing projects, but not exposed as new init registrations.
 // Uses [X] extends [Y] to prevent distributive conditional behavior.
-type _AssertCliFlagsInOptions = [CliFlag] extends [keyof InitOptions]
+type _AssertInitCliFlagsInOptions = [InitCliFlag] extends [keyof InitOptions]
   ? true
-  : "ERROR: CliFlag has values not present in InitOptions";
-const _cliFlagCheck: _AssertCliFlagsInOptions = true;
+  : "ERROR: InitCliFlag has values not present in InitOptions";
+const _cliFlagCheck: _AssertInitCliFlagsInOptions = true;
 
 /**
  * Write monorepo package configuration to config.yaml (non-destructive patch).
@@ -1531,7 +1522,7 @@ export async function init(options: InitOptions): Promise<void> {
     // Explicit flags take precedence (works with or without -y)
     tools = explicitTools;
   } else if (options.yes) {
-    // No explicit tools + -y: default to Cursor and Claude
+    // No explicit tools + -y: use init-supported default choices.
     tools = TOOLS.filter((t) => t.defaultChecked).map((t) => t.key);
   } else {
     // Interactive mode

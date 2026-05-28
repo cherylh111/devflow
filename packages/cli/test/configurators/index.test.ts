@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_MANAGED_DIRS,
   CONFIG_DIRS,
+  INIT_PLATFORM_IDS,
   PLATFORM_IDS,
   PLATFORM_MANAGED_DIRS,
   collectPlatformTemplates,
@@ -240,8 +241,20 @@ describe("resolveCliFlag", () => {
 describe("getInitToolChoices", () => {
   const choices = getInitToolChoices();
 
-  it("returns one entry per platform", () => {
-    expect(choices).toHaveLength(PLATFORM_IDS.length);
+  it("returns only init-supported platforms in registration order", () => {
+    expect(choices.map((choice) => choice.platformId)).toEqual([
+      "codebuddy",
+      "claude-code",
+      "qoder",
+      "codex",
+    ]);
+    expect(choices.map((choice) => choice.key)).toEqual([
+      "codebuddy",
+      "claude",
+      "qoder",
+      "codex",
+    ]);
+    expect(choices).toHaveLength(INIT_PLATFORM_IDS.length);
   });
 
   it("each entry has required fields", () => {
