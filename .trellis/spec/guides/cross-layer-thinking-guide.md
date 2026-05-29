@@ -145,6 +145,10 @@ In Trellis, command templates (e.g., `record-session.md`) exist in **multiple pl
       no-commit rules, context-loading order). Verify with
       `test/templates/language-parity.test.ts` so localization cannot break
       line count, fenced blocks, placeholders, or heading shape.
+- [ ] Runtime-parsed headings are also machine-readable identifiers. If a
+      script exact-matches a heading such as `## Phase Index` or
+      `## Phase 1: Plan`, localized templates must preserve that heading text
+      verbatim and translate only the body under it.
 - [ ] For Gemini TOML: adapt line continuations (`\\` vs `\`) and triple-quoted strings
 - [ ] Run `/trellis:check-cross-layer` to verify nothing was missed
 

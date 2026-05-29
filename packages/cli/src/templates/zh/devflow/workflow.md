@@ -142,7 +142,7 @@ python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>  # 某个工
       .devflow/spec/cli/backend/workflow-state-contract.md
 -->
 
-## 阶段索引
+## Phase Index
 
 ```
 Phase 1: Plan    → 分类请求，取得任务创建许可，然后写规划产物
@@ -181,7 +181,7 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 复杂任务：询问用户是否可以创建 DevFlow 任务并进入规划阶段。如果用户说不可以，解释情况、澄清范围，或建议拆成更小的任务。
 [/workflow-state:no_task]
 
-### Phase 1: 规划
+### Phase 1: Plan
 - 1.0 创建任务 `[required · once]`（仅在取得任务创建许可后）
 - 1.1 需求探索 `[required · repeatable]`（`prd.md`；复杂任务还需要 `design.md` + `implement.md`）
 - 1.2 研究 `[optional · repeatable]`
@@ -210,7 +210,7 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 Inline 模式：跳过 jsonl 整理；Phase 2 通过 `devflow-before-dev` 读取产物和 specs。
 [/workflow-state:planning-inline]
 
-### Phase 2: 执行
+### Phase 2: Execute
 - 2.1 实现 `[required · repeatable]`
 - 2.2 质量检查 `[required · repeatable]`
 - 2.3 回滚 `[on demand]`
@@ -242,7 +242,7 @@ Inline 模式不要派发 implement/check 子代理。
 读取上下文：`prd.md` -> `design.md if present` -> `implement.md if present`，再加上由 skills 加载的相关 spec/research。
 [/workflow-state:in_progress-inline]
 
-### Phase 3: 收尾
+### Phase 3: Finish
 - 3.1 质量验证 `[required · repeatable]`
 - 3.2 调试复盘 `[on demand]`
 - 3.3 更新 spec `[required · once]`
@@ -304,7 +304,7 @@ python3 ./.devflow/scripts/get_context.py --mode phase --step <step>
 
 ---
 
-## Phase 1: 规划
+## Phase 1: Plan
 
 目标：分类请求，在需要任务时取得任务创建许可，并产出实现前所需的规划产物。
 
@@ -476,7 +476,7 @@ python3 ./.devflow/scripts/task.py start <task-dir>
 
 ---
 
-## Phase 2: 执行
+## Phase 2: Execute
 
 目标：把已评审的规划产物转化为能通过质量检查的代码。
 
@@ -571,7 +571,7 @@ check agent 的职责：
 
 ---
 
-## Phase 3: 收尾
+## Phase 3: Finish
 
 目标：确保代码质量，沉淀经验，记录工作。
 

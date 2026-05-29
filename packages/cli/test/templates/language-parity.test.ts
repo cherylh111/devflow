@@ -64,4 +64,23 @@ describe("Chinese template overlays", () => {
       expect(headingShape(chinese), relativePath).toEqual(headingShape(english));
     }
   });
+
+  it("preserves runtime-parsed workflow heading anchors", () => {
+    const workflow = readText(join(zhRoot, "devflow", "workflow.md"));
+    const requiredHeadings = [
+      "## Phase Index",
+      "### Phase 1: Plan",
+      "### Phase 2: Execute",
+      "### Phase 3: Finish",
+      "## Phase 1: Plan",
+      "## Phase 2: Execute",
+      "## Phase 3: Finish",
+    ];
+
+    for (const heading of requiredHeadings) {
+      expect(workflow, heading).toMatch(
+        new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"),
+      );
+    }
+  });
 });
