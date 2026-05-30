@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Codex Session Start Hook - Inject Trellis context into Codex sessions.
+Codex Session Start Hook - Inject DevFlow context into Codex sessions.
 
 Output format follows Codex hook protocol:
   stdout JSON → { hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "..." } }
@@ -93,21 +93,21 @@ warnings.filterwarnings("ignore")
 
 FIRST_REPLY_NOTICE = """<first-reply-notice>
 On the first visible assistant reply in this session, begin with exactly one short Chinese sentence:
-Trellis SessionStart 已注入：workflow、当前任务状态、开发者身份、git 状态、active tasks、spec 索引已加载。
+DevFlow SessionStart 已注入：workflow、当前任务状态、开发者身份、git 状态、active tasks、spec 索引已加载。
 Then continue directly with the user's request. This notice is one-shot: do not repeat it after the first assistant reply in the same session.
 </first-reply-notice>"""
 
 def should_skip_injection() -> bool:
-    if os.environ.get("TRELLIS_HOOKS") == "0":
+    if os.environ.get("DEVFLOW_HOOKS") == "0":
         return True
-    if os.environ.get("TRELLIS_DISABLE_HOOKS") == "1":
+    if os.environ.get("DEVFLOW_DISABLE_HOOKS") == "1":
         return True
     return os.environ.get("CODEX_NON_INTERACTIVE") == "1"
 
 
 def configure_project_encoding(project_dir: Path) -> None:
-    """Reuse Trellis' shared Windows stdio encoding helper before JSON output."""
-    scripts_dir = project_dir / ".trellis" / "scripts"
+    """Reuse DevFlow' shared Windows stdio encoding helper before JSON output."""
+    scripts_dir = project_dir / ".devflow" / "scripts"
     if str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
 
@@ -149,8 +149,63 @@ def read_file(path: Path, fallback: str = "") -> str:
         return fallback
 
 
+def _read_language(devflow_dir: Path) -> str:
+    scripts_dir = devflow_dir / "scripts"
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from common.devflow_config import get_language  # type: ignore[import-not-found]
+
+        return get_language(devflow_dir.parent)
+    except Exception:
+        config = read_file(devflow_dir / "config.yaml")
+        match = re.search(r"^\s*language\s*:\s*['\"]?([^'\"\s#]+)", config, re.MULTILINE)
+        return "zh" if match and match.group(1).lower() in {"zh", "cn", "zh-cn"} else "en"
+
+
+def _localize_session_context(text: str, devflow_dir: Path) -> str:
+    if _read_language(devflow_dir) != "zh":
+        return text
+    replacements = {
+        "DevFlow compact SessionStart context. Use it to orient the session; load details on demand.": "DevFlow 精简 SessionStart 上下文已加载。用它定位当前会话；需要时再按需加载详情。",
+        "On the first visible assistant reply in this session, begin with exactly one short Chinese sentence:": "本会话首次可见回复时，用一句简短中文开头：",
+        "Then continue directly with the user's request. This notice is one-shot: do not repeat it after the first assistant reply in the same session.": "然后直接继续处理用户请求。这条提示只执行一次：同一会话首次回复后不要重复。",
+        "Status: NO ACTIVE TASK": "状态：无活动任务",
+        "Next: Classify the current turn and ask for task-creation consent before creating any DevFlow task.": "下一步：判断当前请求类型，并在创建任何 DevFlow 任务前征求创建任务许可。",
+        "Next: Task directory not found. Run: python ./.devflow/scripts/task.py finish": "下一步：任务目录不存在。运行：python ./.devflow/scripts/task.py finish",
+        "Next: Archive with": "下一步：使用",
+        "or start a new task.": "归档，或开始一个新任务。",
+        "Next: Load devflow-brainstorm and write prd.md. Stay in planning.": "下一步：加载 devflow-brainstorm 并编写 prd.md。保持在规划阶段。",
+        "Review planning artifacts with the user before `task.py start`.": "在 `task.py start` 前请用户 review 规划产物。",
+        "Lightweight task can ask for start review with PRD-only; complex task must add design.md and implement.md before `task.py start`.": "轻量任务可只用 PRD 请求开始 review；复杂任务必须在 `task.py start` 前补充 design.md 和 implement.md。",
+        "Next: Follow the matching per-turn workflow-state. Context order is jsonl entries, prd.md, design.md if present, implement.md if present.": "下一步：遵循匹配的逐轮 workflow-state。上下文顺序为 jsonl 条目、prd.md、design.md（如有）、implement.md（如有）。",
+        "Current task: none.": "当前任务：无。",
+        "Developer:": "开发者：",
+        "Git: branch": "Git：分支",
+        "; clean.": "；干净。",
+        "Active tasks:": "活动任务：",
+        "total. Use `python ./.devflow/scripts/task.py list --mine` only if needed.": "个。仅在需要时使用 `python ./.devflow/scripts/task.py list --mine`。",
+        "Journal:": "日志：",
+        "Spec indexes:": "Spec 索引：",
+        "available.": "个可用。",
+        "# Development Workflow - Session Summary": "# 开发工作流 - 会话摘要",
+        "Full guide: .devflow/workflow.md. Step detail: `python ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`.": "完整指南：.devflow/workflow.md。步骤详情：`python ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`。",
+        "Task context order for implementation/check: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`. Missing optional artifacts are skipped for lightweight tasks.": "实现/检查的任务上下文顺序：jsonl 条目 -> `prd.md` -> `design.md（如有）` -> `implement.md（如有）`。轻量任务会跳过缺失的可选产物。",
+        "## Available indexes (read on demand)": "## 可用索引（按需读取）",
+        "Discover more via: `python ./.devflow/scripts/get_context.py --mode packages`": "发现更多：`python ./.devflow/scripts/get_context.py --mode packages`",
+        "Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.": "上下文已加载。遵循 <task-status>；仅在需要时加载 workflow/spec/task 详情。",
+        "Status:": "状态：",
+        "Task:": "任务：",
+        "Present:": "已有：",
+        "Next:": "下一步：",
+    }
+    for en, zh in replacements.items():
+        text = text.replace(en, zh)
+    return text
+
+
 def _resolve_context_key(project_dir: Path, hook_input: dict) -> str | None:
-    scripts_dir = project_dir / ".trellis" / "scripts"
+    scripts_dir = project_dir / ".devflow" / "scripts"
     if str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
     try:
@@ -160,13 +215,13 @@ def _resolve_context_key(project_dir: Path, hook_input: dict) -> str | None:
     return resolve_context_key(hook_input, platform="codex")
 
 
-def _resolve_active_task(trellis_dir: Path, hook_input: dict):
-    scripts_dir = trellis_dir / "scripts"
+def _resolve_active_task(devflow_dir: Path, hook_input: dict):
+    scripts_dir = devflow_dir / "scripts"
     if str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
     from common.active_task import resolve_active_task  # type: ignore[import-not-found]
 
-    return resolve_active_task(trellis_dir.parent, hook_input, platform="codex")
+    return resolve_active_task(devflow_dir.parent, hook_input, platform="codex")
 
 
 def run_script(script_path: Path, context_key: str | None = None) -> str:
@@ -174,7 +229,7 @@ def run_script(script_path: Path, context_key: str | None = None) -> str:
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         if context_key:
-            env["TRELLIS_CONTEXT_ID"] = context_key
+            env["DEVFLOW_CONTEXT_ID"] = context_key
         cmd = [sys.executable, "-W", "ignore", str(script_path)]
         result = subprocess.run(
             cmd,
@@ -205,36 +260,36 @@ def _normalize_task_ref(task_ref: str) -> str:
         normalized = normalized[2:]
 
     if normalized.startswith("tasks/"):
-        return f".trellis/{normalized}"
+        return f".devflow/{normalized}"
 
     return normalized
 
 
-def _resolve_task_dir(trellis_dir: Path, task_ref: str) -> Path:
+def _resolve_task_dir(devflow_dir: Path, task_ref: str) -> Path:
     normalized = _normalize_task_ref(task_ref)
     path_obj = Path(normalized)
     if path_obj.is_absolute():
         return path_obj
-    if normalized.startswith(".trellis/"):
-        return trellis_dir.parent / path_obj
-    return trellis_dir / "tasks" / path_obj
+    if normalized.startswith(".devflow/"):
+        return devflow_dir.parent / path_obj
+    return devflow_dir / "tasks" / path_obj
 
 
-def _get_task_status(trellis_dir: Path, hook_input: dict) -> str:
-    active = _resolve_active_task(trellis_dir, hook_input)
+def _get_task_status(devflow_dir: Path, hook_input: dict) -> str:
+    active = _resolve_active_task(devflow_dir, hook_input)
     if not active.task_path:
         return (
             "Status: NO ACTIVE TASK\n"
             "Next: Classify the current turn and ask for task-creation consent "
-            "before creating any Trellis task."
+            "before creating any DevFlow task."
         )
 
     task_ref = active.task_path
-    task_dir = _resolve_task_dir(trellis_dir, task_ref)
+    task_dir = _resolve_task_dir(devflow_dir, task_ref)
     if active.stale or not task_dir.is_dir():
         return (
             f"Status: STALE POINTER\nTask: {task_ref}\n"
-            "Next: Task directory not found. Run: python ./.trellis/scripts/task.py finish"
+            "Next: Task directory not found. Run: python ./.devflow/scripts/task.py finish"
         )
 
     task_json_path = task_dir / "task.json"
@@ -251,7 +306,7 @@ def _get_task_status(trellis_dir: Path, hook_input: dict) -> str:
     if task_status == "completed":
         return (
             f"Status: COMPLETED\nTask: {task_title}\n"
-            f"Next: Archive with `python ./.trellis/scripts/task.py archive {task_dir.name}` "
+            f"Next: Archive with `python ./.devflow/scripts/task.py archive {task_dir.name}` "
             "or start a new task."
         )
 
@@ -268,7 +323,7 @@ def _get_task_status(trellis_dir: Path, hook_input: dict) -> str:
     if not has_prd:
         return (
             f"Status: PLANNING\nTask: {task_title}\nPresent: {present_line}\n"
-            "Next: Load trellis-brainstorm and write prd.md. Stay in planning."
+            "Next: Load devflow-brainstorm and write prd.md. Stay in planning."
         )
 
     if task_status == "planning":
@@ -326,13 +381,13 @@ def _repo_relative(repo_root: Path, path: Path) -> str:
         return str(path)
 
 
-def _collect_spec_index_paths(trellis_dir: Path) -> list[str]:
+def _collect_spec_index_paths(devflow_dir: Path) -> list[str]:
     paths: list[str] = []
-    guides_index = trellis_dir / "spec" / "guides" / "index.md"
+    guides_index = devflow_dir / "spec" / "guides" / "index.md"
     if guides_index.is_file():
-        paths.append(".trellis/spec/guides/index.md")
+        paths.append(".devflow/spec/guides/index.md")
 
-    spec_dir = trellis_dir / "spec"
+    spec_dir = devflow_dir / "spec"
     if not spec_dir.is_dir():
         return paths
 
@@ -341,24 +396,24 @@ def _collect_spec_index_paths(trellis_dir: Path) -> list[str]:
             continue
         index_file = sub / "index.md"
         if index_file.is_file():
-            paths.append(f".trellis/spec/{sub.name}/index.md")
+            paths.append(f".devflow/spec/{sub.name}/index.md")
             continue
         for nested in sorted(sub.iterdir()):
             if not nested.is_dir():
                 continue
             nested_index = nested / "index.md"
             if nested_index.is_file():
-                paths.append(f".trellis/spec/{sub.name}/{nested.name}/index.md")
+                paths.append(f".devflow/spec/{sub.name}/{nested.name}/index.md")
 
     return paths
 
 
 def _build_compact_current_state(
-    trellis_dir: Path,
+    devflow_dir: Path,
     hook_input: dict,
     spec_index_paths: list[str],
 ) -> str:
-    repo_root = trellis_dir.parent
+    repo_root = devflow_dir.parent
     lines: list[str] = []
 
     try:
@@ -375,9 +430,9 @@ def _build_compact_current_state(
     lines.append(f"Developer: {developer or '(not initialized)'}")
     lines.append(_format_git_state(repo_root))
 
-    active = _resolve_active_task(trellis_dir, hook_input)
+    active = _resolve_active_task(devflow_dir, hook_input)
     if active.task_path:
-        task_dir = _resolve_task_dir(trellis_dir, active.task_path)
+        task_dir = _resolve_task_dir(devflow_dir, active.task_path)
         status = "unknown"
         task_json = task_dir / "task.json"
         if task_json.is_file():
@@ -395,7 +450,7 @@ def _build_compact_current_state(
         try:
             task_count = sum(1 for _ in iter_active_tasks(get_tasks_dir(repo_root)))
             lines.append(
-                f"Active tasks: {task_count} total. Use `python ./.trellis/scripts/task.py list --mine` only if needed."
+                f"Active tasks: {task_count} total. Use `python ./.devflow/scripts/task.py list --mine` only if needed."
             )
         except Exception:
             pass
@@ -434,7 +489,7 @@ def _extract_range(content: str, start_header: str, end_header: str) -> str:
 
 
 _BREADCRUMB_TAG_RE = re.compile(
-    r"\[workflow-state:([A-Za-z0-9_-]+)\]\s*\n.*?\n\s*\[/workflow-state:\1\]",
+    r"\[workflow-state:(?P<status>[A-Za-z0-9_-]+)\]\s*\n.*?\n\s*\[/workflow-state:(?P=status)\]",
     re.DOTALL,
 )
 
@@ -454,7 +509,7 @@ def _build_workflow_toc(workflow_path: Path) -> str:
 
     out_lines = [
         "# Development Workflow - Session Summary",
-        "Full guide: .trellis/workflow.md. Step detail: `python ./.trellis/scripts/get_context.py --mode phase --step <X.Y>`.",
+        "Full guide: .devflow/workflow.md. Step detail: `python ./.devflow/scripts/get_context.py --mode phase --step <X.Y>`.",
         "",
     ]
 
@@ -481,13 +536,13 @@ def main() -> None:
 
     configure_project_encoding(project_dir)
 
-    trellis_dir = project_dir / ".trellis"
-    spec_index_paths = _collect_spec_index_paths(trellis_dir)
+    devflow_dir = project_dir / ".devflow"
+    spec_index_paths = _collect_spec_index_paths(devflow_dir)
 
     output = StringIO()
 
     output.write("""<session-context>
-Trellis compact SessionStart context. Use it to orient the session; load details on demand.
+DevFlow compact SessionStart context. Use it to orient the session; load details on demand.
 </session-context>
 
 """)
@@ -495,12 +550,12 @@ Trellis compact SessionStart context. Use it to orient the session; load details
     output.write("\n\n")
 
     output.write("<current-state>\n")
-    output.write(_build_compact_current_state(trellis_dir, hook_input, spec_index_paths))
+    output.write(_build_compact_current_state(devflow_dir, hook_input, spec_index_paths))
     output.write("\n</current-state>\n\n")
 
-    output.write("<trellis-workflow>\n")
-    output.write(_build_workflow_toc(trellis_dir / "workflow.md"))
-    output.write("\n</trellis-workflow>\n\n")
+    output.write("<devflow-workflow>\n")
+    output.write(_build_workflow_toc(devflow_dir / "workflow.md"))
+    output.write("\n</devflow-workflow>\n\n")
 
     output.write("<guidelines>\n")
     output.write(
@@ -517,21 +572,21 @@ Trellis compact SessionStart context. Use it to orient the session; load details
 
     output.write(
         "Discover more via: "
-        "`python ./.trellis/scripts/get_context.py --mode packages`\n"
+        "`python ./.devflow/scripts/get_context.py --mode packages`\n"
     )
     output.write("</guidelines>\n\n")
 
-    task_status = _get_task_status(trellis_dir, hook_input)
+    task_status = _get_task_status(devflow_dir, hook_input)
     output.write(f"<task-status>\n{task_status}\n</task-status>\n\n")
 
     output.write("""<ready>
 Context loaded. Follow <task-status>. Load workflow/spec/task details only when needed.
 </ready>""")
 
-    context = output.getvalue()
+    context = _localize_session_context(output.getvalue(), devflow_dir)
     result = {
         "suppressOutput": True,
-        "systemMessage": f"Trellis context injected ({len(context)} chars)",
+        "systemMessage": f"DevFlow context injected ({len(context)} chars)",
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",
             "additionalContext": context,
