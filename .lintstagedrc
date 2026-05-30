@@ -1,0 +1,4 @@
+{
+  "packages/cli/src/**/*.ts": ["eslint --fix", "prettier --write"],
+  "packages/core/src/**/*.ts": ["eslint --fix"]
+}
