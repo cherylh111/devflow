@@ -163,6 +163,7 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 - `implement.md`：复杂任务的执行计划，包括有序清单、验证命令、评审门和回滚点。
 - `implement.jsonl` / `check.jsonl`：子代理上下文使用的 spec 和 research 清单。它们不能替代 `implement.md`。
 - 轻量任务可以只有 PRD。复杂任务必须在 `task.py start` 前具备 `prd.md`、`design.md` 和 `implement.md`。
+- `task.py start` 会执行 start gate：`prd.md` 必须存在且不能仍是生成的 `TBD` 占位内容。复杂任务设置 `task.json.meta.complex: true`；需要 sub-agent manifest 上下文的任务设置 `task.json.meta.requires_subagent_context: true` 并整理真实 JSONL 条目。
 
 ### 父子任务树
 
@@ -193,9 +194,9 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 
 [workflow-state:planning]
 加载 `devflow-brainstorm`；保持在规划阶段。
-轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`；在 `task.py start` 前请求评审。
+轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`，并设置 `task.json.meta.complex: true`；在 `task.py start` 前请求评审。
 多交付物范围：考虑使用一个父任务加多个可独立验证的子任务；依赖关系必须写入子任务产物，不能由树结构暗示。
-子代理模式：启动前整理 `implement.jsonl` 和 `check.jsonl`，作为 spec/research/knowledge 清单。
+子代理模式：如果 Phase 2 需要 manifest 上下文，设置 `task.json.meta.requires_subagent_context: true`，并在启动前把真实 spec/research/knowledge 条目整理到 `implement.jsonl` / `check.jsonl`。
 [/workflow-state:planning]
 
 <!-- 每回合面包屑：codex.dispatch_mode=inline 时在整个 Phase 1 显示。
@@ -205,9 +206,9 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 
 [workflow-state:planning-inline]
 加载 `devflow-brainstorm`；保持在规划阶段。
-轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`；在 `task.py start` 前请求评审。
+轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`，并设置 `task.json.meta.complex: true`；在 `task.py start` 前请求评审。
 多交付物范围：考虑使用一个父任务加多个可独立验证的子任务；依赖关系必须写入子任务产物，不能由树结构暗示。
-Inline 模式：跳过 jsonl 整理；Phase 2 通过 `devflow-before-dev` 读取产物和 specs。
+Inline 模式：保持 `task.json.meta.requires_subagent_context` 未设置，跳过 jsonl 整理；Phase 2 通过 `devflow-before-dev` 读取产物和 specs。
 [/workflow-state:planning-inline]
 
 ### Phase 2: Execute
@@ -451,9 +452,11 @@ python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "wiki:<id>" "<r
 python3 ./.devflow/scripts/task.py start <task-dir>
 ```
 
-对轻量任务，`prd.md` 可以足够。对复杂任务，启动前必须存在并评审 `prd.md`、`design.md` 和 `implement.md`。在支持子代理的平台上，如果需要额外 spec 或 research 上下文，则整理 jsonl 清单；只有种子行的清单会被消费者容忍。
+对轻量任务，`prd.md` 可以足够，但它不能仍包含生成的 `TBD` 占位内容。对复杂任务，启动前必须存在并评审 `prd.md`、`design.md` 和 `implement.md`，并且任务必须声明 `task.json.meta.complex: true`。对子代理任务，如果需要 manifest 上下文，声明 `task.json.meta.requires_subagent_context: true` 并整理真实 `implement.jsonl` / `check.jsonl` 条目；只有该 metadata 标记为 true 时，`task.py start` 才会阻止 seed-only manifest。Codex inline 任务保持该标记未设置，并通过 `devflow-before-dev` 加载上下文。
 
 该命令成功后，面包屑会自动切换为 `[workflow-state:in_progress]`，随后执行 Phase 2 / 3 的其余步骤。
+
+如果 `task.py start` 报出 start-gate 校验错误，回到 Phase 1 修复产物或 metadata。只有在有意绕过且能解释为什么任务仍应进入实现时，才使用 `--force`。
 
 如果 `task.py start` 报出会话身份错误（hook 输入、`DEVFLOW_CONTEXT_ID` 或平台原生 session env 都没有 context key），按错误提示设置会话身份后重试。
 
@@ -467,10 +470,11 @@ python3 ./.devflow/scripts/task.py start <task-dir>
 | `research/` 有产物（复杂任务） | 建议 |
 | `design.md` 存在（复杂任务） | ✅ |
 | `implement.md` 存在（复杂任务） | ✅ |
+| `task.json.meta.complex: true`（复杂任务） | ✅ |
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-| 需要额外 spec 或 research 上下文时已整理 `implement.jsonl` / `check.jsonl` | 建议 |
+| 需要 sub-agent manifest 上下文时，`task.json.meta.requires_subagent_context: true` 加已整理的 `implement.jsonl` / `check.jsonl` | ✅ |
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 

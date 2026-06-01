@@ -186,6 +186,102 @@ external system (Linear, Jira). `after_finish` means "AI session closed its
 pointer to this task" — the task may resume in a different session. The
 correct event for "task is done" is `after_archive`.
 
+## Scenario: `task.py start` Start Gate
+
+### 1. Scope / Trigger
+
+- Trigger: any change to `task.py start`, planning artifact requirements,
+  JSONL manifest semantics, or task metadata fields that decide whether a task
+  can enter `in_progress`.
+- Reason: `cmd_start` is a status writer. It must not silently advance an
+  under-planned task, but it must preserve inline workflows that do not use
+  JSONL manifests.
+
+### 2. Signatures
+
+- `python3 .devflow/scripts/task.py start <task-dir>`
+- `python3 .devflow/scripts/task.py start <task-dir> --force`
+- `task.json.meta.complex: true`
+- `task.json.meta.requires_subagent_context: true`
+
+### 3. Contracts
+
+- `cmd_start` runs start-gate validation after resolving the task directory and
+  before writing session runtime state or changing `task.json.status`.
+- `prd.md` is always required and must not be the untouched generated template
+  containing the default `TBD` placeholders.
+- `task.json.meta.complex == true` requires non-empty `design.md` and
+  `implement.md`.
+- `task.json.meta.requires_subagent_context == true` requires both
+  `implement.jsonl` and `check.jsonl` to contain at least one curated context
+  entry.
+- Curated JSONL entries are rows with `file`, `knowledge`, `wiki`, or
+  `{"type": "knowledge", "id": "..."}` context fields. Seed rows such as
+  `{"_example": "..."}` do not count.
+- Codex inline / agent-less flows should leave
+  `requires_subagent_context` unset. Missing or seed-only JSONL must not block
+  those flows.
+- `--force` bypasses validation errors, prints the bypassed errors to stderr,
+  then continues with the normal start behavior.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Missing `task.json` or invalid JSON | Fail before status/session writes |
+| Missing, empty, or default-placeholder `prd.md` | Fail unless `--force` |
+| `meta.complex == true` and `design.md` missing/empty | Fail unless `--force` |
+| `meta.complex == true` and `implement.md` missing/empty | Fail unless `--force` |
+| `meta.requires_subagent_context == true` and a JSONL file is missing | Fail unless `--force` |
+| Required JSONL is empty or seed-only | Fail unless `--force` |
+| Required JSONL contains invalid JSON | Fail unless `--force` |
+| JSONL missing/seed-only but `requires_subagent_context` unset | Allow start |
+| Any validation failure with `--force` | Print warning + errors, then continue |
+
+### 5. Good/Base/Bad Cases
+
+- Good: a complex sub-agent task sets both metadata flags, fills
+  `prd.md` / `design.md` / `implement.md`, and curates real JSONL spec entries
+  before `start`.
+- Base: a Codex inline task fills `prd.md`, leaves JSONL absent or seed-only,
+  and starts successfully because inline context is loaded by
+  `devflow-before-dev`.
+- Bad: a task is created and immediately started while `prd.md` still contains
+  the generated `TBD` placeholders; the start gate must block the status flip.
+
+### 6. Tests Required
+
+- Placeholder PRD blocks `task.py start` and leaves `task.json.status` as
+  `"planning"`.
+- Complex task metadata requires `design.md` and `implement.md`.
+- `--force` exits 0, prints the bypass warning, and still flips
+  `"planning" -> "in_progress"`.
+- Missing JSONL is tolerated when `requires_subagent_context` is unset.
+- Seed-only JSONL blocks when `requires_subagent_context` is true.
+- Existing session pointer / degraded-mode tests must set up a valid PRD when
+  they intend to exercise start behavior unrelated to planning validation.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```python
+# Wrong: every sub-agent-capable repo must fill JSONL, breaking Codex inline
+# and lightweight tasks that load specs through devflow-before-dev.
+if has_subagent_platform(repo_root) and seed_only_jsonl(task_dir):
+    return 1
+```
+
+#### Correct
+
+```python
+# Correct: JSONL is a hard gate only when the task declares that sub-agent
+# manifest context is required.
+if task_json.get("meta", {}).get("requires_subagent_context") is True:
+    validate_curated_jsonl(task_dir / "implement.jsonl")
+    validate_curated_jsonl(task_dir / "check.jsonl")
+```
+
 ---
 
 ## Reachability matrix

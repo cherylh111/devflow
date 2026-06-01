@@ -1414,6 +1414,252 @@ describe("regression: current-task path normalization", () => {
     expect(after.status).toBe("in_progress");
   });
 
+  it("[start-gate] task.py start blocks default placeholder PRD before status changes", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    writeProjectFile(
+      path.join(".devflow", "tasks", "issue-106", "prd.md"),
+      [
+        "# Issue 106 task",
+        "",
+        "## Goal",
+        "",
+        "TBD.",
+        "",
+        "## Requirements",
+        "",
+        "- TBD",
+        "",
+        "## Acceptance Criteria",
+        "",
+        "- [ ] TBD",
+        "",
+      ].join("\n"),
+    );
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-placeholder" }),
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Start gate validation failed");
+    expect(result.stderr).toContain("default TBD placeholder");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("planning");
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".devflow",
+          ".runtime",
+          "sessions",
+          "start-gate-placeholder.json",
+        ),
+      ),
+    ).toBe(false);
+  });
+
+  it("[start-gate] task.py start blocks missing PRD before status changes", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    fs.rmSync(path.join(tmpDir, ".devflow", "tasks", "issue-106", "prd.md"), {
+      force: true,
+    });
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-missing-prd" }),
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Missing prd.md");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("planning");
+  });
+
+  it("[start-gate] task.py start blocks complex tasks missing design and implement plans", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    taskJson.meta = { complex: true };
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-complex" }),
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Complex task is missing design.md");
+    expect(result.stderr).toContain("Complex task is missing implement.md");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("planning");
+  });
+
+  it("[start-gate] task.py start force bypass records explicit validation warnings", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    taskJson.meta = { complex: true };
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106", "--force"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-force" }),
+      },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("bypassing start gate validation");
+    expect(result.stderr).toContain("Complex task is missing design.md");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("in_progress");
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".devflow",
+          ".runtime",
+          "sessions",
+          "start-gate-force.json",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("[start-gate] task.py start allows missing JSONL unless sub-agent context is required", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    taskJson.meta = {};
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    fs.rmSync(
+      path.join(tmpDir, ".devflow", "tasks", "issue-106", "implement.jsonl"),
+      { force: true },
+    );
+    fs.rmSync(
+      path.join(tmpDir, ".devflow", "tasks", "issue-106", "check.jsonl"),
+      { force: true },
+    );
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-inline-jsonl" }),
+      },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain("implement.jsonl");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("in_progress");
+  });
+
+  it("[start-gate] task.py start blocks seed-only JSONL when sub-agent context is required", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    taskJson.meta = { requires_subagent_context: true };
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    for (const jsonlName of ["implement.jsonl", "check.jsonl"]) {
+      writeProjectFile(
+        path.join(".devflow", "tasks", "issue-106", jsonlName),
+        JSON.stringify({ _example: "seed row" }) + "\n",
+      );
+    }
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-subagent" }),
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("implement.jsonl has no curated context entries");
+    expect(result.stderr).toContain("check.jsonl has no curated context entries");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("planning");
+  });
+
   it("[session-current-task] task.py start writes session runtime state when DEVFLOW_CONTEXT_ID is set", () => {
     setupTaskRepo();
     const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
@@ -1590,6 +1836,21 @@ describe("regression: current-task path normalization", () => {
       status: string;
     };
     expect(beforeStart.status).toBe("planning");
+    writeProjectFile(
+      path.join(".devflow", "tasks", taskDir as string, "prd.md"),
+      [
+        "# R7 idempotent task",
+        "",
+        "## Goal",
+        "",
+        "Verify create followed by start keeps the same session pointer.",
+        "",
+        "## Acceptance Criteria",
+        "",
+        "- [ ] Start flips the task to in_progress.",
+        "",
+      ].join("\n"),
+    );
 
     // Now run start with the same session — must not error.
     let startStatus = 0;
@@ -3417,6 +3678,8 @@ print(entries[0][1])
     const body = match?.[1] ?? "";
     expect(body).toMatch(/Lightweight: `prd\.md` can be enough/);
     expect(body).toMatch(/Complex: finish `prd\.md`, `design\.md`, and `implement\.md`/);
+    expect(body).toContain("task.json.meta.complex");
+    expect(body).toContain("task.json.meta.requires_subagent_context");
     expect(body).toMatch(/implement\.jsonl|check\.jsonl/);
   });
 

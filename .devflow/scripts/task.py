@@ -25,7 +25,9 @@ from __future__ import annotations
 
 import argparse
 import builtins
+import json
 import sys
+from pathlib import Path
 
 from common.log import Colors, colored
 from common.paths import (
@@ -154,6 +156,81 @@ def _h(en: str, zh: str) -> str:
         repo_root = None
     return _tr(en, zh, repo_root)
 
+
+def _meta_flag(data: dict, key: str) -> bool:
+    meta = data.get("meta")
+    return isinstance(meta, dict) and meta.get(key) is True
+
+
+def _is_placeholder_prd(content: str) -> bool:
+    return "TBD." in content and "- TBD" in content and "- [ ] TBD" in content
+
+
+def _jsonl_curated_entry_count(jsonl_file: Path) -> tuple[int, list[str]]:
+    if not jsonl_file.is_file():
+        return 0, [f"{jsonl_file.name}: not found"]
+
+    errors: list[str] = []
+    count = 0
+    for line_num, line in enumerate(jsonl_file.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            errors.append(f"{jsonl_file.name}:{line_num}: invalid JSON")
+            continue
+
+        if data.get("file") or data.get("knowledge") or data.get("wiki"):
+            count += 1
+            continue
+        if data.get("type") == "knowledge" and data.get("id"):
+            count += 1
+
+    return count, errors
+
+
+def _validate_start_gate(task_dir: Path, task_json_path: Path) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if not task_json_path.is_file():
+        return [f"Missing {FILE_TASK_JSON}"], warnings
+
+    data = read_json(task_json_path)
+    if not isinstance(data, dict):
+        return [f"Invalid {FILE_TASK_JSON}"], warnings
+
+    prd_path = task_dir / "prd.md"
+    if not prd_path.is_file():
+        errors.append("Missing prd.md")
+    else:
+        prd_content = prd_path.read_text(encoding="utf-8")
+        if not prd_content.strip():
+            errors.append("prd.md is empty")
+        elif _is_placeholder_prd(prd_content):
+            errors.append("prd.md still contains the default TBD placeholder")
+
+    if _meta_flag(data, "complex"):
+        for artifact_name in ("design.md", "implement.md"):
+            artifact_path = task_dir / artifact_name
+            if not artifact_path.is_file():
+                errors.append(f"Complex task is missing {artifact_name}")
+            elif not artifact_path.read_text(encoding="utf-8").strip():
+                errors.append(f"Complex task has empty {artifact_name}")
+
+    if _meta_flag(data, "requires_subagent_context"):
+        for jsonl_name in ("implement.jsonl", "check.jsonl"):
+            entry_count, jsonl_errors = _jsonl_curated_entry_count(task_dir / jsonl_name)
+            errors.extend(jsonl_errors)
+            if entry_count == 0:
+                errors.append(
+                    f"{jsonl_name} has no curated context entries "
+                    "(seed _example rows do not count)"
+                )
+
+    return errors, warnings
+
 # Import command handlers from split modules (also re-exports for plan.py compatibility)
 from common.task_store import (
     cmd_create,
@@ -199,6 +276,20 @@ def cmd_start(args: argparse.Namespace) -> int:
         task_dir = str(full_path)
 
     task_json_path = full_path / FILE_TASK_JSON
+    gate_errors, gate_warnings = _validate_start_gate(full_path, task_json_path)
+    for warning in gate_warnings:
+        print(colored(f"Warning: {warning}", Colors.YELLOW), file=sys.stderr)
+    if gate_errors:
+        if not getattr(args, "force", False):
+            print(colored("Error: Start gate validation failed", Colors.RED), file=sys.stderr)
+            for error in gate_errors:
+                print(f"  - {error}", file=sys.stderr)
+            print("Use --force to bypass this gate intentionally.", file=sys.stderr)
+            return 1
+
+        print(colored("Warning: bypassing start gate validation with --force", Colors.YELLOW), file=sys.stderr)
+        for error in gate_errors:
+            print(f"  - {error}", file=sys.stderr)
 
     if not resolve_context_key():
         # Degraded mode: no session identity available.
@@ -444,6 +535,7 @@ Examples:
   python task.py add-context <dir> implement .devflow/spec/cli/backend/auth.md "Auth guidelines"
   python task.py set-branch <dir> task/add-login
   python task.py start .devflow/tasks/01-21-add-login
+  python task.py start .devflow/tasks/01-21-add-login --force
   python task.py current --source
   python task.py finish
   python task.py archive add-login
@@ -527,6 +619,7 @@ def main() -> int:
     # start
     p_start = subparsers.add_parser("start", help=_h("Set active task", "设置活动任务"))
     p_start.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_start.add_argument("--force", action="store_true", help=_h("Bypass start gate validation errors", "绕过 start gate 校验错误"))
 
     # current
     p_current = subparsers.add_parser("current", help=_h("Show active task", "显示活动任务"))

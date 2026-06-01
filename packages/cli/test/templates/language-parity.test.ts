@@ -83,4 +83,14 @@ describe("Chinese template overlays", () => {
       );
     }
   });
+
+  it("preserves workflow start-gate metadata guidance", () => {
+    const workflow = readText(join(zhRoot, "devflow", "workflow.md"));
+    expect(workflow).toContain("task.json.meta.complex");
+    expect(workflow).toContain("task.json.meta.requires_subagent_context");
+    expect(workflow).toContain("implement.jsonl");
+    expect(workflow).toContain("check.jsonl");
+    expect(workflow).toContain("devflow-before-dev");
+    expect(workflow).toContain("--force");
+  });
 });

@@ -162,6 +162,7 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 - `implement.md` — execution plan for complex tasks: ordered checklist, validation commands, review gates, and rollback points.
 - `implement.jsonl` / `check.jsonl` — spec and research manifests for sub-agent context. They do not replace `implement.md`.
 - Lightweight tasks may be PRD-only. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
+- `task.py start` enforces the start gate: `prd.md` must exist and not be the generated `TBD` placeholder. For complex tasks, set `task.json.meta.complex: true`; for sub-agent tasks that require manifest context, set `task.json.meta.requires_subagent_context: true` and curate real JSONL entries.
 
 ### Parent / Child Task Trees
 
@@ -191,9 +192,9 @@ Complex task: ask the user if you can create a DevFlow task and enter the planni
 
 [workflow-state:planning]
 Load `devflow-brainstorm`; stay in planning.
-Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
+Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`, and set `task.json.meta.complex: true`; ask for review before `task.py start`.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Sub-agent mode: curate `implement.jsonl` and `check.jsonl` as spec/research/knowledge manifests before start.
+Sub-agent mode: if Phase 2 needs manifest context, set `task.json.meta.requires_subagent_context: true` and curate `implement.jsonl` / `check.jsonl` with real spec/research/knowledge entries before start.
 [/workflow-state:planning]
 
 <!-- Per-turn breadcrumb: shown throughout Phase 1 when codex.dispatch_mode=inline.
@@ -204,9 +205,9 @@ Sub-agent mode: curate `implement.jsonl` and `check.jsonl` as spec/research/know
 
 [workflow-state:planning-inline]
 Load `devflow-brainstorm`; stay in planning.
-Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
+Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`, and set `task.json.meta.complex: true`; ask for review before `task.py start`.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `devflow-before-dev`.
+Inline mode: leave `task.json.meta.requires_subagent_context` unset, skip jsonl curation, and load artifacts/specs via `devflow-before-dev` in Phase 2.
 [/workflow-state:planning-inline]
 
 ### Phase 2: Execute
@@ -451,9 +452,11 @@ After artifact review, flip the task status to `in_progress`:
 python3 ./.devflow/scripts/task.py start <task-dir>
 ```
 
-For lightweight tasks, `prd.md` can be enough. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist and be reviewed before start. On sub-agent-capable platforms, curate jsonl manifests when extra spec or research context is needed; seed-only manifests are tolerated by consumers.
+For lightweight tasks, `prd.md` can be enough, but it must not still contain the generated `TBD` placeholders. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist, be reviewed, and the task must declare `task.json.meta.complex: true` before start. For sub-agent tasks that require manifest context, declare `task.json.meta.requires_subagent_context: true` and curate real `implement.jsonl` / `check.jsonl` entries; seed-only manifests are blocked by `task.py start` only when that metadata flag is true. Codex inline tasks leave that flag unset and load context through `devflow-before-dev`.
 
 After this command succeeds, the breadcrumb auto-switches to `[workflow-state:in_progress]`, and the rest of Phase 2 / 3 follows.
+
+If `task.py start` reports start-gate validation errors, return to Phase 1 and fix the artifacts or metadata. Use `--force` only when the bypass is intentional and you can explain why the task should enter implementation anyway.
 
 If `task.py start` errors with a session-identity message (no context key from hook input, `DEVFLOW_CONTEXT_ID`, or platform-native session env), follow the hint in the error to set up session identity, then retry.
 
@@ -467,10 +470,11 @@ If `task.py start` errors with a session-identity message (no context key from h
 | `research/` has artifacts (complex tasks) | recommended |
 | `design.md` exists (complex tasks) | ✅ |
 | `implement.md` exists (complex tasks) | ✅ |
+| `task.json.meta.complex: true` for complex tasks | ✅ |
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-| `implement.jsonl` / `check.jsonl` curated when extra spec or research context is needed | recommended |
+| `task.json.meta.requires_subagent_context: true` plus curated `implement.jsonl` / `check.jsonl` when sub-agent manifest context is required | ✅ |
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
