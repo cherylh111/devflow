@@ -110,3 +110,38 @@ Added init-time marketplace batch template selection by template id and category
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Add devflow-use bundled skill
+
+**Date**: 2026-06-02
+**Task**: Add devflow-use bundled skill
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added the built-in devflow-use skill in English and Chinese templates, updated init/configurator tests for installation and hash tracking, and documented the bundled skill naming convention.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `79d8174` | (see git log) |
+| `d20c464` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
