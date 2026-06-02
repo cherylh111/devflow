@@ -36,7 +36,11 @@ import {
   replacePythonCommandLiterals,
 } from "../../src/configurators/shared.js";
 
-const BUNDLED_SKILL_NAMES = ["devflow-meta", "devflow-spec-bootstarp"];
+const BUNDLED_SKILL_NAMES = [
+  "devflow-meta",
+  "devflow-spec-bootstarp",
+  "devflow-use",
+];
 const BUNDLED_SKILL_NAME = BUNDLED_SKILL_NAMES[0];
 const BUNDLED_REFERENCE = path.join(
   BUNDLED_SKILL_NAME,
@@ -288,6 +292,9 @@ describe("configurePlatform", () => {
     expect(
       fs.existsSync(path.join(skillsRoot, "devflow-start", "SKILL.md")),
     ).toBe(true);
+    expect(
+      fs.existsSync(path.join(skillsRoot, "devflow-use", "SKILL.md")),
+    ).toBe(true);
   });
 
   it("configurePlatform('codex') writes custom agents and config", async () => {
@@ -419,7 +426,10 @@ describe("configurePlatform", () => {
         ).length,
     );
     for (const dir of skillDirs) {
-      expect(dir.name.startsWith("devflow-")).toBe(true);
+      expect(
+        dir.name.startsWith("devflow-") ||
+          BUNDLED_SKILL_NAMES.includes(dir.name),
+      ).toBe(true);
       expect(fs.existsSync(path.join(skillsDir, dir.name, "SKILL.md"))).toBe(
         true,
       );
@@ -901,6 +911,7 @@ describe("configurePlatform", () => {
         ".pi/skills/devflow-spec-bootstarp/references/spec-writing.md",
       ),
     ).toBeDefined();
+    expect(templates?.get(".pi/skills/devflow-use/SKILL.md")).toBeDefined();
     expect(templates?.get(".pi/agents/devflow-implement.md")).toContain(
       "Required: Load DevFlow Context First",
     );
