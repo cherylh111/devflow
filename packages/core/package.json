@@ -1,6 +1,6 @@
 {
   "name": "@enpd/devflow-core",
-  "version": "0.6.0-beta.21",
+  "version": "0.6.0-beta.22",
   "description": "DevFlow core SDK — channel and task domain primitives consumed by the DevFlow CLI and downstream Node services",
   "type": "module",
   "main": "./dist/index.js",
