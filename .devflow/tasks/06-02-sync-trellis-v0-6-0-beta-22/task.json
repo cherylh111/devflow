@@ -1,0 +1,36 @@
+{
+  "id": "sync-trellis-v0-6-0-beta-22",
+  "name": "sync-trellis-v0-6-0-beta-22",
+  "title": "Sync upstream Trellis v0.6.0-beta.22",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": "devflow",
+  "priority": "P2",
+  "creator": "z0968",
+  "assignee": "z0968",
+  "createdAt": "2026-06-02",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "packages/cli/src/templates/codex/agents/devflow-check.toml",
+    "packages/cli/src/templates/codex/agents/devflow-implement.toml",
+    "packages/cli/src/migrations/manifests/0.5.19.json",
+    "packages/cli/src/migrations/manifests/0.6.0-beta.22.json",
+    "packages/cli/test/regression.test.ts",
+    "packages/cli/package.json",
+    "packages/core/package.json"
+  ],
+  "notes": "",
+  "meta": {
+    "complex": true
+  }
+}
