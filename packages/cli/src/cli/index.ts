@@ -144,6 +144,20 @@ program
     ),
   )
   .option(
+    "--templates <ids>",
+    localized(
+      "Use multiple marketplace templates by comma-separated id list",
+      "使用逗号分隔的多个 marketplace 模板 id",
+    ),
+  )
+  .option(
+    "--categories <names>",
+    localized(
+      "Use all marketplace templates tagged with comma-separated categories",
+      "按逗号分隔的 category/tag 批量使用 marketplace 模板",
+    ),
+  )
+  .option(
     "--overwrite",
     localized(
       "Overwrite existing spec directory when using template",

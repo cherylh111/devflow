@@ -55,8 +55,8 @@ interface TemplateIndex {
 }
 
 export type TemplateStrategy = "skip" | "overwrite" | "append";
-export type RegistryBackend = "http" | "git";
-export type RegistrySourceKind = "prefixed" | "https" | "ssh";
+export type RegistryBackend = "http" | "git" | "local";
+export type RegistrySourceKind = "prefixed" | "https" | "ssh" | "local";
 export type RegistryErrorKind =
   | "auth"
   | "git-unavailable"
@@ -107,6 +107,27 @@ export interface RegistrySource {
   sourceKind: RegistrySourceKind;
 }
 
+export interface LocalRegistrySource {
+  kind: "local";
+  /** Absolute filesystem path to the local marketplace root. */
+  root: string;
+  /** Display/source label used where remote registries expose a raw base URL. */
+  rawBaseUrl: string;
+  /** Original source label used in user-facing messages. */
+  gigetSource: string;
+  preferGit: false;
+  sourceKind: "local";
+}
+
+export type MarketplaceSource = RegistrySource | LocalRegistrySource;
+
+export interface TemplateSelectionResult {
+  templates: SpecTemplate[];
+  missingIds: string[];
+  missingCategories: string[];
+  availableCategories: string[];
+}
+
 // =============================================================================
 // Registry Source Parsing
 // =============================================================================
@@ -120,6 +141,43 @@ const RAW_URL_PATTERNS: Record<string, string> = {
 };
 
 export const SUPPORTED_PROVIDERS = Object.keys(RAW_URL_PATTERNS);
+
+export function isLocalRegistrySource(
+  source: MarketplaceSource | undefined,
+): source is LocalRegistrySource {
+  return source?.sourceKind === "local";
+}
+
+function isLikelyLocalRegistryPath(source: string): boolean {
+  return (
+    path.isAbsolute(source) ||
+    path.win32.isAbsolute(source) ||
+    source.startsWith("./") ||
+    source.startsWith("../") ||
+    source.startsWith(".\\") ||
+    source.startsWith("..\\") ||
+    fs.existsSync(source)
+  );
+}
+
+function parseLocalRegistrySource(source: string): LocalRegistrySource {
+  const root = path.resolve(source);
+  return {
+    kind: "local",
+    root,
+    rawBaseUrl: root,
+    gigetSource: source,
+    preferGit: false,
+    sourceKind: "local",
+  };
+}
+
+export function parseMarketplaceSource(source: string): MarketplaceSource {
+  if (isLikelyLocalRegistryPath(source)) {
+    return parseLocalRegistrySource(source);
+  }
+  return parseRegistrySource(source);
+}
 
 /**
  * Convert an HTTPS URL to giget-style source format.
@@ -500,9 +558,10 @@ function emptyProbeResult(
 }
 
 function shouldFallbackToGit(
-  registry: RegistrySource | undefined,
+  registry: MarketplaceSource | undefined,
   result: RegistryProbeResult,
 ): boolean {
+  if (isLocalRegistrySource(registry)) return false;
   if (registry?.provider !== "gitlab") return false;
   if (result.backend !== "http" || result.isNotFound) return false;
   return result.error?.kind === "auth" || result.error?.kind === "invalid-json";
@@ -566,8 +625,12 @@ async function probeRegistryIndexHttp(
  */
 export async function probeRegistryIndex(
   indexUrl: string,
-  registry?: RegistrySource,
+  registry?: MarketplaceSource,
 ): Promise<RegistryProbeResult> {
+  if (isLocalRegistrySource(registry)) {
+    return probeRegistryIndexLocal(registry);
+  }
+
   if (registry?.preferGit) {
     return probeRegistryIndexGit(registry);
   }
@@ -842,6 +905,80 @@ async function probeRegistryIndexGit(
   }
 }
 
+async function probeRegistryIndexLocal(
+  registry: LocalRegistrySource,
+): Promise<RegistryProbeResult> {
+  try {
+    if (!(await isDirectory(registry.root))) {
+      return emptyProbeResult(
+        "local",
+        false,
+        new RegistryBackendError(
+          "path-not-found",
+          `Local registry path "${registry.root}" was not found or is not a directory.`,
+        ),
+      );
+    }
+    const indexPath = path.join(registry.root, "index.json");
+    if (!(await isFile(indexPath))) {
+      return emptyProbeResult("local", true);
+    }
+    const index = parseTemplateIndex(
+      await fs.promises.readFile(indexPath, "utf-8"),
+      "Local registry index.json",
+    );
+    return { templates: index.templates, isNotFound: false, backend: "local" };
+  } catch (error) {
+    const registryError =
+      error instanceof RegistryBackendError
+        ? error
+        : new RegistryBackendError(
+            "unknown",
+            `Local registry probe failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+    return emptyProbeResult("local", false, registryError);
+  }
+}
+
+export function splitSelectorList(input: string | undefined): string[] {
+  if (!input) return [];
+  return [
+    ...new Set(
+      input
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0),
+    ),
+  ];
+}
+
+export function selectMarketplaceTemplates(
+  templates: SpecTemplate[],
+  options: { ids?: string[]; categories?: string[] },
+): TemplateSelectionResult {
+  const requestedIds = new Set(options.ids ?? []);
+  const requestedCategories = new Set(options.categories ?? []);
+  const availableCategories = [
+    ...new Set(templates.flatMap((template) => template.tags ?? [])),
+  ].sort();
+  const availableCategorySet = new Set(availableCategories);
+
+  const selected = templates.filter((template) => {
+    if (requestedIds.has(template.id)) return true;
+    return (template.tags ?? []).some((tag) => requestedCategories.has(tag));
+  });
+  const selectedIds = new Set(selected.map((template) => template.id));
+
+  return {
+    templates: selected,
+    missingIds: [...requestedIds].filter((id) => !selectedIds.has(id)),
+    missingCategories: [...requestedCategories].filter(
+      (category) => !availableCategorySet.has(category),
+    ),
+    availableCategories,
+  };
+}
+
 /**
  * Find a template by ID from the index
  */
@@ -1085,11 +1222,77 @@ async function downloadGitRegistryDirect(
   }
 }
 
+async function downloadLocalRegistryPath(
+  registry: LocalRegistrySource,
+  relativePath: string,
+  destDir: string,
+  strategy: TemplateStrategy,
+): Promise<boolean> {
+  const sourceRoot = resolveInsideRegistryRoot(
+    registry.root,
+    relativePath,
+    "Template",
+  );
+  if (!(await isDirectory(sourceRoot))) {
+    throw new RegistryBackendError(
+      "path-not-found",
+      `Template path "${relativePath.length > 0 ? relativePath : "."}" was not found in local registry ${registry.root}.`,
+    );
+  }
+  return copyDirectoryWithStrategy(sourceRoot, destDir, strategy);
+}
+
+async function downloadLocalRegistryDirect(
+  registry: LocalRegistrySource,
+  destDir: string,
+  strategy: TemplateStrategy,
+): Promise<boolean> {
+  if (!(await isDirectory(registry.root))) {
+    throw new RegistryBackendError(
+      "path-not-found",
+      `Local registry path "${registry.root}" was not found or is not a directory.`,
+    );
+  }
+  return copyDirectoryWithStrategy(registry.root, destDir, strategy);
+}
+
 function resolveRegistryBackend(
-  registry: RegistrySource,
+  registry: MarketplaceSource,
   backendOverride?: RegistryBackend,
 ): RegistryBackend {
+  if (isLocalRegistrySource(registry)) return "local";
   return backendOverride ?? (registry.preferGit ? "git" : "http");
+}
+
+function isSupportedInstallType(templateType: string): boolean {
+  return Object.hasOwn(INSTALL_PATHS, templateType);
+}
+
+function unsupportedTemplateTypeMessage(templateType: string): string {
+  if (templateType === "workflow") {
+    return localized(
+      'Template type "workflow" is installed with `devflow workflow` or `devflow init --workflow`; it is not supported by generic marketplace pulls.',
+      'Template type "workflow" is installed with `devflow workflow` or `devflow init --workflow`; it is not supported by generic marketplace pulls.',
+    );
+  }
+  const supported = Object.keys(INSTALL_PATHS).join(", ");
+  return localized(
+    `Template type "${templateType}" is not supported by generic marketplace pulls. Supported types: ${supported}`,
+    `Template type "${templateType}" is not supported by generic marketplace pulls. Supported types: ${supported}`,
+  );
+}
+
+function getTemplateInstallDir(
+  cwd: string,
+  template: SpecTemplate,
+  destDirOverride?: string,
+): string {
+  if (destDirOverride) return destDirOverride;
+  const basePath = getInstallPath(cwd, template.type);
+  if (template.type === "skill") {
+    return path.join(basePath, template.id);
+  }
+  return basePath;
 }
 
 /**
@@ -1108,7 +1311,7 @@ export async function downloadTemplateById(
   templateId: string,
   strategy: TemplateStrategy,
   template?: SpecTemplate,
-  registry?: RegistrySource,
+  registry?: MarketplaceSource,
   destDirOverride?: string,
   registryBackend?: RegistryBackend,
 ): Promise<{ success: boolean; message: string; skipped?: boolean }> {
@@ -1160,19 +1363,15 @@ export async function downloadTemplateById(
     };
   }
 
-  // Only support spec type in MVP
-  if (resolved.type !== "spec") {
+  if (!isSupportedInstallType(resolved.type)) {
     return {
       success: false,
-      message: localized(
-        `Template type "${resolved.type}" is not supported yet (only "spec" is supported)`,
-        `暂不支持模板类型 "${resolved.type}"（目前仅支持 "spec"）`,
-      ),
+      message: unsupportedTemplateTypeMessage(resolved.type),
     };
   }
 
   // Get destination path (use override for monorepo per-package downloads)
-  const destDir = destDirOverride ?? getInstallPath(cwd, resolved.type);
+  const destDir = getTemplateInstallDir(cwd, resolved, destDirOverride);
 
   // Check if directory exists for skip strategy
   if (strategy === "skip" && fs.existsSync(destDir)) {
@@ -1189,19 +1388,32 @@ export async function downloadTemplateById(
   // Download template
   try {
     if (registry) {
-      if (resolveRegistryBackend(registry, backend) === "git") {
+      const resolvedBackend = resolveRegistryBackend(registry, backend);
+      if (resolvedBackend === "local" && isLocalRegistrySource(registry)) {
+        await downloadLocalRegistryPath(
+          registry,
+          resolved.path,
+          destDir,
+          strategy,
+        );
+      } else if (resolvedBackend === "git" && !isLocalRegistrySource(registry)) {
         await downloadGitRegistryPath(
           registry,
           resolved.path,
           destDir,
           strategy,
         );
-      } else {
+      } else if (!isLocalRegistrySource(registry)) {
         // Custom registry: build full giget source with ref at the end
         // giget format: provider:user/repo/path#ref
         const fullSource = `${registry.provider}:${registry.repo}/${resolved.path}#${registry.ref}`;
         await withGigetHost(registry.host, () =>
           downloadWithStrategy(fullSource, destDir, strategy, null),
+        );
+      } else {
+        throw new RegistryBackendError(
+          "unknown",
+          `Unsupported registry backend "${resolvedBackend}" for local registry.`,
         );
       }
     } else {
@@ -1263,7 +1475,7 @@ export async function downloadTemplateById(
  */
 export async function downloadRegistryDirect(
   cwd: string,
-  registry: RegistrySource,
+  registry: MarketplaceSource,
   strategy: TemplateStrategy,
   destDirOverride?: string,
   registryBackend?: RegistryBackend,
@@ -1282,9 +1494,12 @@ export async function downloadRegistryDirect(
   }
 
   try {
-    if (resolveRegistryBackend(registry, registryBackend) === "git") {
+    const resolvedBackend = resolveRegistryBackend(registry, registryBackend);
+    if (resolvedBackend === "local" && isLocalRegistrySource(registry)) {
+      await downloadLocalRegistryDirect(registry, destDir, strategy);
+    } else if (resolvedBackend === "git" && !isLocalRegistrySource(registry)) {
       await downloadGitRegistryDirect(registry, destDir, strategy);
-    } else {
+    } else if (!isLocalRegistrySource(registry)) {
       await withGigetHost(registry.host, () =>
         downloadWithStrategy(
           registry.gigetSource,
@@ -1292,6 +1507,11 @@ export async function downloadRegistryDirect(
           strategy,
           null, // null = templatePath is already a full giget source
         ),
+      );
+    } else {
+      throw new RegistryBackendError(
+        "unknown",
+        `Unsupported registry backend "${resolvedBackend}" for local registry.`,
       );
     }
     return {

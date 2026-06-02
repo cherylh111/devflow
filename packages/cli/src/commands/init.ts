@@ -56,12 +56,14 @@ import {
   probeRegistryIndex,
   downloadTemplateById,
   downloadRegistryDirect,
-  parseRegistrySource,
+  parseMarketplaceSource,
+  selectMarketplaceTemplates,
+  splitSelectorList,
   TIMEOUTS,
   TEMPLATE_INDEX_URL,
   type SpecTemplate,
   type TemplateStrategy,
-  type RegistrySource,
+  type MarketplaceSource,
   type RegistryBackend,
 } from "../utils/template-fetcher.js";
 import { setupProxy, maskProxyUrl } from "../utils/proxy.js";
@@ -1008,6 +1010,8 @@ interface InitOptions {
   force?: boolean;
   skipExisting?: boolean;
   template?: string;
+  templates?: string;
+  categories?: string;
   overwrite?: boolean;
   append?: boolean;
   registry?: string;
@@ -1257,10 +1261,10 @@ export async function init(options: InitOptions): Promise<void> {
   const detectedType = detectProjectType(cwd);
 
   // Parse custom registry source early (needed by both monorepo + single-repo flows)
-  let registry: RegistrySource | undefined;
+  let registry: MarketplaceSource | undefined;
   if (options.registry) {
     try {
-      registry = parseRegistrySource(options.registry);
+      registry = parseMarketplaceSource(options.registry);
     } catch (error) {
       console.log(
         chalk.red(
@@ -1565,10 +1569,20 @@ export async function init(options: InitOptions): Promise<void> {
   // ==========================================================================
 
   let selectedTemplate: string | null = null;
+  let selectedTemplates: SpecTemplate[] = [];
 
   // Pre-fetched templates list (used to pass selected SpecTemplate to downloadTemplateById)
   let fetchedTemplates: SpecTemplate[] = [];
   let registryBackend: RegistryBackend | undefined;
+  const requestedTemplateIds = splitSelectorList(options.templates);
+  if (options.template) {
+    requestedTemplateIds.unshift(options.template);
+  }
+  const requestedCategories = splitSelectorList(options.categories);
+  const hasBatchTemplateSelection =
+    requestedTemplateIds.length > 1 ||
+    options.templates !== undefined ||
+    requestedCategories.length > 0;
 
   // Determine the index URL based on registry
   const indexUrl = registry
@@ -1577,6 +1591,74 @@ export async function init(options: InitOptions): Promise<void> {
 
   if (monorepoPackages) {
     // Monorepo: template selection already handled above
+  } else if (hasBatchTemplateSelection) {
+    let templates: SpecTemplate[];
+    if (registry) {
+      const probeResult = await probeRegistryIndex(indexUrl, registry);
+      registryBackend = probeResult.backend;
+      if (probeResult.error) {
+        console.log(chalk.red(`   ${probeResult.error.message}`));
+        return;
+      }
+      if (probeResult.isNotFound) {
+        console.log(
+          chalk.red(
+            localized(
+              "Registry has no index.json. Batch marketplace selection requires an index.json.",
+              "Registry 中没有 index.json。批量 marketplace 选择需要 index.json。",
+            ),
+          ),
+        );
+        return;
+      }
+      templates = probeResult.templates;
+    } else {
+      templates = await fetchTemplateIndex(indexUrl);
+    }
+    fetchedTemplates = templates;
+
+    const selection = selectMarketplaceTemplates(templates, {
+      ids: requestedTemplateIds,
+      categories: requestedCategories,
+    });
+    if (selection.missingIds.length > 0) {
+      console.log(
+        chalk.red(
+          localized(
+            `Template(s) not found: ${selection.missingIds.join(", ")}`,
+            `未找到模板：${selection.missingIds.join(", ")}`,
+          ),
+        ),
+      );
+      return;
+    }
+    if (selection.missingCategories.length > 0) {
+      const available =
+        selection.availableCategories.length > 0
+          ? selection.availableCategories.join(", ")
+          : localized("(none)", "（无）");
+      console.log(
+        chalk.red(
+          localized(
+            `Category not found: ${selection.missingCategories.join(", ")}. Available categories: ${available}`,
+            `未找到 category：${selection.missingCategories.join(", ")}。可用 category：${available}`,
+          ),
+        ),
+      );
+      return;
+    }
+    if (selection.templates.length === 0) {
+      console.log(
+        chalk.red(
+          localized(
+            "No marketplace templates matched the requested ids or categories.",
+            "没有 marketplace 模板匹配请求的 id 或 category。",
+          ),
+        ),
+      );
+      return;
+    }
+    selectedTemplates = selection.templates;
   } else if (options.template) {
     // Template specified via --template flag
     selectedTemplate = options.template;
@@ -1720,7 +1802,7 @@ export async function init(options: InitOptions): Promise<void> {
             continue; // Back to picker
           }
           try {
-            registry = parseRegistrySource(customSource);
+            registry = parseMarketplaceSource(customSource);
             fetchedTemplates = []; // Reset so direct-download guard works correctly
             // Probe index.json to detect marketplace vs direct download
             const customIndexUrl = `${registry.rawBaseUrl}/index.json`;
@@ -1892,7 +1974,13 @@ export async function init(options: InitOptions): Promise<void> {
   }
   // -y mode with --registry (no --template): probe index.json to detect mode
   // Skip when monorepo mode already handled templates above
-  if (options.yes && registry && !selectedTemplate && !monorepoPackages) {
+  if (
+    options.yes &&
+    registry &&
+    !selectedTemplate &&
+    selectedTemplates.length === 0 &&
+    !monorepoPackages
+  ) {
     const probeResult = await probeRegistryIndex(
       `${registry.rawBaseUrl}/index.json`,
       registry,
@@ -1933,7 +2021,48 @@ export async function init(options: InitOptions): Promise<void> {
 
   let useRemoteTemplate = false;
 
-  if (selectedTemplate) {
+  if (selectedTemplates.length > 0) {
+    console.log(
+      chalk.blue(
+        localized(
+          `📦 Downloading ${selectedTemplates.length} marketplace template(s)...`,
+          `📦 正在下载 ${selectedTemplates.length} 个 marketplace 模板...`,
+        ),
+      ),
+    );
+    console.log(
+      chalk.gray(
+        localized(
+          "   This may take a moment on slow connections.",
+          "   网络较慢时可能需要一些时间。",
+        ),
+      ),
+    );
+
+    for (const template of selectedTemplates) {
+      const result = await downloadTemplateById(
+        cwd,
+        template.id,
+        templateStrategy,
+        template,
+        registry,
+        undefined,
+        registryBackend,
+      );
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      if (result.skipped) {
+        console.log(chalk.gray(`   ${result.message}`));
+      } else {
+        console.log(chalk.green(`   ${result.message}`));
+        if (template.type === "spec") {
+          useRemoteTemplate = true;
+        }
+      }
+    }
+  } else if (selectedTemplate) {
     // Marketplace mode: download specific template by ID
     console.log(
       chalk.blue(

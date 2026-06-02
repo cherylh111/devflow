@@ -24,6 +24,10 @@ vi.mock("node:child_process", () => ({
   execSync: vi.fn().mockReturnValue(""),
 }));
 
+vi.mock("giget", () => ({
+  downloadTemplate: vi.fn(),
+}));
+
 // === Imports ===
 
 import { init } from "../../src/commands/init.js";
@@ -32,6 +36,7 @@ import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
 import { computeHash } from "../../src/utils/template-hash.js";
 import { execSync } from "node:child_process";
 import { setTemplateLanguage } from "../../src/templates/language.js";
+import { downloadTemplate } from "giget";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
@@ -752,6 +757,82 @@ describe("init() integration", () => {
 
     expect(logOutput).toContain("Error: Could not reach registry index");
     expect(fs.existsSync(path.join(tmpDir, DIR_NAMES.WORKFLOW))).toBe(false);
+  });
+
+  it("#20b -y --registry --categories pulls matching remote marketplace templates", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            version: 1,
+            templates: [
+              {
+                id: "common-spec",
+                type: "spec",
+                name: "Common Spec",
+                path: "specs/common",
+                tags: ["common"],
+              },
+              {
+                id: "uware-skill",
+                type: "skill",
+                name: "Uware Skill",
+                path: "skills/uware-skill",
+                tags: ["uware"],
+              },
+              {
+                id: "other-spec",
+                type: "spec",
+                name: "Other Spec",
+                path: "specs/other",
+                tags: ["other"],
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    vi.mocked(downloadTemplate).mockImplementation(async (source, options) => {
+      const dir = options?.dir;
+      if (!dir) return undefined;
+      fs.mkdirSync(dir, { recursive: true });
+      if (String(source).includes("uware-skill")) {
+        fs.writeFileSync(path.join(dir, "SKILL.md"), "remote skill\n");
+      } else {
+        fs.writeFileSync(path.join(dir, "rules.md"), "remote spec\n");
+      }
+      return undefined;
+    });
+
+    await init({
+      yes: true,
+      registry: "gh:myorg/registry/marketplace",
+      categories: "common,uware",
+    });
+
+    expect(
+      fs.readFileSync(
+        path.join(tmpDir, ".devflow", "spec", "rules.md"),
+        "utf-8",
+      ),
+    ).toBe("remote spec\n");
+    expect(
+      fs.readFileSync(
+        path.join(
+          tmpDir,
+          ".agents",
+          "skills",
+          "uware-skill",
+          "SKILL.md",
+        ),
+        "utf-8",
+      ),
+    ).toBe("remote skill\n");
+    expect(
+      fs.existsSync(path.join(tmpDir, ".devflow", "spec", "other.md")),
+    ).toBe(false);
   });
 
   it("#19 polyrepo: writes git: true for sibling .git packages", async () => {

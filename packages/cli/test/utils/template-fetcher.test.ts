@@ -8,8 +8,11 @@ import {
   downloadTemplateById,
   getInstallPath,
   normalizeRegistrySource,
+  parseMarketplaceSource,
   parseRegistrySource,
   probeRegistryIndex,
+  selectMarketplaceTemplates,
+  splitSelectorList,
   type RegistrySource,
 } from "../../src/utils/template-fetcher.js";
 
@@ -56,6 +59,195 @@ describe("getInstallPath", () => {
 // =============================================================================
 // parseRegistrySource — pure function
 // =============================================================================
+
+describe("marketplace selection helpers", () => {
+  const templates = [
+    {
+      id: "base-spec",
+      type: "spec",
+      name: "Base Spec",
+      path: "specs/base",
+      tags: ["common"],
+    },
+    {
+      id: "uware-skill",
+      type: "skill",
+      name: "Uware Skill",
+      path: "skills/uware-skill",
+      tags: ["uware"],
+    },
+    {
+      id: "shared-command",
+      type: "command",
+      name: "Shared Command",
+      path: "commands/shared",
+      tags: ["common", "uware"],
+    },
+  ];
+
+  it("splits comma-separated selectors and removes duplicates", () => {
+    expect(splitSelectorList(" common,uware,common ,, ")).toEqual([
+      "common",
+      "uware",
+    ]);
+  });
+
+  it("selects explicit ids and category matches in index order", () => {
+    const result = selectMarketplaceTemplates(templates, {
+      ids: ["uware-skill"],
+      categories: ["common"],
+    });
+
+    expect(result.templates.map((template) => template.id)).toEqual([
+      "base-spec",
+      "uware-skill",
+      "shared-command",
+    ]);
+    expect(result.missingIds).toEqual([]);
+    expect(result.missingCategories).toEqual([]);
+    expect(result.availableCategories).toEqual(["common", "uware"]);
+  });
+
+  it("reports missing ids and categories with available category metadata", () => {
+    const result = selectMarketplaceTemplates(templates, {
+      ids: ["missing-template"],
+      categories: ["missing-category"],
+    });
+
+    expect(result.templates).toEqual([]);
+    expect(result.missingIds).toEqual(["missing-template"]);
+    expect(result.missingCategories).toEqual(["missing-category"]);
+    expect(result.availableCategories).toEqual(["common", "uware"]);
+  });
+});
+
+describe("local marketplace sources", () => {
+  it("parses filesystem paths as local marketplace sources", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-local-"));
+    try {
+      const source = parseMarketplaceSource(tmpDir);
+
+      expect(source.sourceKind).toBe("local");
+      expect(source.rawBaseUrl).toBe(path.resolve(tmpDir));
+      expect(source.gigetSource).toBe(tmpDir);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("treats Windows drive paths as local marketplace sources", () => {
+    const source = parseMarketplaceSource("C:\\marketplace");
+
+    expect(source.sourceKind).toBe("local");
+    expect(source.gigetSource).toBe("C:\\marketplace");
+  });
+
+  it("probes index.json and downloads non-spec templates from a local marketplace", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-local-"));
+    try {
+      const registryRoot = path.join(tmpDir, "marketplace");
+      const projectRoot = path.join(tmpDir, "project");
+      writeFixtureFiles(registryRoot, {
+        "index.json": JSON.stringify({
+          version: 1,
+          templates: [
+            {
+              id: "uware-skill",
+              type: "skill",
+              name: "Uware Skill",
+              path: "skills/uware-skill",
+              tags: ["uware"],
+            },
+          ],
+        }),
+        "skills/uware-skill/SKILL.md": "remote skill\n",
+      });
+
+      const registry = parseMarketplaceSource(registryRoot);
+      const probe = await probeRegistryIndex("", registry);
+      expect(probe.backend).toBe("local");
+      expect(probe.templates.map((template) => template.id)).toEqual([
+        "uware-skill",
+      ]);
+
+      const result = await downloadTemplateById(
+        projectRoot,
+        "uware-skill",
+        "overwrite",
+        probe.templates[0],
+        registry,
+        undefined,
+        probe.backend,
+      );
+
+      expect(result.success).toBe(true);
+      expect(
+        fs.readFileSync(
+          path.join(
+            projectRoot,
+            ".agents",
+            "skills",
+            "uware-skill",
+            "SKILL.md",
+          ),
+          "utf-8",
+        ),
+      ).toBe("remote skill\n");
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects local template paths that escape the marketplace root", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-local-"));
+    try {
+      const registryRoot = path.join(tmpDir, "marketplace");
+      writeFixtureFiles(registryRoot, {
+        "index.json": JSON.stringify({ version: 1, templates: [] }),
+      });
+      const registry = parseMarketplaceSource(registryRoot);
+
+      const result = await downloadTemplateById(
+        path.join(tmpDir, "project"),
+        "bad",
+        "overwrite",
+        {
+          id: "bad",
+          type: "spec",
+          name: "Bad",
+          path: "../outside",
+        },
+        registry,
+        undefined,
+        "local",
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("must stay inside");
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("downloadTemplateById template type support", () => {
+  it("rejects workflow entries in generic marketplace pulls", async () => {
+    const result = await downloadTemplateById(
+      "/project",
+      "tdd",
+      "overwrite",
+      {
+        id: "tdd",
+        type: "workflow",
+        name: "TDD",
+        path: "workflows/tdd/workflow.md",
+      },
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("devflow workflow");
+  });
+});
 
 describe("parseRegistrySource", () => {
   // -------------------------------------------------------------------------
