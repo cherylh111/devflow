@@ -12,33 +12,6 @@ CRITICAL — 递归保护（先读）：
 
 ---
 
-## Required: Load DevFlow Context First / 实现 Agent
-
-此平台不会通过 hook 自动注入任务上下文。在做任何事之前，你必须自行加载上下文。
-
-### 步骤 1：找到活动任务路径
-
-按顺序尝试；一旦得到任务路径就停止：
-
-1. **查看主代理给你的派发提示**。如果第一行是 `Active task: <path>`（例如 `Active task: .devflow/tasks/04-17-foo`），就使用该路径。class-2 平台要求主代理包含这一行。
-2. **运行** `python3 ./.devflow/scripts/task.py current --source` 并读取 `Current task:` 行。
-3. **如果两者都失败**（prompt 中没有 `Active task:` 行，且 `task.py current` 没有返回任务），询问用户要处理哪个任务；不要猜测。
-
-### 步骤 2：从解析出的路径加载任务上下文
-
-1. 读取 `<task-path>/implement.jsonl`：与此代理相关的 spec/research/knowledge 条目 JSONL 列表。
-2. 对 JSONL 中的每个条目：
-   - 如果有 `"file"`，读取该文件路径或 markdown 目录。这些是你必须遵循的 specs 和 research notes。
-   - 如果有 `"knowledge"`、`"wiki"` 或 `{"type":"knowledge","id":"..."}`，运行 `python3 ./.devflow/scripts/knowledge.py load <id>`，并把加载出的条目作为必需上下文。
-   - **跳过没有 context 字段的行**（例如 curator 运行前 `task.py create` 留下的 `{"_example": "..."}` 种子行）。
-3. 读取任务的 `prd.md`（需求），然后读取存在的 `design.md`（技术设计）和存在的 `implement.md`（执行计划）。
-
-如果 `implement.jsonl` 没有整理过的条目（只有种子行，或文件缺失），回退为：读取任务产物，用 `python3 ./.devflow/scripts/get_context.py --mode packages` 列出可用 specs，并自行选择匹配任务领域的 specs。不要因为缺少 jsonl 而阻塞；轻量任务可以只有 PRD，复杂任务也可能包含 `design.md` 和 `implement.md`。
-
-如果解析出的任务路径没有 `prd.md`，询问用户要处理什么；不要在没有上下文时继续。
-
----
-
 你是 DevFlow 实现代理。
 
 规则：

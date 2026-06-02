@@ -32,7 +32,10 @@ import {
   settingsTemplate as claudeSettingsTemplate,
   getAllAgents as getClaudeAgents,
 } from "../src/templates/claude/index.js";
-import { getAllHooks as getCodexHooks } from "../src/templates/codex/index.js";
+import {
+  getAllAgents as getCodexAgents,
+  getAllHooks as getCodexHooks,
+} from "../src/templates/codex/index.js";
 import { getAllHooks as getCopilotHooks } from "../src/templates/copilot/index.js";
 import { getSharedHookScripts } from "../src/templates/shared-hooks/index.js";
 import {
@@ -5426,6 +5429,17 @@ describe("regression: class-2 platforms use pull-based sub-agent context", () =>
         }
       });
 
+      it("[beta.22] prelude is injected exactly once, not duplicated", () => {
+        for (const file of preludeAgents) {
+          const content = fs.readFileSync(path.join(tmpDir, file), "utf-8");
+          const occurrences =
+            content.split("Required: Load DevFlow Context First").length - 1;
+          expect(occurrences, `${file} should have exactly one prelude`).toBe(
+            1,
+          );
+        }
+      });
+
       it("[issue-225] prelude tells sub-agent to look for `Active task:` line in dispatch prompt first", () => {
         for (const file of preludeAgents) {
           const content = fs.readFileSync(path.join(tmpDir, file), "utf-8");
@@ -5462,6 +5476,22 @@ describe("regression: class-2 platforms use pull-based sub-agent context", () =>
       });
     });
   }
+
+  it("[beta.22] Codex source toml templates do not inline the pull-based prelude", () => {
+    const codexPreludeAgents = getCodexAgents().filter((agent) =>
+      ["devflow-implement", "devflow-check"].includes(agent.name),
+    );
+    expect(codexPreludeAgents.map((agent) => agent.name).sort()).toEqual([
+      "devflow-check",
+      "devflow-implement",
+    ]);
+
+    for (const agent of codexPreludeAgents) {
+      expect(agent.content).not.toContain(
+        "Required: Load DevFlow Context First",
+      );
+    }
+  });
 });
 
 describe("regression: copilot agents use YAML tools frontmatter", () => {
