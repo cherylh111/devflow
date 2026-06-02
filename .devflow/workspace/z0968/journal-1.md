@@ -75,3 +75,38 @@ Synced upstream beta22 manifests and package versions, removed duplicated Codex 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Marketplace template category pulls
+
+**Date**: 2026-06-02
+**Task**: Marketplace template category pulls
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added init-time marketplace batch template selection by template id and category tags, including remote/local registry support, generic template install paths, tests, and init command spec coverage.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d964ad5` | (see git log) |
+| `2726ad1` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
