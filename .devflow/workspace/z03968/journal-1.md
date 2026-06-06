@@ -39,3 +39,37 @@ Added a deterministic PRD convergence check to task.py start, updated workflow a
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Task progress recovery state
+
+**Date**: 2026-06-06
+**Task**: Task progress recovery state
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added task progress recovery state via progress.json and task.py progress commands; updated continue/workflow templates, specs, and regression tests.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0eeb102` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
