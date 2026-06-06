@@ -162,7 +162,8 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 - `implement.md` — execution plan for complex tasks: ordered checklist, validation commands, review gates, and rollback points.
 - `implement.jsonl` / `check.jsonl` — spec and research manifests for sub-agent context. They do not replace `implement.md`.
 - Lightweight tasks may be PRD-only. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
-- `task.py start` enforces the start gate: `prd.md` must exist and not be the generated `TBD` placeholder. For complex tasks, set `task.json.meta.complex: true`; for sub-agent tasks that require manifest context, set `task.json.meta.requires_subagent_context: true` and curate real JSONL entries.
+- Before start review, converge `prd.md` into final requirements and acceptance criteria: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets.
+- `task.py start` enforces the start gate: `prd.md` must exist, must not be the generated `TBD` placeholder, and must not contain unresolved brainstorm headings or placeholder bullets. For complex tasks, set `task.json.meta.complex: true`; for sub-agent tasks that require manifest context, set `task.json.meta.requires_subagent_context: true` and curate real JSONL entries.
 
 ### Parent / Child Task Trees
 
@@ -193,6 +194,7 @@ Complex task: ask the user if you can create a DevFlow task and enter the planni
 [workflow-state:planning]
 Load `devflow-brainstorm`; stay in planning.
 Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`, and set `task.json.meta.complex: true`; ask for review before `task.py start`.
+Before start review, converge `prd.md`: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
 Sub-agent mode: if Phase 2 needs manifest context, set `task.json.meta.requires_subagent_context: true` and curate `implement.jsonl` / `check.jsonl` with real spec/research/knowledge entries before start.
 [/workflow-state:planning]
@@ -206,6 +208,7 @@ Sub-agent mode: if Phase 2 needs manifest context, set `task.json.meta.requires_
 [workflow-state:planning-inline]
 Load `devflow-brainstorm`; stay in planning.
 Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`, and set `task.json.meta.complex: true`; ask for review before `task.py start`.
+Before start review, converge `prd.md`: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
 Inline mode: leave `task.json.meta.requires_subagent_context` unset, skip jsonl curation, and load artifacts/specs via `devflow-before-dev` in Phase 2.
 [/workflow-state:planning-inline]
@@ -338,6 +341,7 @@ The brainstorm skill will guide you to:
 - Update `prd.md` immediately after each user answer
 - Split large scopes into a parent task plus child tasks when the deliverables can be verified independently
 - Keep `prd.md` focused on requirements and acceptance criteria
+- Converge `prd.md` before start review: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets
 - For complex tasks, produce `design.md` and `implement.md` before implementation starts
 
 When considering a parent/child split:
@@ -452,7 +456,7 @@ After artifact review, flip the task status to `in_progress`:
 python3 ./.devflow/scripts/task.py start <task-dir>
 ```
 
-For lightweight tasks, `prd.md` can be enough, but it must not still contain the generated `TBD` placeholders. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist, be reviewed, and the task must declare `task.json.meta.complex: true` before start. For sub-agent tasks that require manifest context, declare `task.json.meta.requires_subagent_context: true` and curate real `implement.jsonl` / `check.jsonl` entries; seed-only manifests are blocked by `task.py start` only when that metadata flag is true. Codex inline tasks leave that flag unset and load context through `devflow-before-dev`.
+For lightweight tasks, `prd.md` can be enough, but it must not still contain the generated `TBD` placeholders, unresolved brainstorm headings, or placeholder bullets. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist, be reviewed, and the task must declare `task.json.meta.complex: true` before start. For sub-agent tasks that require manifest context, declare `task.json.meta.requires_subagent_context: true` and curate real `implement.jsonl` / `check.jsonl` entries; seed-only manifests are blocked by `task.py start` only when that metadata flag is true. Codex inline tasks leave that flag unset and load context through `devflow-before-dev`.
 
 After this command succeeds, the breadcrumb auto-switches to `[workflow-state:in_progress]`, and the rest of Phase 2 / 3 follows.
 

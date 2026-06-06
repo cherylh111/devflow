@@ -98,11 +98,19 @@ Lightweight tasks may have only `prd.md`. Complex tasks must have `prd.md`, `des
 
 `implement.md` is not a replacement for `implement.jsonl`. Use JSONL files only for manifest-style spec and research references when the task needs them.
 
+Before start review, converge `prd.md` into its final form:
+
+- Remove temporary brainstorm sections such as `What I already know`, `Assumptions`, `Open Questions`, `Brainstorm Notes`, and `Raw Notes`.
+- Fold discovery notes and resolved questions into final requirements, constraints, acceptance criteria, or out-of-scope sections.
+- Clear placeholder bullets such as `- TBD`, `- [ ] TBD`, `- TODO`, and `- [ ] TODO`.
+- Move technical design or execution details into `design.md` or `implement.md` for complex tasks.
+
 ## Quality Bar
 
 Before declaring planning ready:
 
 - `prd.md` contains testable acceptance criteria.
+- `prd.md` has been converged and no longer contains temporary brainstorm sections or placeholder bullets.
 - Repository-answerable questions have already been answered through inspection.
 - Remaining open questions are genuinely about user intent or scope.
 - Complex tasks have `design.md` and `implement.md`.

@@ -99,6 +99,14 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 `implement.md` 不能替代 `implement.jsonl`。仅当任务需要 manifest 风格的 spec 和 research 引用时，才使用 JSONL 文件。
 
 ## 质量标准
+在 start review 前，把 `prd.md` 收敛为最终形态：
+
+- 移除临时 brainstorm 章节，例如 `What I already know`、`Assumptions`、`Open Questions`、`Brainstorm Notes` 和 `Raw Notes`。
+- 把 discovery notes 和已解决问题合并到最终 requirements、constraints、acceptance criteria 或 out-of-scope 章节。
+- 清理占位 bullet，例如 `- TBD`、`- [ ] TBD`、`- TODO` 和 `- [ ] TODO`。
+- 对复杂任务，把技术设计或执行细节移到 `design.md` 或 `implement.md`。
+
+- `prd.md` 已收敛，不再包含临时 brainstorm 章节或占位 bullet。
 
 宣布规划就绪前：
 

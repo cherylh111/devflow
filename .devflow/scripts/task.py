@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import builtins
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -166,6 +167,48 @@ def _is_placeholder_prd(content: str) -> bool:
     return "TBD." in content and "- TBD" in content and "- [ ] TBD" in content
 
 
+_TEMPORARY_PRD_HEADINGS = (
+    "What I already know",
+    "What we know",
+    "Assumptions",
+    "Open Questions",
+    "Questions",
+    "Brainstorm Notes",
+    "Discovery Notes",
+    "Scratchpad",
+    "Raw Notes",
+)
+_TEMPORARY_PRD_HEADING_RE = re.compile(
+    r"^\s{0,3}#{2,3}\s+("
+    + "|".join(re.escape(heading) for heading in _TEMPORARY_PRD_HEADINGS)
+    + r")\s*#*\s*$",
+    re.IGNORECASE,
+)
+_PLACEHOLDER_BULLET_RE = re.compile(
+    r"^\s*[-*+]\s+(?:\[[ xX]\]\s+)?(?:TBD\.?|TODO)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _validate_prd_convergence(content: str) -> list[str]:
+    errors: list[str] = []
+    for line_num, line in enumerate(content.splitlines(), start=1):
+        heading_match = _TEMPORARY_PRD_HEADING_RE.match(line)
+        if heading_match:
+            heading = heading_match.group(1)
+            errors.append(
+                f"prd.md contains unresolved brainstorm heading at line {line_num}: {heading}"
+            )
+            continue
+
+        if _PLACEHOLDER_BULLET_RE.match(line):
+            errors.append(
+                f"prd.md contains unresolved placeholder bullet at line {line_num}: "
+                f"{line.strip()}"
+            )
+    return errors
+
+
 def _jsonl_curated_entry_count(jsonl_file: Path) -> tuple[int, list[str]]:
     if not jsonl_file.is_file():
         return 0, [f"{jsonl_file.name}: not found"]
@@ -210,6 +253,8 @@ def _validate_start_gate(task_dir: Path, task_json_path: Path) -> tuple[list[str
             errors.append("prd.md is empty")
         elif _is_placeholder_prd(prd_content):
             errors.append("prd.md still contains the default TBD placeholder")
+        else:
+            errors.extend(_validate_prd_convergence(prd_content))
 
     if _meta_flag(data, "complex"):
         for artifact_name in ("design.md", "implement.md"):

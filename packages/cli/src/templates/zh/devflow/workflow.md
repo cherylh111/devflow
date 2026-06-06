@@ -157,6 +157,7 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 - 用户批准创建任务并不等于批准开始实现。仍然必须先完成规划。
 
 ### 规划产物
+在 start review 前收敛 `prd.md`：移除临时 brainstorm 标题，合并 discovery notes，并清理占位 bullet。
 
 - `prd.md`：需求、约束和验收标准。不要把技术设计或执行清单放在这里。
 - `design.md`：复杂任务的技术设计，包括边界、契约、数据流、取舍、兼容性、发布/回滚形态。
@@ -193,6 +194,7 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
 <!-- 每回合面包屑：整个 Phase 1 显示（status='planning'） -->
 
 [workflow-state:planning]
+在 start review 前收敛 `prd.md`：移除临时 brainstorm 标题，合并 discovery notes，并清理占位 bullet。
 加载 `devflow-brainstorm`；保持在规划阶段。
 轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`，并设置 `task.json.meta.complex: true`；在 `task.py start` 前请求评审。
 多交付物范围：考虑使用一个父任务加多个可独立验证的子任务；依赖关系必须写入子任务产物，不能由树结构暗示。
@@ -205,6 +207,7 @@ Phase 3: Finish  → 验证、更新 spec、提交并收尾
      而不是把 JSONL 注入子代理。 -->
 
 [workflow-state:planning-inline]
+在 start review 前收敛 `prd.md`：移除临时 brainstorm 标题，合并 discovery notes，并清理占位 bullet。
 加载 `devflow-brainstorm`；保持在规划阶段。
 轻量任务：`prd.md` 可以足够。复杂任务：完成 `prd.md`、`design.md` 和 `implement.md`，并设置 `task.json.meta.complex: true`；在 `task.py start` 前请求评审。
 多交付物范围：考虑使用一个父任务加多个可独立验证的子任务；依赖关系必须写入子任务产物，不能由树结构暗示。
@@ -328,6 +331,7 @@ python3 ./.devflow/scripts/task.py create "<task title>" --slug <name>
 如果 `python3 ./.devflow/scripts/task.py current --source` 已经指向一个任务，则跳过。
 
 #### 1.1 需求探索 `[required · repeatable]`
+在请求 start review 前，先把 `prd.md` 收敛为最终需求和验收标准，移除临时 brainstorm 标题和占位 bullet。
 
 加载 `devflow-brainstorm` skill，并按该 skill 的指导与用户交互式探索需求。
 

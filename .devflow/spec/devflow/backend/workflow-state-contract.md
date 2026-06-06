@@ -210,6 +210,11 @@ correct event for "task is done" is `after_archive`.
   before writing session runtime state or changing `task.json.status`.
 - `prd.md` is always required and must not be the untouched generated template
   containing the default `TBD` placeholders.
+- `prd.md` must be converged before start. It must not contain unresolved
+  temporary brainstorm headings such as `What I already know`, `Assumptions`,
+  `Open Questions`, `Brainstorm Notes`, or `Raw Notes`.
+- `prd.md` must not contain unresolved placeholder bullets such as `- TBD`,
+  `- [ ] TBD`, `- TODO`, or `- [ ] TODO`.
 - `task.json.meta.complex == true` requires non-empty `design.md` and
   `implement.md`.
 - `task.json.meta.requires_subagent_context == true` requires both
@@ -230,6 +235,8 @@ correct event for "task is done" is `after_archive`.
 |---|---|
 | Missing `task.json` or invalid JSON | Fail before status/session writes |
 | Missing, empty, or default-placeholder `prd.md` | Fail unless `--force` |
+| `prd.md` contains unresolved temporary brainstorm headings | Fail unless `--force` |
+| `prd.md` contains unresolved placeholder bullets | Fail unless `--force` |
 | `meta.complex == true` and `design.md` missing/empty | Fail unless `--force` |
 | `meta.complex == true` and `implement.md` missing/empty | Fail unless `--force` |
 | `meta.requires_subagent_context == true` and a JSONL file is missing | Fail unless `--force` |
@@ -253,6 +260,10 @@ correct event for "task is done" is `after_archive`.
 
 - Placeholder PRD blocks `task.py start` and leaves `task.json.status` as
   `"planning"`.
+- Temporary brainstorm headings in `prd.md` block `task.py start` and leave
+  `task.json.status` as `"planning"`.
+- Placeholder bullets in `prd.md` block `task.py start` and leave
+  `task.json.status` as `"planning"`.
 - Complex task metadata requires `design.md` and `implement.md`.
 - `--force` exits 0, prints the bypass warning, and still flips
   `"planning" -> "in_progress"`.

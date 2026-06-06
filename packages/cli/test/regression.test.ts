@@ -1511,6 +1511,106 @@ describe("regression: current-task path normalization", () => {
     expect(after.status).toBe("planning");
   });
 
+  it("[start-gate] task.py start blocks unresolved brainstorm headings", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    writeProjectFile(
+      path.join(".devflow", "tasks", "issue-106", "prd.md"),
+      [
+        "# Issue 106 task",
+        "",
+        "## Goal",
+        "",
+        "Ship the feature.",
+        "",
+        "## Open Questions",
+        "",
+        "- Already resolved but not folded into requirements.",
+        "",
+        "## Acceptance Criteria",
+        "",
+        "- [ ] Feature works.",
+        "",
+      ].join("\n"),
+    );
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-brainstorm" }),
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("unresolved brainstorm heading");
+    expect(result.stderr).toContain("Open Questions");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("planning");
+  });
+
+  it("[start-gate] task.py start blocks unresolved placeholder bullets", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    writeProjectFile(
+      path.join(".devflow", "tasks", "issue-106", "prd.md"),
+      [
+        "# Issue 106 task",
+        "",
+        "## Goal",
+        "",
+        "Ship the feature.",
+        "",
+        "## Requirements",
+        "",
+        "- [ ] TODO",
+        "",
+        "## Acceptance Criteria",
+        "",
+        "- [ ] Feature works.",
+        "",
+      ].join("\n"),
+    );
+
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-placeholder-bullet" }),
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("unresolved placeholder bullet");
+    expect(result.stderr).toContain("- [ ] TODO");
+    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    expect(after.status).toBe("planning");
+  });
+
   it("[start-gate] task.py start blocks complex tasks missing design and implement plans", () => {
     setupTaskRepo();
     const taskJsonPath = path.join(
