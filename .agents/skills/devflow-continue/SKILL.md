@@ -19,6 +19,14 @@ Confirms: current task, git state, recent commits.
 
 ## Step 2: Load the Phase Index
 
+If available, first load the compact recovery context:
+
+```bash
+python ./.devflow/scripts/task.py progress recover
+```
+
+Use it as a resume hint. If it reports missing `progress.json` or the command is unavailable in an older project, continue with the artifact/status routing below.
+
 ```bash
 python ./.devflow/scripts/get_context.py --mode phase
 ```

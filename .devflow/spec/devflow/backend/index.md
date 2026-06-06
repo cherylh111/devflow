@@ -33,6 +33,7 @@ This directory contains guidelines for backend development. Fill in each file wi
 | [`devflow uninstall` Command](./commands-uninstall.md) | Uninstall orchestration: plan composition, structured-file dispatch, execute phases, `.devflow/` removal | Done |
 | [Uninstall Scrubbers](./uninstall-scrubbers.md) | Pure scrubber contract for structured config files (`settings.json`, `hooks.json`, `package.json`, `config.toml`) | Done |
 | [`devflow channel` Command](./commands-channel.md) | Multi-agent collaboration runtime: events.jsonl protocol, per-worker supervisor, provider adapters (claude / codex), project buckets, ephemeral / run lifecycle, ShutdownController state machine | Done |
+| [Task Progress Recovery](./task-progress.md) | `task.py progress` command surface, `progress.json` schema, recovery context, and workflow integration | Done |
 ---
 
 ## Pre-Development Checklist
@@ -57,6 +58,7 @@ Before writing backend code, read the relevant guidelines based on your task:
 - Editing `commands/workflow.ts`, `utils/workflow-resolver.ts`, workflow marketplace entries, or `init --workflow` behavior → [commands-workflow.md](./commands-workflow.md)
 - Editing `commands/uninstall.ts` or `utils/uninstall-scrubbers.ts` → [commands-uninstall.md](./commands-uninstall.md) + [uninstall-scrubbers.md](./uninstall-scrubbers.md)
 - Editing `commands/channel/**` (events.jsonl protocol, supervisors, adapters, project buckets, channel-lifecycle commands) → [commands-channel.md](./commands-channel.md)
+- Editing `task.py progress`, `progress.json`, or progress recovery guidance → [task-progress.md](./task-progress.md)
 
 Also read [unit-test/conventions.md](../unit-test/conventions.md) — specifically the "When to Write Tests" section.
 

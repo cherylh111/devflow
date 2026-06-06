@@ -14,6 +14,14 @@
 
 ## 第 2 步：加载 Phase Index
 
+如果可用，先加载紧凑恢复上下文：
+
+```bash
+{{PYTHON_CMD}} ./.devflow/scripts/task.py progress recover
+```
+
+把它作为恢复提示。如果它提示缺少 `progress.json`，或者旧项目中没有该命令，则继续使用下面的产物/status 路由。
+
 ```bash
 {{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase
 ```

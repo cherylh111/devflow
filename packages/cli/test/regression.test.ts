@@ -1763,6 +1763,148 @@ describe("regression: current-task path normalization", () => {
     expect(after.status).toBe("planning");
   });
 
+  it("[task-progress] task.py progress init creates valid progress.json", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const output = execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress init .devflow/tasks/issue-106`,
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    expect(output.trim()).toBe(".devflow/tasks/issue-106/progress.json");
+    const progressPath = path.join(
+      tmpDir,
+      ".devflow",
+      "tasks",
+      "issue-106",
+      "progress.json",
+    );
+    const progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
+    expect(progress).toMatchObject({
+      schema_version: 1,
+      phase: "implement",
+      step: "2.1",
+      summary: "",
+      resume_hint: "",
+      current_item: null,
+      completed_items: [],
+      pending_items: [],
+      last_validation: null,
+      updated_by: "agent",
+    });
+    expect(typeof progress.updated_at).toBe("string");
+  });
+
+  it("[task-progress] task.py progress set rejects unknown fields", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [
+        taskScriptPath,
+        "progress",
+        "set",
+        ".devflow/tasks/issue-106",
+        "unknown_field",
+        "value",
+      ],
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("unknown progress field");
+    expect(
+      fs.existsSync(
+        path.join(tmpDir, ".devflow", "tasks", "issue-106", "progress.json"),
+      ),
+    ).toBe(false);
+  });
+
+  it("[task-progress] task.py progress set rejects invalid enum values", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [
+        taskScriptPath,
+        "progress",
+        "set",
+        ".devflow/tasks/issue-106",
+        "phase",
+        "done",
+      ],
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("invalid phase");
+  });
+
+  it("[task-progress] task.py progress recover works without progress.json", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "progress", "recover", ".devflow/tasks/issue-106"],
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Task Progress Recovery");
+    expect(result.stdout).toContain("Progress file: missing");
+    expect(result.stdout).toContain("Artifacts: prd=True");
+    expect(result.stdout).toContain("Next workflow step: 2.1 implementation");
+  });
+
+  it("[task-progress] task.py progress recover reports progress and artifacts", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress init .devflow/tasks/issue-106`,
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+    execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress set .devflow/tasks/issue-106 resume_hint ${JSON.stringify("Run focused progress tests")}`,
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    const result = spawnSync(
+      pythonCmd,
+      [taskScriptPath, "progress", "recover", ".devflow/tasks/issue-106"],
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Progress: phase=implement step=2.1");
+    expect(result.stdout).toContain("Artifacts: prd=True design=False");
+    expect(result.stdout).toContain("JSONL: implement=1 curated");
+    expect(result.stdout).toContain("Next: Resume hint: Run focused progress tests");
+  });
+
+  it("[task-progress] task.py archive preserves progress.json", () => {
+    setupTaskRepo();
+    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
+    execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress init .devflow/tasks/issue-106`,
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    );
+
+    const archivePath = execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} archive issue-106 --no-commit`,
+      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+    )
+      .trim()
+      .split(/\r?\n/)
+      .at(-1);
+
+    expect(archivePath).toMatch(
+      /^\.devflow\/tasks\/archive\/\d{4}-\d{2}\/issue-106$/,
+    );
+    expect(
+      fs.existsSync(path.join(tmpDir, archivePath ?? "", "progress.json")),
+    ).toBe(true);
+  });
+
   it("[session-current-task] task.py start writes session runtime state when DEVFLOW_CONTEXT_ID is set", () => {
     setupTaskRepo();
     const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");

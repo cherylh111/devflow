@@ -39,6 +39,7 @@ const SCRIPT_PATHS = [
   "common/types.py",
   "common/tasks.py",
   "common/task_context.py",
+  "common/task_progress.py",
   "common/task_store.py",
   "common/session_context.py",
   "common/packages_context.py",
@@ -79,6 +80,7 @@ export const commonGit = readScriptTemplate("common/git.py");
 export const commonTypes = readScriptTemplate("common/types.py");
 export const commonTasks = readScriptTemplate("common/tasks.py");
 export const commonTaskContext = readScriptTemplate("common/task_context.py");
+export const commonTaskProgress = readScriptTemplate("common/task_progress.py");
 export const commonTaskStore = readScriptTemplate("common/task_store.py");
 export const commonSessionContext = readScriptTemplate(
   "common/session_context.py",

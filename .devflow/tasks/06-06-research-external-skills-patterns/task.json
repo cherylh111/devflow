@@ -1,0 +1,28 @@
+{
+  "id": "research-external-skills-patterns",
+  "name": "research-external-skills-patterns",
+  "title": "Research external skills patterns",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": "devflow",
+  "priority": "P2",
+  "creator": "z03968",
+  "assignee": "z03968",
+  "createdAt": "2026-06-06",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "complex": true
+  }
+}

@@ -19,13 +19,13 @@ Usage:
     python task.py list-archive [month]        # List archived tasks
     python task.py add-subtask <parent-dir> <child-dir>     # Link child to parent
     python task.py remove-subtask <parent-dir> <child-dir>  # Unlink child from parent
+    python task.py progress <subcommand>       # Manage task progress recovery
 """
 
 from __future__ import annotations
 
 import argparse
 import builtins
-import json
 import re
 import sys
 from pathlib import Path
@@ -209,30 +209,6 @@ def _validate_prd_convergence(content: str) -> list[str]:
     return errors
 
 
-def _jsonl_curated_entry_count(jsonl_file: Path) -> tuple[int, list[str]]:
-    if not jsonl_file.is_file():
-        return 0, [f"{jsonl_file.name}: not found"]
-
-    errors: list[str] = []
-    count = 0
-    for line_num, line in enumerate(jsonl_file.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            data = json.loads(line)
-        except json.JSONDecodeError:
-            errors.append(f"{jsonl_file.name}:{line_num}: invalid JSON")
-            continue
-
-        if data.get("file") or data.get("knowledge") or data.get("wiki"):
-            count += 1
-            continue
-        if data.get("type") == "knowledge" and data.get("id"):
-            count += 1
-
-    return count, errors
-
-
 def _validate_start_gate(task_dir: Path, task_json_path: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -266,7 +242,7 @@ def _validate_start_gate(task_dir: Path, task_json_path: Path) -> tuple[list[str
 
     if _meta_flag(data, "requires_subagent_context"):
         for jsonl_name in ("implement.jsonl", "check.jsonl"):
-            entry_count, jsonl_errors = _jsonl_curated_entry_count(task_dir / jsonl_name)
+            entry_count, jsonl_errors = jsonl_curated_entry_count(task_dir / jsonl_name)
             errors.extend(jsonl_errors)
             if entry_count == 0:
                 errors.append(
@@ -291,6 +267,7 @@ from common.task_context import (
     cmd_validate,
     cmd_list_context,
 )
+from common.task_progress import cmd_progress, jsonl_curated_entry_count
 
 
 # =============================================================================
@@ -563,6 +540,10 @@ Usage:
   python task.py archive <task-dir>                 Archive completed task
   python task.py add-subtask <parent> <child>       Link child task to parent
   python task.py remove-subtask <parent> <child>    Unlink child from parent
+  python task.py progress init <task-dir>           Create or refresh progress.json
+  python task.py progress set <task-dir> <field> <value>  Update progress field
+  python task.py progress recover [task-dir]        Print compact recovery context
+  python task.py progress status [task-dir] [--json]  Print progress status
   python task.py list [--mine] [--status <status>]  List tasks
   python task.py list-archive [YYYY-MM]             List archived tasks
 
@@ -586,6 +567,9 @@ Examples:
   python task.py archive add-login
   python task.py add-subtask parent-task child-task  # Link existing tasks
   python task.py remove-subtask parent-task child-task
+  python task.py progress init .devflow/tasks/01-21-add-login
+  python task.py progress set .devflow/tasks/01-21-add-login step 2.2
+  python task.py progress recover
   python task.py list                               # List all active tasks
   python task.py list --mine                        # List my tasks only
   python task.py list --mine --status in_progress   # List my in-progress tasks
@@ -709,6 +693,25 @@ def main() -> int:
     p_rmsub.add_argument("parent_dir", help=_h("Parent task directory", "父任务目录"))
     p_rmsub.add_argument("child_dir", help=_h("Child task directory", "子任务目录"))
 
+    # progress
+    p_progress = subparsers.add_parser("progress", help=_h("Manage task progress recovery", "管理任务进度恢复"))
+    progress_subparsers = p_progress.add_subparsers(dest="progress_command")
+
+    p_progress_init = progress_subparsers.add_parser("init", help=_h("Create or refresh progress.json", "创建或刷新 progress.json"))
+    p_progress_init.add_argument("dir", help=_h("Task directory", "任务目录"))
+
+    p_progress_set = progress_subparsers.add_parser("set", help=_h("Update progress field", "更新进度字段"))
+    p_progress_set.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_progress_set.add_argument("field", help=_h("Progress field", "进度字段"))
+    p_progress_set.add_argument("value", help=_h("Progress field value", "进度字段值"))
+
+    p_progress_recover = progress_subparsers.add_parser("recover", help=_h("Print compact recovery context", "输出紧凑恢复上下文"))
+    p_progress_recover.add_argument("dir", nargs="?", help=_h("Task directory", "任务目录"))
+
+    p_progress_status = progress_subparsers.add_parser("status", help=_h("Print progress status", "输出进度状态"))
+    p_progress_status.add_argument("dir", nargs="?", help=_h("Task directory", "任务目录"))
+    p_progress_status.add_argument("--json", action="store_true", help=_h("Print JSON", "输出 JSON"))
+
     # list-archive
     p_listarch = subparsers.add_parser("list-archive", help=_h("List archived tasks", "列出已归档任务"))
     p_listarch.add_argument("month", nargs="?", help=_h("Month (YYYY-MM)", "月份（YYYY-MM）"))
@@ -733,6 +736,7 @@ def main() -> int:
         "archive": cmd_archive,
         "add-subtask": cmd_add_subtask,
         "remove-subtask": cmd_remove_subtask,
+        "progress": cmd_progress,
         "list": cmd_list,
         "list-archive": cmd_list_archive,
     }

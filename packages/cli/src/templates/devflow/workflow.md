@@ -231,6 +231,7 @@ Tools: `devflow-implement` / `devflow-research` are sub-agent types only (Task/A
 Flow: `devflow-implement` -> `devflow-check` -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
 Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `devflow-implement`, do NOT spawn another `devflow-implement` or `devflow-check`; if already running as `devflow-check`, do NOT spawn another `devflow-check` or `devflow-implement`. Dispatch is main session only.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
+For long-running work, update `task.py progress set <task> ...` at meaningful implementation, check, and finish boundaries so `/devflow:continue` can recover quickly.
 [/workflow-state:in_progress]
 
 <!-- Per-turn breadcrumb: shown while status='in_progress' when
@@ -242,6 +243,7 @@ Dispatch prompt starts with `Active task: <task path from task.py current>`. Rea
 Flow: `devflow-before-dev` -> edit -> `devflow-check` -> validation -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
 Do not dispatch implement/check sub-agents in inline mode.
 Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
+For long-running work, update `task.py progress set <task> ...` at meaningful implementation, check, and finish boundaries so `/devflow:continue` can recover quickly.
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
@@ -296,6 +298,7 @@ When a user request matches one of these intents inside an active task, route fi
 - Task creation approval is not implementation approval; implementation waits for `task.py start` after artifact review.
 - PRD-only is valid for lightweight tasks; complex tasks need `design.md` + `implement.md`.
 - Planning must be persisted to task artifacts; checks must run before reporting completion.
+- Progress hints in `progress.json` are advisory recovery state only; they must not replace `task.json.status`, PRD/design/implement artifacts, or validation evidence.
 
 ### Loading Step Detail
 

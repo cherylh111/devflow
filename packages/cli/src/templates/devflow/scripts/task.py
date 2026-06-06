@@ -4,28 +4,28 @@
 Task Management Script.
 
 Usage:
-    python3 task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>]
-    python3 task.py add-context <dir> <file> <path> [reason] # Add jsonl entry
-    python3 task.py validate <dir>              # Validate jsonl files
-    python3 task.py list-context <dir>          # List jsonl entries
-    python3 task.py start <dir>                 # Set active task
-    python3 task.py current [--source]          # Show active task
-    python3 task.py finish                      # Clear active task
-    python3 task.py set-branch <dir> <branch>   # Set git branch
-    python3 task.py set-base-branch <dir> <branch>  # Set PR target branch
-    python3 task.py set-scope <dir> <scope>     # Set scope for PR title
-    python3 task.py archive <task-dir>          # Archive completed task
-    python3 task.py list                        # List active tasks
-    python3 task.py list-archive [month]        # List archived tasks
-    python3 task.py add-subtask <parent-dir> <child-dir>     # Link child to parent
-    python3 task.py remove-subtask <parent-dir> <child-dir>  # Unlink child from parent
+    python task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>]
+    python task.py add-context <dir> <file> <path> [reason] # Add jsonl entry
+    python task.py validate <dir>              # Validate jsonl files
+    python task.py list-context <dir>          # List jsonl entries
+    python task.py start <dir>                 # Set active task
+    python task.py current [--source]          # Show active task
+    python task.py finish                      # Clear active task
+    python task.py set-branch <dir> <branch>   # Set git branch
+    python task.py set-base-branch <dir> <branch>  # Set PR target branch
+    python task.py set-scope <dir> <scope>     # Set scope for PR title
+    python task.py archive <task-dir>          # Archive completed task
+    python task.py list                        # List active tasks
+    python task.py list-archive [month]        # List archived tasks
+    python task.py add-subtask <parent-dir> <child-dir>     # Link child to parent
+    python task.py remove-subtask <parent-dir> <child-dir>  # Unlink child from parent
+    python task.py progress <subcommand>       # Manage task progress recovery
 """
 
 from __future__ import annotations
 
 import argparse
 import builtins
-import json
 import re
 import sys
 from pathlib import Path
@@ -209,30 +209,6 @@ def _validate_prd_convergence(content: str) -> list[str]:
     return errors
 
 
-def _jsonl_curated_entry_count(jsonl_file: Path) -> tuple[int, list[str]]:
-    if not jsonl_file.is_file():
-        return 0, [f"{jsonl_file.name}: not found"]
-
-    errors: list[str] = []
-    count = 0
-    for line_num, line in enumerate(jsonl_file.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            data = json.loads(line)
-        except json.JSONDecodeError:
-            errors.append(f"{jsonl_file.name}:{line_num}: invalid JSON")
-            continue
-
-        if data.get("file") or data.get("knowledge") or data.get("wiki"):
-            count += 1
-            continue
-        if data.get("type") == "knowledge" and data.get("id"):
-            count += 1
-
-    return count, errors
-
-
 def _validate_start_gate(task_dir: Path, task_json_path: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -266,7 +242,7 @@ def _validate_start_gate(task_dir: Path, task_json_path: Path) -> tuple[list[str
 
     if _meta_flag(data, "requires_subagent_context"):
         for jsonl_name in ("implement.jsonl", "check.jsonl"):
-            entry_count, jsonl_errors = _jsonl_curated_entry_count(task_dir / jsonl_name)
+            entry_count, jsonl_errors = jsonl_curated_entry_count(task_dir / jsonl_name)
             errors.extend(jsonl_errors)
             if entry_count == 0:
                 errors.append(
@@ -291,6 +267,7 @@ from common.task_context import (
     cmd_validate,
     cmd_list_context,
 )
+from common.task_progress import cmd_progress, jsonl_curated_entry_count
 
 
 # =============================================================================
@@ -548,23 +525,27 @@ def show_usage() -> None:
     print("""Task Management Script
 
 Usage:
-  python3 task.py create <title>                     Create new task directory
-  python3 task.py create <title> --package <pkg>     Create task for a specific package
-  python3 task.py create <title> --parent <dir>      Create task as child of parent
-  python3 task.py add-context <dir> <jsonl> <path> [reason]  Add entry to jsonl
-  python3 task.py validate <dir>                     Validate jsonl files
-  python3 task.py list-context <dir>                 List jsonl entries
-  python3 task.py start <dir>                        Set active task
-  python3 task.py current [--source]                 Show active task
-  python3 task.py finish                             Clear active task
-  python3 task.py set-branch <dir> <branch>          Set git branch
-  python3 task.py set-base-branch <dir> <branch>     Set PR target branch
-  python3 task.py set-scope <dir> <scope>            Set scope for PR title
-  python3 task.py archive <task-dir>                 Archive completed task
-  python3 task.py add-subtask <parent> <child>       Link child task to parent
-  python3 task.py remove-subtask <parent> <child>    Unlink child from parent
-  python3 task.py list [--mine] [--status <status>]  List tasks
-  python3 task.py list-archive [YYYY-MM]             List archived tasks
+  python task.py create <title>                     Create new task directory
+  python task.py create <title> --package <pkg>     Create task for a specific package
+  python task.py create <title> --parent <dir>      Create task as child of parent
+  python task.py add-context <dir> <jsonl> <path> [reason]  Add entry to jsonl
+  python task.py validate <dir>                     Validate jsonl files
+  python task.py list-context <dir>                 List jsonl entries
+  python task.py start <dir>                        Set active task
+  python task.py current [--source]                 Show active task
+  python task.py finish                             Clear active task
+  python task.py set-branch <dir> <branch>          Set git branch
+  python task.py set-base-branch <dir> <branch>     Set PR target branch
+  python task.py set-scope <dir> <scope>            Set scope for PR title
+  python task.py archive <task-dir>                 Archive completed task
+  python task.py add-subtask <parent> <child>       Link child task to parent
+  python task.py remove-subtask <parent> <child>    Unlink child from parent
+  python task.py progress init <task-dir>           Create or refresh progress.json
+  python task.py progress set <task-dir> <field> <value>  Update progress field
+  python task.py progress recover [task-dir]        Print compact recovery context
+  python task.py progress status [task-dir] [--json]  Print progress status
+  python task.py list [--mine] [--status <status>]  List tasks
+  python task.py list-archive [YYYY-MM]             List archived tasks
 
 Monorepo options:
   --package <pkg>      Package name (validated against config.yaml packages)
@@ -574,21 +555,24 @@ List options:
   --status, -s <s>     Filter by status (planning, in_progress, review, completed)
 
 Examples:
-  python3 task.py create "Add login feature" --slug add-login
-  python3 task.py create "Add login feature" --slug add-login --package cli
-  python3 task.py create "Child task" --slug child --parent .devflow/tasks/01-21-parent
-  python3 task.py add-context <dir> implement .devflow/spec/cli/backend/auth.md "Auth guidelines"
-  python3 task.py set-branch <dir> task/add-login
-  python3 task.py start .devflow/tasks/01-21-add-login
-  python3 task.py start .devflow/tasks/01-21-add-login --force
-  python3 task.py current --source
-  python3 task.py finish
-  python3 task.py archive add-login
-  python3 task.py add-subtask parent-task child-task  # Link existing tasks
-  python3 task.py remove-subtask parent-task child-task
-  python3 task.py list                               # List all active tasks
-  python3 task.py list --mine                        # List my tasks only
-  python3 task.py list --mine --status in_progress   # List my in-progress tasks
+  python task.py create "Add login feature" --slug add-login
+  python task.py create "Add login feature" --slug add-login --package cli
+  python task.py create "Child task" --slug child --parent .devflow/tasks/01-21-parent
+  python task.py add-context <dir> implement .devflow/spec/cli/backend/auth.md "Auth guidelines"
+  python task.py set-branch <dir> task/add-login
+  python task.py start .devflow/tasks/01-21-add-login
+  python task.py start .devflow/tasks/01-21-add-login --force
+  python task.py current --source
+  python task.py finish
+  python task.py archive add-login
+  python task.py add-subtask parent-task child-task  # Link existing tasks
+  python task.py remove-subtask parent-task child-task
+  python task.py progress init .devflow/tasks/01-21-add-login
+  python task.py progress set .devflow/tasks/01-21-add-login step 2.2
+  python task.py progress recover
+  python task.py list                               # List all active tasks
+  python task.py list --mine                        # List my tasks only
+  python task.py list --mine --status in_progress   # List my in-progress tasks
 """)
 
 
@@ -621,7 +605,7 @@ def main() -> int:
         )
         print("See .devflow/workflow.md planning artifact guidance or run:", file=sys.stderr)
         print(
-            "  python3 ./.devflow/scripts/get_context.py --mode phase --step 1",
+            "  python ./.devflow/scripts/get_context.py --mode phase --step 1",
             file=sys.stderr,
         )
         print(
@@ -709,6 +693,25 @@ def main() -> int:
     p_rmsub.add_argument("parent_dir", help=_h("Parent task directory", "父任务目录"))
     p_rmsub.add_argument("child_dir", help=_h("Child task directory", "子任务目录"))
 
+    # progress
+    p_progress = subparsers.add_parser("progress", help=_h("Manage task progress recovery", "管理任务进度恢复"))
+    progress_subparsers = p_progress.add_subparsers(dest="progress_command")
+
+    p_progress_init = progress_subparsers.add_parser("init", help=_h("Create or refresh progress.json", "创建或刷新 progress.json"))
+    p_progress_init.add_argument("dir", help=_h("Task directory", "任务目录"))
+
+    p_progress_set = progress_subparsers.add_parser("set", help=_h("Update progress field", "更新进度字段"))
+    p_progress_set.add_argument("dir", help=_h("Task directory", "任务目录"))
+    p_progress_set.add_argument("field", help=_h("Progress field", "进度字段"))
+    p_progress_set.add_argument("value", help=_h("Progress field value", "进度字段值"))
+
+    p_progress_recover = progress_subparsers.add_parser("recover", help=_h("Print compact recovery context", "输出紧凑恢复上下文"))
+    p_progress_recover.add_argument("dir", nargs="?", help=_h("Task directory", "任务目录"))
+
+    p_progress_status = progress_subparsers.add_parser("status", help=_h("Print progress status", "输出进度状态"))
+    p_progress_status.add_argument("dir", nargs="?", help=_h("Task directory", "任务目录"))
+    p_progress_status.add_argument("--json", action="store_true", help=_h("Print JSON", "输出 JSON"))
+
     # list-archive
     p_listarch = subparsers.add_parser("list-archive", help=_h("List archived tasks", "列出已归档任务"))
     p_listarch.add_argument("month", nargs="?", help=_h("Month (YYYY-MM)", "月份（YYYY-MM）"))
@@ -733,6 +736,7 @@ def main() -> int:
         "archive": cmd_archive,
         "add-subtask": cmd_add_subtask,
         "remove-subtask": cmd_remove_subtask,
+        "progress": cmd_progress,
         "list": cmd_list,
         "list-archive": cmd_list_archive,
     }
