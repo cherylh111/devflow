@@ -137,6 +137,11 @@ describe("init() integration", () => {
         path.join(tmpDir, ".claude", "skills", "devflow-use", "SKILL.md"),
       ),
     ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(tmpDir, ".claude", "skills", "devflow-diagnose", "SKILL.md"),
+      ),
+    ).toBe(true);
   });
 
   it("creates Chinese templates when --lang zh is selected", async () => {
@@ -173,6 +178,11 @@ describe("init() integration", () => {
       "utf-8",
     );
     expect(devflowUseSkill).toContain("使用 DevFlow");
+    const diagnoseSkill = fs.readFileSync(
+      path.join(tmpDir, ".agents", "skills", "devflow-diagnose", "SKILL.md"),
+      "utf-8",
+    );
+    expect(diagnoseSkill).toContain("DevFlow 诊断");
   });
 
   it("#1b does not print the promotional pain-point block", async () => {
@@ -282,6 +292,11 @@ describe("init() integration", () => {
     ).toBe(true);
     expect(
       fs.existsSync(
+        path.join(tmpDir, ".agents", "skills", "devflow-diagnose", "SKILL.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
         path.join(
           tmpDir,
           ".agents",
@@ -343,6 +358,7 @@ describe("init() integration", () => {
       ".agents/skills/devflow-session-insight/references/cli-quick-reference.md",
     );
     expect(trackedPaths).toContain(".agents/skills/devflow-use/SKILL.md");
+    expect(trackedPaths).toContain(".agents/skills/devflow-diagnose/SKILL.md");
   });
 
   it("#3g qoder platform creates .qoder/commands + .qoder/skills", async () => {

@@ -120,6 +120,12 @@ Runtime parser contract:
 - Every workflow template must keep `## Phase Index`, `## Phase 1: Plan`,
   `#### X.Y` step headings, platform marker syntax, and all required
   `[workflow-state:*]` blocks.
+- Shared lifecycle or skill-routing guidance changes must audit every
+  `marketplace/workflows/**/workflow.md` variant, not only the bundled native
+  template. Variant-specific Phase 2 mechanics may differ, but common routing
+  affordances such as `devflow-brainstorm`, `devflow-diagnose`,
+  `devflow-break-loop`, and `devflow-update-spec` should stay discoverable
+  unless a variant has an explicit reason to diverge.
 - SessionStart, per-turn workflow-state hooks, `devflow-start`, and
   `get_context.py --mode phase` read the current `.devflow/workflow.md`; do not
   duplicate variant-specific behavior in hook scripts or skills.

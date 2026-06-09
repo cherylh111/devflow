@@ -280,6 +280,7 @@ Inline 模式不要派发 implement/check 子代理。
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 - 规划或需求不清 -> `devflow-brainstorm`。
+- Bug、失败行为、根因不清或性能回归 -> `devflow-diagnose`。
 - `in_progress` 实现/检查 -> 派发 `devflow-implement` / `devflow-check`。
 - 反复调试 -> `devflow-break-loop`；spec 更新 -> `devflow-update-spec`。
 
@@ -288,6 +289,7 @@ Inline 模式不要派发 implement/check 子代理。
 [codex-inline, Kilo, Antigravity, Windsurf]
 
 - 规划或需求不清 -> `devflow-brainstorm`。
+- Bug、失败行为、根因不清或性能回归 -> `devflow-diagnose`。
 - 编辑前 -> `devflow-before-dev`；编辑后 -> `devflow-check`。
 - 反复调试 -> `devflow-break-loop`；spec 更新 -> `devflow-update-spec`。
 
@@ -492,6 +494,8 @@ python3 ./.devflow/scripts/task.py start <task-dir>
 目标：把已评审的规划产物转化为能通过质量检查的代码。
 
 #### 2.1 实现 `[required · repeatable]`
+
+如果是 bug 修复、失败行为、根因不清或性能回归，除非根因和修复方案已经有证据证明，否则编辑前先加载 `devflow-diagnose`。
 
 [Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 

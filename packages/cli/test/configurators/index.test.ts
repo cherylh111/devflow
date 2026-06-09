@@ -401,6 +401,9 @@ describe("collectPlatformTemplates", () => {
           `${skillRoot}/devflow-session-insight/references/cli-quick-reference.md`,
         ),
       ).toBe(true);
+      expect(
+        result?.has(`${skillRoot}/devflow-diagnose/SKILL.md`),
+      ).toBe(true);
     }
   });
 

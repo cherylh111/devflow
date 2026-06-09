@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "phase": "finish",
+  "step": "3.4",
+  "summary": "Workflow now routes bug/failing/unclear-root-cause work to devflow-diagnose and adds a Phase 2 pre-edit diagnosis hint.",
+  "resume_hint": "Next: prepare commit plan and commit if the user approves; validation already passed.",
+  "current_item": null,
+  "completed_items": [],
+  "pending_items": [],
+  "last_validation": "Passed: devflow template test, regression test, workflow integration test, CLI lint, CLI typecheck.",
+  "updated_at": "2026-06-09T11:31:17Z",
+  "updated_by": "agent"
+}

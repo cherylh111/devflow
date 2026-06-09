@@ -1,0 +1,28 @@
+{
+  "id": "research-skill-design-lessons",
+  "name": "research-skill-design-lessons",
+  "title": "Research skill design lessons",
+  "description": "Research Matt Pocock's skills framework and DevFlow's own framework to decide which design ideas should be borrowed, adapted, rejected, or deferred.",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "research",
+  "package": "devflow",
+  "priority": "P2",
+  "creator": "z03968",
+  "assignee": "z03968",
+  "createdAt": "2026-06-09",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "complex": true
+  }
+}

@@ -170,6 +170,7 @@ Code committed. Run `/devflow:finish-work`; if dirty, return to Phase 3.4 first.
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 - Planning or unclear requirements -> `devflow-brainstorm`.
+- Bug, failing behavior, unclear root cause, or performance regression -> `devflow-diagnose`.
 - `in_progress` implementation -> `devflow channel spawn --agent implement`.
 - `in_progress` quality check -> `devflow channel spawn --agent check`.
 - Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
@@ -179,6 +180,7 @@ Code committed. Run `/devflow:finish-work`; if dirty, return to Phase 3.4 first.
 [codex-inline, Kilo, Antigravity, Windsurf]
 
 - Planning or unclear requirements -> `devflow-brainstorm`.
+- Bug, failing behavior, unclear root cause, or performance regression -> `devflow-diagnose`.
 - Before editing -> `devflow-before-dev`; after editing -> prefer a channel-driven `check` worker.
 - Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
 
@@ -253,6 +255,8 @@ Goal: the main session turns reviewed planning artifacts into checked code throu
 #### 2.1 Implement `[required · repeatable]`
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+
+For bug fixes, failing behavior, unclear root cause, or performance regressions, load `devflow-diagnose` before spawning implementation workers unless the root cause and fix are already proven by evidence.
 
 Use channel-driven implement dispatch:
 

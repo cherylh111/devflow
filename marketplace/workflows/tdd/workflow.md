@@ -275,6 +275,7 @@ When a user request matches one of these intents inside an active task, route fi
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 - Planning or unclear requirements -> `devflow-brainstorm`.
+- Bug, failing behavior, unclear root cause, or performance regression -> `devflow-diagnose`.
 - `in_progress` implementation/check -> dispatch `devflow-implement` / `devflow-check`.
 - Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
 
@@ -283,6 +284,7 @@ When a user request matches one of these intents inside an active task, route fi
 [codex-inline, Kilo, Antigravity, Windsurf]
 
 - Planning or unclear requirements -> `devflow-brainstorm`.
+- Bug, failing behavior, unclear root cause, or performance regression -> `devflow-diagnose`.
 - Before editing -> `devflow-before-dev`; after editing -> `devflow-check`.
 - Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
 
@@ -484,6 +486,8 @@ If `task.py start` errors with a session-identity message (no context key from h
 Goal: turn reviewed planning artifacts into code that passes quality checks.
 
 #### 2.1 Implement `[required · repeatable]`
+
+For bug fixes, failing behavior, unclear root cause, or performance regressions, load `devflow-diagnose` before writing the first failing test unless the root cause and fix are already proven by evidence.
 
 Run one behavior slice at a time. Do not write all tests first and do not implement multiple behaviors before seeing a failing test.
 

@@ -38,11 +38,12 @@ import {
 
 const BUNDLED_SKILL_NAMES = [
   "devflow-meta",
+  "devflow-diagnose",
   "devflow-spec-bootstrap",
   "devflow-session-insight",
   "devflow-use",
 ];
-const BUNDLED_SKILL_NAME = BUNDLED_SKILL_NAMES[0];
+const BUNDLED_SKILL_NAME = "devflow-meta";
 const BUNDLED_REFERENCE = path.join(
   BUNDLED_SKILL_NAME,
   "references",
@@ -295,6 +296,9 @@ describe("configurePlatform", () => {
     ).toBe(true);
     expect(
       fs.existsSync(path.join(skillsRoot, "devflow-use", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(skillsRoot, "devflow-diagnose", "SKILL.md")),
     ).toBe(true);
   });
 
@@ -913,6 +917,9 @@ describe("configurePlatform", () => {
       ),
     ).toBeDefined();
     expect(templates?.get(".pi/skills/devflow-use/SKILL.md")).toBeDefined();
+    expect(
+      templates?.get(".pi/skills/devflow-diagnose/SKILL.md"),
+    ).toBeDefined();
     expect(templates?.get(".pi/agents/devflow-implement.md")).toContain(
       "Required: Load DevFlow Context First",
     );

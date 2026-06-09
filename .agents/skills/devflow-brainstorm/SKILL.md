@@ -56,6 +56,29 @@ Use a concise title from the user's request. Use a slug without a date prefix. `
 
 Do not invent a project-specific product/spec hierarchy. If the repository already has product, domain, or spec docs, use them. If it does not, proceed with the evidence that exists.
 
+## Vertical Slice Decomposition
+
+When the request contains several independently verifiable deliverables, consider a parent/child task split.
+
+Use this mapping:
+
+- Parent task: owns the source requirement set, shared research, task map, cross-child acceptance criteria, and final integration review.
+- Child task: owns one thin, end-to-end vertical slice that can be planned, implemented, checked, and archived independently.
+
+Prefer tracer-bullet slices over horizontal layer slices:
+
+- Good: one narrow behavior path through schema/config, command/API, user-visible output, and tests.
+- Bad: one child for "types", one child for "backend", one child for "tests" when none is independently verifiable.
+
+Before creating children, draft the proposed slice list in the parent `prd.md` or `design.md`:
+
+- title
+- independently verifiable outcome
+- blocked-by relationship, if any
+- whether human review is required before implementation
+
+Dependencies must be written in child artifacts. Do not rely on tree position to imply ordering.
+
 ## Question Rules
 
 Ask only one question per message.

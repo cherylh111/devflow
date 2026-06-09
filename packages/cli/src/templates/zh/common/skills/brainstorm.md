@@ -51,6 +51,29 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 
 不要虚构项目特定的 product/spec 层级。如果仓库已有 product、domain 或 spec docs，就使用它们。如果没有，就基于现有证据继续。
 
+## 垂直切片拆分
+
+当一个请求包含多个可以独立验收的交付物时，考虑拆成 parent/child task。
+
+使用这个映射：
+
+- Parent task：承载原始需求、共享 research、任务地图、跨 child 的验收标准和最终集成 review。
+- Child task：承载一个薄的端到端 vertical slice，可以独立规划、实现、检查和归档。
+
+优先使用 tracer-bullet 式切片，而不是水平分层切片：
+
+- 好：一个狭窄行为路径贯穿 schema/config、command/API、用户可见输出和 tests。
+- 坏：把 "types"、"backend"、"tests" 分别作为 child，但没有任何一个能独立验收。
+
+创建 children 前，先在 parent 的 `prd.md` 或 `design.md` 中草拟切片列表：
+
+- 标题
+- 可独立验收的结果
+- blocked-by 关系，如有
+- 实现前是否需要人工 review
+
+依赖关系必须写入 child artifacts。不要依赖任务树位置来暗示顺序。
+
 ## 提问规则
 
 每条消息只问一个问题。
