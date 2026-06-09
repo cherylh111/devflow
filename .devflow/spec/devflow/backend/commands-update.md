@@ -66,8 +66,10 @@ Note that `force` / `skipAll` / `createNew` are mutually exclusive in spirit but
 | `.devflow/config.yaml` | `templates/devflow/index.ts:configYamlTemplate` |
 | `.devflow/.gitignore` | `templates/devflow/index.ts:gitignoreTemplate` |
 | `.devflow/workflow.md` | `templates/devflow/index.ts:workflowMdTemplate` (whole-file hash-gated, see below) |
+| `.devflow/agents/*.md` runtime agents | `templates/devflow/index.ts:getAllRuntimeAgents` |
 | Root `AGENTS.md` | `commands/update.ts:buildAgentsMdTemplate` (managed-block merge) |
 | Per-platform files | `configurators/index.ts:collectPlatformTemplates` for each detected platform via `configurators/index.ts:getConfiguredPlatforms` |
+| Registry-backed `.devflow/spec` files | `utils/registry-config.ts` + `utils/template-fetcher.ts`, only when `.devflow/config.yaml` has `registry.spec` |
 | `.claude/settings.json` `statusLine` | preserved through `commands/update.ts:preserveExistingClaudeStatusLine` |
 
 Platforms are auto-discovered by directory existence in `cwd`. There is one exception: if `commands/update.ts:needsCodexUpgrade` returns true (legacy DevFlow tracked `.agents/skills/` but no `.codex/` exists yet), `commands/update.ts:update` passes `extraPlatforms: new Set(["codex"])` to force Codex template collection so the upgrade can create `.codex/`.
@@ -76,6 +78,12 @@ After collection, `collectTemplateFiles` runs two final passes:
 
 1. `update.skip` filtering via `commands/update.ts:loadUpdateSkipPaths` — drops paths matching the `update.skip` list in `.devflow/config.yaml`. **Bypassed** when the update is a breaking release with `recommendMigrate` (`breakingBypass`); see "Migration Trigger Semantics".
 2. `configurators/shared.ts:replacePythonCommandLiterals` is applied to every value so init-time and update-time bytes are byte-identical on the same OS. This is the load-bearing step that keeps idempotency working — see Common Pitfalls.
+
+Registry-backed spec refresh joins the same template map as bundled files. It
+must therefore use the normal `analyzeChanges` hash/conflict buckets: pristine
+registry spec files auto-update, user-edited spec files prompt or follow
+`--force` / `--skip-all` / `--create-new`, and missing files with a stored hash
+remain treated as user deletions.
 
 ### 2. Whole-file workflow.md update and AGENTS.md managed-block merge
 
@@ -249,6 +257,11 @@ The idempotency invariant ("re-running update on a clean repo writes nothing") r
 1. **`collectTemplateFiles` resolves all placeholders the same way init does.** The most common bug is forgetting to pipe a new placeholder through `configurators/shared.ts:replacePythonCommandLiterals` (or the per-platform `resolvePlaceholders`) inside a configurator's `collectTemplates` lambda. Init writes resolved bytes; update collects unresolved templates; hashes mismatch every run. See `platform-integration.md > Common Mistakes > "Template placeholder not resolved in collectTemplates"`.
 2. **Init and update agree on what files exist.** Anything `collectTemplateFiles` lists must also be created by `init`, otherwise update auto-adds it on every run. See `platform-integration.md > Common Mistakes > "Template listed in update but not created by init"`.
 3. **The runtime templates are byte-stable.** `workflowMdTemplate` and `buildAgentsMdTemplate` should return the same content when given the same inputs across runs. The CLI tests this via `update.integration.test.ts > #1 same version update is a true no-op` (full snapshot before/after).
+4. **Registry-backed specs preserve user-data protections.** Even though
+   `.devflow/spec/` is user-owned by default, files refreshed from a recorded
+   `registry.spec` source are DevFlow-managed template entries only when their
+   paths are part of the fetched registry template and hash analysis allows the
+   write. Do not bypass `analyzeChanges` for registry refresh.
 
 ---
 

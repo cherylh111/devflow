@@ -60,6 +60,14 @@ export function selectMarketplaceTemplates(
   - `command` -> `.claude/commands`
   - `full` -> project root
 - `workflow` entries must use workflow-specific commands, not generic pulls.
+- Registry-backed `spec` installs persist their source/template identity in
+  `.devflow/config.yaml` so `devflow update` can refresh them later. Persist the
+  original source string, including provider prefixes and refs such as
+  `gh:org/repo/path#branch`; do not reconstruct it from parsed pieces and drop
+  the ref.
+- Blank/default scaffolding and built-in non-registry spec creation must not
+  write `registry.spec`; only a registry-backed spec template selection owns
+  that config section.
 
 ### 4. Validation & Error Matrix
 
@@ -73,6 +81,8 @@ export function selectMarketplaceTemplates(
 | Selected template path escapes registry root | Return/print path-not-found style error |
 | Selected type is unsupported | Return/print supported generic types |
 | Selected type is `workflow` | Tell user to use `devflow workflow` or `init --workflow` |
+| Registry-backed spec template installed | Write `.devflow/config.yaml` `registry.spec` with source + template id |
+| Built-in/blank spec scaffolding installed | Do not write `registry.spec` |
 
 ### 5. Good/Base/Bad Cases
 
@@ -98,6 +108,9 @@ export function selectMarketplaceTemplates(
   interactive selection" branch.
 - Existing Git-backed registry tests must keep asserting probe/download backend
   consistency.
+- Integration tests for `init --registry <source> --template <id>` where the
+  selected entry is `type: "spec"` must assert that `.devflow/config.yaml`
+  records the exact source string and template id, including refs.
 
 ### 7. Wrong vs Correct
 

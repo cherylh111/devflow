@@ -123,6 +123,11 @@ Runtime parser contract:
 - SessionStart, per-turn workflow-state hooks, `devflow-start`, and
   `get_context.py --mode phase` read the current `.devflow/workflow.md`; do not
   duplicate variant-specific behavior in hook scripts or skills.
+- Workflow templates may reference channel runtime agents with
+  `.devflow/agents/<name>.md` paths or `channel spawn --agent <name>` command
+  text. `devflow workflow --template <id>` and `devflow init --workflow <id>`
+  should warn on stderr when those runtime agent files are missing in the target
+  project. The warning is advisory only and must not block template selection.
 
 Native source-of-truth contract:
 
@@ -142,6 +147,7 @@ Native source-of-truth contract:
 | Missing workflow id | Throw `WorkflowResolveError` / command error; CLI exits non-zero |
 | Marketplace index fetch fails | List can still show bundled native with warning; resolve fails with workflow-specific error |
 | Workflow entry path is missing, not `.md`, absolute, or contains `..` | Fail with workflow-specific error |
+| Resolved workflow references missing `.devflow/agents/<name>.md` runtime files | Print a non-blocking warning that points at `devflow update` |
 | `init --workflow missing-id` | Reject; do not print and return success |
 | `init --workflow tdd` | Write marketplace content and remove `.devflow/workflow.md` hash |
 | `devflow update` after switching to non-native | Treat workflow as modified/user-managed; never silently restore native |
@@ -184,6 +190,10 @@ Integration tests:
 - Real `marketplace/workflows/tdd/workflow.md` planning breadcrumbs include the
   TDD gates: observable behavior slices, public interface under test, and mock
   boundaries.
+- Unit tests cover referenced-agent extraction from both `.devflow/agents/*.md`
+  paths and `channel spawn --agent <name>` text.
+- Integration tests cover non-blocking missing-agent warnings for
+  `devflow workflow --template <id>` and `devflow init --workflow <id>`.
 
 Runtime parsing validation:
 
