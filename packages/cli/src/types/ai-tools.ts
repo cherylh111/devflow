@@ -21,7 +21,8 @@ export type AITool =
   | "codebuddy"
   | "copilot"
   | "droid"
-  | "pi";
+  | "pi"
+  | "reasonix";
 
 /**
  * Template directory categories
@@ -41,7 +42,8 @@ export type TemplateDir =
   | "codebuddy"
   | "copilot"
   | "droid"
-  | "pi";
+  | "pi"
+  | "reasonix";
 
 /**
  * CLI flag names for platform selection (e.g., --claude, --cursor, --kilo, --kiro, --gemini, --antigravity)
@@ -61,7 +63,8 @@ export type CliFlag =
   | "codebuddy"
   | "copilot"
   | "droid"
-  | "pi";
+  | "pi"
+  | "reasonix";
 
 /**
  * CLI flag names exposed by `devflow init`.
@@ -70,7 +73,12 @@ export type CliFlag =
  * update/uninstall can service existing projects, but new init registration is
  * intentionally limited to these platforms.
  */
-export type InitCliFlag = "codebuddy" | "claude" | "qoder" | "codex";
+export type InitCliFlag =
+  | "codebuddy"
+  | "claude"
+  | "qoder"
+  | "codex"
+  | "reasonix";
 
 /**
  * Template context for placeholder resolution.
@@ -374,6 +382,22 @@ export const AI_TOOLS: Record<AITool, AIToolConfig> = {
       agentCapable: true,
       hasHooks: true,
       cliFlag: "pi",
+    },
+  },
+  reasonix: {
+    name: "Reasonix",
+    templateDirs: ["common", "reasonix"],
+    configDir: ".reasonix",
+    cliFlag: "reasonix",
+    defaultChecked: false,
+    hasPythonHooks: false,
+    templateContext: {
+      cmdRefPrefix: "$",
+      executorAI: "Bash scripts or tool calls",
+      userActionLabel: "Skills",
+      agentCapable: true,
+      hasHooks: false,
+      cliFlag: "reasonix",
     },
   },
 };

@@ -1,7 +1,7 @@
 ---
 name: devflow-check
 description: "代码质量检查专家。根据 specs review 代码变更，并自行修复问题。"
-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 # Check Agent
 

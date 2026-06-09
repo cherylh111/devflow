@@ -38,7 +38,8 @@ import {
 
 const BUNDLED_SKILL_NAMES = [
   "devflow-meta",
-  "devflow-spec-bootstarp",
+  "devflow-spec-bootstrap",
+  "devflow-session-insight",
   "devflow-use",
 ];
 const BUNDLED_SKILL_NAME = BUNDLED_SKILL_NAMES[0];
@@ -49,7 +50,7 @@ const BUNDLED_REFERENCE = path.join(
   "overview.md",
 );
 const SPEC_BOOTSTARP_REFERENCE = path.join(
-  "devflow-spec-bootstarp",
+  "devflow-spec-bootstrap",
   "references",
   "spec-writing.md",
 );
@@ -908,7 +909,7 @@ describe("configurePlatform", () => {
     ).toBeDefined();
     expect(
       templates?.get(
-        ".pi/skills/devflow-spec-bootstarp/references/spec-writing.md",
+        ".pi/skills/devflow-spec-bootstrap/references/spec-writing.md",
       ),
     ).toBeDefined();
     expect(templates?.get(".pi/skills/devflow-use/SKILL.md")).toBeDefined();

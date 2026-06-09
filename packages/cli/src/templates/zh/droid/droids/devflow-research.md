@@ -2,7 +2,7 @@
 name: devflow-research
 description: |
   代码和技术搜索专家。查找文件、模式和技术方案，并将每个发现持久化到当前任务的 research/ 目录。不得修改该目录以外的代码。
-tools: Read, Write, Glob, Grep, Bash, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa, Skill, mcp__chrome-devtools__*
+tools: Read, Write, Glob, Grep, Bash, Skill, mcp__*
 ---
 # Research Agent
 

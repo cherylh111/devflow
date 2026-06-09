@@ -1,7 +1,7 @@
 ---
 name: devflow-implement
 description: DevFlow 实现 Agent。Use this exact agent for DevFlow task implementation, implement.jsonl context injection, and hook-injection tests. Do not use generic/default/generalPurpose agents for DevFlow implementation. No git commit allowed.
-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 # Implement Agent
 

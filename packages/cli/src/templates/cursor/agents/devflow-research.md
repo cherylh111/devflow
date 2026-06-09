@@ -1,7 +1,7 @@
 ---
 name: devflow-research
 description: DevFlow research agent. Use this exact agent for DevFlow task research and research/ persistence. Do not use generic/default/generalPurpose agents for DevFlow research.
-tools: Read, Write, Glob, Grep, Bash, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa, Skill, mcp__chrome-devtools__*
+tools: Read, Write, Glob, Grep, Bash, Skill, mcp__*
 ---
 # Research Agent
 

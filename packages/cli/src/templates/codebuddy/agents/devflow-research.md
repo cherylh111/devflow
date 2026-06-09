@@ -1,7 +1,7 @@
 ---
 name: devflow-research
 description: "Code and tech search expert. Finds files, patterns, and tech solutions, and PERSISTS every finding to the current task's research/ directory. No code modifications outside that directory."
-tools: Read, Write, Glob, Grep, Bash, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa, Skill, mcp__chrome-devtools__*
+tools: Read, Write, Glob, Grep, Bash, Skill, mcp__*
 ---
 # Research Agent
 

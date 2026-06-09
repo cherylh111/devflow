@@ -10,6 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import { downloadTemplate } from "giget";
 import { localized } from "./language-config.js";
+import { toPosix } from "./posix.js";
 
 // =============================================================================
 // Constants
@@ -657,6 +658,15 @@ interface CommandError extends Error {
 interface GitCheckout {
   dir: string;
   cleanup: () => Promise<void>;
+}
+
+export async function removeDirectory(dir: string): Promise<void> {
+  await fs.promises.rm(dir, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 100,
+  });
 }
 
 async function runGit(args: string[]): Promise<GitCommandOutput> {
@@ -1560,5 +1570,64 @@ export async function downloadRegistryDirect(
         `下载失败：${errorMessage}`,
       ),
     };
+  }
+}
+
+export function collectDirectoryFiles(
+  root: string,
+  relativeRoot: string,
+): Map<string, string> {
+  const files = new Map<string, string>();
+  if (!fs.existsSync(root)) return files;
+
+  const walk = (dir: string): void => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile()) {
+        const relativePath = toPosix(
+          path.join(relativeRoot, path.relative(root, fullPath)),
+        );
+        files.set(relativePath, fs.readFileSync(fullPath, "utf-8"));
+      }
+    }
+  };
+
+  walk(root);
+  return files;
+}
+
+/**
+ * Download a direct registry spec into a temporary directory and return its
+ * files as update-template entries under `.devflow/spec/**`.
+ */
+export async function fetchRegistrySpecTemplates(
+  registry: RegistrySource,
+  registryBackend?: RegistryBackend,
+): Promise<{ success: boolean; message?: string; files: Map<string, string> }> {
+  const tempRoot = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "devflow-registry-spec-"),
+  );
+  try {
+    const result = await downloadRegistryDirect(
+      tempRoot,
+      registry,
+      "overwrite",
+      undefined,
+      registryBackend,
+    );
+    if (!result.success) {
+      return { success: false, message: result.message, files: new Map() };
+    }
+    return {
+      success: true,
+      files: collectDirectoryFiles(
+        path.join(tempRoot, ".devflow", "spec"),
+        ".devflow/spec",
+      ),
+    };
+  } finally {
+    await removeDirectory(tempRoot);
   }
 }

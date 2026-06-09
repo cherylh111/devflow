@@ -46,11 +46,16 @@ import {
   NATIVE_WORKFLOW_ID,
   resolveWorkflowTemplate,
 } from "../utils/workflow-resolver.js";
+import { collectMissingAgents } from "../utils/agent-refs.js";
 import {
   isCwdHomedir,
   homedirGuardMessage,
   homedirBypassEnabled,
 } from "../utils/cwd-guard.js";
+import {
+  writeSpecRegistryConfig,
+  type SpecRegistryConfig,
+} from "../utils/registry-config.js";
 import {
   fetchTemplateIndex,
   probeRegistryIndex,
@@ -1005,6 +1010,7 @@ interface InitOptions {
   codex?: boolean;
   qoder?: boolean;
   codebuddy?: boolean;
+  reasonix?: boolean;
   yes?: boolean;
   user?: string;
   force?: boolean;
@@ -1088,6 +1094,22 @@ function writeLanguageConfig(cwd: string, language: TemplateLanguage): void {
     configPath,
     `${content.trimEnd()}\n\n# Template language for DevFlow-managed files\nlanguage: ${language}\n`,
     "utf-8",
+  );
+}
+
+function warnAboutMissingWorkflowAgents(
+  cwd: string,
+  workflowContent: string,
+): void {
+  const missing = collectMissingAgents(cwd, workflowContent);
+  if (missing.length === 0) return;
+  process.stderr.write(
+    chalk.yellow(
+      `\nWarning: The selected workflow references .devflow/agents/{${missing.join(",")}}.md, but those files are not on disk.\n`,
+    ) +
+      chalk.yellow(
+        `  Run \`devflow update\` to backfill the bundled agent definitions, or create them under ${PATHS.AGENTS}/.\n`,
+      ),
   );
 }
 
@@ -1262,9 +1284,11 @@ export async function init(options: InitOptions): Promise<void> {
 
   // Parse custom registry source early (needed by both monorepo + single-repo flows)
   let registry: MarketplaceSource | undefined;
+  let registrySourceForConfig: string | undefined;
   if (options.registry) {
     try {
       registry = parseMarketplaceSource(options.registry);
+      registrySourceForConfig = options.registry;
     } catch (error) {
       console.log(
         chalk.red(
@@ -1803,6 +1827,7 @@ export async function init(options: InitOptions): Promise<void> {
           }
           try {
             registry = parseMarketplaceSource(customSource);
+            registrySourceForConfig = customSource;
             fetchedTemplates = []; // Reset so direct-download guard works correctly
             // Probe index.json to detect marketplace vs direct download
             const customIndexUrl = `${registry.rawBaseUrl}/index.json`;
@@ -1906,6 +1931,7 @@ export async function init(options: InitOptions): Promise<void> {
                 ),
               );
               registry = undefined; // Reset so we don't fall through to direct download
+              registrySourceForConfig = undefined;
             }
           } catch (error) {
             console.log(
@@ -2020,6 +2046,7 @@ export async function init(options: InitOptions): Promise<void> {
   // ==========================================================================
 
   let useRemoteTemplate = false;
+  let registrySpecConfigToPersist: SpecRegistryConfig | null = null;
 
   if (selectedTemplates.length > 0) {
     console.log(
@@ -2100,6 +2127,12 @@ export async function init(options: InitOptions): Promise<void> {
       } else {
         console.log(chalk.green(`   ${result.message}`));
         useRemoteTemplate = true;
+        if (registry) {
+          registrySpecConfigToPersist = {
+            source: registrySourceForConfig ?? registry.gigetSource,
+            template: selectedTemplate,
+          };
+        }
       }
     } else {
       console.log(chalk.yellow(`   ${result.message}`));
@@ -2200,6 +2233,9 @@ export async function init(options: InitOptions): Promise<void> {
       } else {
         console.log(chalk.green(`   ${result.message}`));
         useRemoteTemplate = true;
+        registrySpecConfigToPersist = {
+          source: registrySourceForConfig ?? registry.gigetSource,
+        };
       }
     } else {
       console.log(chalk.yellow(`   ${result.message}`));
@@ -2276,6 +2312,9 @@ export async function init(options: InitOptions): Promise<void> {
       remoteSpecPackages,
       workflowMdOverride,
     });
+    if (workflowMdOverride !== undefined) {
+      warnAboutMissingWorkflowAgents(cwd, workflowMdOverride);
+    }
 
     // Write monorepo packages to config.yaml (non-destructive patch)
     if (monorepoPackages) {
@@ -2324,6 +2363,10 @@ export async function init(options: InitOptions): Promise<void> {
     await createRootFiles(cwd);
   } finally {
     stopRecordingWrites();
+  }
+
+  if (registrySpecConfigToPersist) {
+    writeSpecRegistryConfig(cwd, registrySpecConfigToPersist);
   }
 
   // Initialize template hashes for modification tracking

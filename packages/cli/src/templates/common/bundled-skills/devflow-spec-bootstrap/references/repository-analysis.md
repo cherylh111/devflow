@@ -1,4 +1,4 @@
-# Repository Analysis
+﻿# Repository Analysis
 
 The goal is to discover the project's real architecture before writing rules. Do not start from generic spec templates and fill blanks. Start from the code, then let the spec structure follow.
 
@@ -57,3 +57,4 @@ Keep short notes while analyzing. The notes should include:
 - Rules the spec should teach.
 - Anti-patterns found in old code, comments, tests, or migration paths.
 - Spec files that should be created, deleted, renamed, or merged.
+

@@ -8,6 +8,7 @@ import {
   getWorkflowMdTemplate,
   getConfigYamlTemplate,
   getGitignoreTemplate,
+  getAllAgents,
 } from "../templates/devflow/index.js";
 
 // Import markdown templates
@@ -117,6 +118,14 @@ export async function createWorkflowStructure(
     path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml"),
     getConfigYamlTemplate(),
   );
+
+  // Channel runtime agent definitions. These are dispatched on every init
+  // regardless of selected workflow because the user can switch to a
+  // channel-driven workflow at any time via `devflow workflow --template`.
+  ensureDir(path.join(cwd, PATHS.AGENTS));
+  for (const [agentFile, content] of getAllAgents()) {
+    await writeFile(path.join(cwd, PATHS.AGENTS, agentFile), content);
+  }
 
   // Create workspace/ with index.md
   ensureDir(path.join(cwd, PATHS.WORKSPACE));

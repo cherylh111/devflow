@@ -5757,7 +5757,7 @@ describe("regression: copilot agents use YAML tools frontmatter", () => {
     const frontmatter = content.split("---\n")[1] ?? "";
 
     expect(frontmatter).toContain(
-      "tools:\n  - read\n  - edit\n  - execute\n  - search\n  - web\n  - exa/*",
+      "tools:\n  - read\n  - edit\n  - execute\n  - search",
     );
     expect(frontmatter).not.toContain(
       "tools: Read, Write, Edit, Bash, Glob, Grep",
@@ -5775,9 +5775,9 @@ describe("regression: copilot agents use YAML tools frontmatter", () => {
     expect(frontmatter).toContain("  - edit");
     expect(frontmatter).toContain("  - search");
     expect(frontmatter).toContain("  - execute");
-    expect(frontmatter).toContain("  - web");
-    expect(frontmatter).toContain("  - exa/*");
-    expect(frontmatter).toContain("  - chrome-devtools/*");
+    expect(frontmatter).not.toContain("  - web");
+    expect(frontmatter).not.toContain("  - exa/*");
+    expect(frontmatter).not.toContain("  - chrome-devtools/*");
     expect(frontmatter).not.toContain("mcp__exa__");
     expect(frontmatter).not.toContain("mcp__chrome-devtools__*");
     expect(frontmatter).not.toContain("Skill");

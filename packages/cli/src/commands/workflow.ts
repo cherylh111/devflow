@@ -24,6 +24,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 
 import { DIR_NAMES, PATHS } from "../constants/paths.js";
+import { collectMissingAgents } from "../utils/agent-refs.js";
 import { replacePythonCommandLiterals } from "../configurators/shared.js";
 import {
   computeHash,
@@ -343,4 +344,23 @@ export async function runWorkflowCommand(
   }
 
   await writeWorkflow(cwd, template, options);
+
+  // Best-effort warning: if the resolved workflow references
+  // `.devflow/agents/<name>.md` files that don't exist on disk, point the user
+  // at `devflow update` so `devflow channel spawn --agent <name>` doesn't fail
+  // mid-session. Non-blocking; never errors a successful write.
+  warnAboutMissingAgents(cwd, template.content);
+}
+
+function warnAboutMissingAgents(cwd: string, workflowContent: string): void {
+  const missing = collectMissingAgents(cwd, workflowContent);
+  if (missing.length === 0) return;
+  process.stderr.write(
+    chalk.yellow(
+      `\nWarning: The selected workflow references .devflow/agents/{${missing.join(",")}}.md, but those files are not on disk.\n`,
+    ) +
+      chalk.yellow(
+        `  Run \`devflow update\` to backfill the bundled agent definitions, or create them under ${PATHS.AGENTS}/.\n`,
+      ),
+  );
 }

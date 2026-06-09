@@ -247,12 +247,14 @@ describe("getInitToolChoices", () => {
       "claude-code",
       "qoder",
       "codex",
+      "reasonix",
     ]);
     expect(choices.map((choice) => choice.key)).toEqual([
       "codebuddy",
       "claude",
       "qoder",
       "codex",
+      "reasonix",
     ]);
     expect(choices).toHaveLength(INIT_PLATFORM_IDS.length);
   });
@@ -384,11 +386,19 @@ describe("collectPlatformTemplates", () => {
         ),
       ).toBe(true);
       expect(
-        result?.has(`${skillRoot}/devflow-spec-bootstarp/SKILL.md`),
+        result?.has(`${skillRoot}/devflow-spec-bootstrap/SKILL.md`),
       ).toBe(true);
       expect(
         result?.has(
-          `${skillRoot}/devflow-spec-bootstarp/references/spec-writing.md`,
+          `${skillRoot}/devflow-spec-bootstrap/references/spec-writing.md`,
+        ),
+      ).toBe(true);
+      expect(
+        result?.has(`${skillRoot}/devflow-session-insight/SKILL.md`),
+      ).toBe(true);
+      expect(
+        result?.has(
+          `${skillRoot}/devflow-session-insight/references/cli-quick-reference.md`,
         ),
       ).toBe(true);
     }

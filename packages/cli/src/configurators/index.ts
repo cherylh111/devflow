@@ -32,6 +32,7 @@ import { configureCodebuddy } from "./codebuddy.js";
 import { configureCopilot } from "./copilot.js";
 import { configureDroid } from "./droid.js";
 import { configurePi, collectPiTemplates } from "./pi.js";
+import { configureReasonix, collectReasonixTemplates } from "./reasonix.js";
 
 // Shared utilities
 import {
@@ -447,6 +448,10 @@ const PLATFORM_FUNCTIONS: Record<AITool, PlatformFunctions> = {
     configure: configurePi,
     collectTemplates: () => collectPiTemplates(),
   },
+  reasonix: {
+    configure: configureReasonix,
+    collectTemplates: () => collectReasonixTemplates(),
+  },
 };
 
 // =============================================================================
@@ -462,6 +467,7 @@ const INIT_PLATFORM_CHOICES = [
   { platformId: "claude-code", key: "claude" },
   { platformId: "qoder", key: "qoder" },
   { platformId: "codex", key: "codex" },
+  { platformId: "reasonix", key: "reasonix" },
 ] as const satisfies readonly { platformId: AITool; key: InitCliFlag }[];
 
 /** Platform IDs exposed by `devflow init` registration. */

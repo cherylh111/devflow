@@ -76,6 +76,13 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, PATHS.WORKSPACE))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, PATHS.TASKS))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, PATHS.SPEC))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, PATHS.AGENTS))).toBe(true);
+    expect(
+      fs.existsSync(path.join(tmpDir, PATHS.AGENTS, "implement.md")),
+    ).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, PATHS.AGENTS, "check.md"))).toBe(
+      true,
+    );
 
     // Default platform: claude
     expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
@@ -109,7 +116,18 @@ describe("init() integration", () => {
           tmpDir,
           ".claude",
           "skills",
-          "devflow-spec-bootstarp",
+          "devflow-spec-bootstrap",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "skills",
+          "devflow-session-insight",
           "SKILL.md",
         ),
       ),
@@ -313,10 +331,16 @@ describe("init() integration", () => {
       ".agents/skills/devflow-meta/references/local-architecture/overview.md",
     );
     expect(trackedPaths).toContain(
-      ".agents/skills/devflow-spec-bootstarp/SKILL.md",
+      ".agents/skills/devflow-spec-bootstrap/SKILL.md",
     );
     expect(trackedPaths).toContain(
-      ".agents/skills/devflow-spec-bootstarp/references/spec-writing.md",
+      ".agents/skills/devflow-spec-bootstrap/references/spec-writing.md",
+    );
+    expect(trackedPaths).toContain(
+      ".agents/skills/devflow-session-insight/SKILL.md",
+    );
+    expect(trackedPaths).toContain(
+      ".agents/skills/devflow-session-insight/references/cli-quick-reference.md",
     );
     expect(trackedPaths).toContain(".agents/skills/devflow-use/SKILL.md");
   });

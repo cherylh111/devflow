@@ -1,7 +1,7 @@
 ---
 name: devflow-check
 description: DevFlow quality check agent. Use this exact agent for DevFlow task verification, check.jsonl context injection, and self-fixing code review. Do not use generic/default/generalPurpose agents for DevFlow checks.
-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 # Check Agent
 

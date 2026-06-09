@@ -102,6 +102,7 @@ program
   )
   .option("--qoder", localized("Include Qoder commands", "包含 Qoder 命令"))
   .option("--codex", localized("Include Codex skills", "包含 Codex skill"))
+  .option("--reasonix", "Include Reasonix skills")
   .option(
     "--lang <lang>",
     localized("Template language: en or zh", "模板语言：en 或 zh"),

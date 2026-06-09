@@ -109,6 +109,10 @@ export const knowledgeScript = readScriptTemplate("knowledge.py");
 export const workflowMdTemplate = readEnglishTemplate("workflow.md");
 export const configYamlTemplate = readEnglishTemplate("config.yaml");
 export const gitignoreTemplate = readEnglishTemplate("gitignore.txt");
+export const implementAgentTemplate = readEnglishTemplate(
+  "agents/implement.md",
+);
+export const checkAgentTemplate = readEnglishTemplate("agents/check.md");
 
 export function getWorkflowMdTemplate(): string {
   return readRuntimeTemplate("workflow.md");
@@ -128,4 +132,11 @@ export function getAllScripts(): Map<string, string> {
     scripts.set(scriptPath, readRuntimeTemplate(`scripts/${scriptPath}`));
   }
   return scripts;
+}
+
+export function getAllAgents(): Map<string, string> {
+  const agents = new Map<string, string>();
+  agents.set("implement.md", implementAgentTemplate);
+  agents.set("check.md", checkAgentTemplate);
+  return agents;
 }

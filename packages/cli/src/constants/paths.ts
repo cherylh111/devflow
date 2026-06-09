@@ -19,6 +19,8 @@ export const DIR_NAMES = {
   SPEC: "spec",
   /** Scripts directory (under .devflow/) */
   SCRIPTS: "scripts",
+  /** Channel runtime agent definitions (under .devflow/) */
+  AGENTS: "agents",
 } as const;
 
 // File names
@@ -51,6 +53,8 @@ export const PATHS = {
   SPEC: `${DIR_NAMES.WORKFLOW}/${DIR_NAMES.SPEC}`,
   /** .devflow/scripts/ */
   SCRIPTS: `${DIR_NAMES.WORKFLOW}/${DIR_NAMES.SCRIPTS}`,
+  /** .devflow/agents/ */
+  AGENTS: `${DIR_NAMES.WORKFLOW}/${DIR_NAMES.AGENTS}`,
   /** .devflow/.developer */
   DEVELOPER_FILE: `${DIR_NAMES.WORKFLOW}/${FILE_NAMES.DEVELOPER}`,
   /** .devflow/.current-task */

@@ -666,6 +666,31 @@ describe("update() integration", () => {
     expect(fs.existsSync(targetPath)).toBe(true);
   });
 
+  it("#15b backfills channel runtime agents for projects installed before they existed", async () => {
+    await setupProject();
+
+    fs.writeFileSync(versionFilePath(), "0.6.0-beta.22");
+    fs.rmSync(projectFile(PATHS.AGENTS), { recursive: true, force: true });
+    const hashes = readHashesV2(hashFilePath());
+    const pruned = removeHashEntry(
+      removeHashEntry(hashes, `${PATHS.AGENTS}/implement.md`),
+      `${PATHS.AGENTS}/check.md`,
+    ) as Record<string, string>;
+    writeHashesV2(hashFilePath(), pruned);
+
+    await update({ force: true });
+
+    expect(readProjectFile(`${PATHS.AGENTS}/implement.md`)).toContain(
+      "Implement Agent",
+    );
+    expect(readProjectFile(`${PATHS.AGENTS}/check.md`)).toContain(
+      "Check Agent",
+    );
+    const updatedHashes = readHashesV2(hashFilePath());
+    expect(updatedHashes[`${PATHS.AGENTS}/implement.md`]).toBeDefined();
+    expect(updatedHashes[`${PATHS.AGENTS}/check.md`]).toBeDefined();
+  });
+
   it("#16 config.yaml update.skip prevents file from being updated", async () => {
     await setupProject();
 
