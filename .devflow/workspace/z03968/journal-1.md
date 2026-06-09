@@ -117,3 +117,37 @@ Synced DevFlow CLI behavior to local Trellis v0.6.0-rc.0 with Reasonix support, 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Add DevFlow diagnose skill
+
+**Date**: 2026-06-09
+**Task**: Add DevFlow diagnose skill
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Compared Matt Pocock's skill design with DevFlow, added devflow-diagnose as a bundled/common skill, improved brainstorm vertical-slice task guidance, surfaced diagnosis in workflow routing, and captured skill/workflow authoring specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `77814f2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
