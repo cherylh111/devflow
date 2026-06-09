@@ -1,0 +1,28 @@
+{
+  "id": "sync-trellis-0-6-0-rc",
+  "name": "sync-trellis-0-6-0-rc",
+  "title": "Sync Trellis 0.6.0 rc changes",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "devflow",
+  "priority": "P2",
+  "creator": "z03968",
+  "assignee": "z03968",
+  "createdAt": "2026-06-08",
+  "completedAt": "2026-06-09",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "complex": true
+  }
+}
