@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
-- **Last Active**: 2026-06-06
+- **Total Sessions**: 3
+- **Last Active**: 2026-06-09
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~75 | Active |
+| `journal-1.md` | ~110 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 3 | 2026-06-09 | Sync Trellis 0.6.0 rc | `f28376d`, `f577688` | `main` |
 | 2 | 2026-06-06 | Task progress recovery state | `0eeb102` | `main` |
 | 1 | 2026-06-06 | PRD convergence start gate | `2fd1429` | `main` |
 <!-- @@@/auto:session-history -->

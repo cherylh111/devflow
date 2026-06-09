@@ -20,7 +20,12 @@ Added a deterministic PRD convergence check to task.py start, updated workflow a
 
 ### Main Changes
 
-(Add details)
+- Synced CLI/core package versions and migration manifests to `0.6.0-rc.0`.
+- Added Reasonix as an init/update platform with skill and subagent templates.
+- Added bundled `.devflow/agents` runtime templates and missing-agent warnings for workflow selection.
+- Added registry-backed spec source persistence and update refresh through the normal hash/conflict flow.
+- Renamed `devflow-spec-bootstarp` bundled templates to `devflow-spec-bootstrap`, added `devflow-session-insight`, and updated localized overlays.
+- Updated integration, configurator, regression, and utility tests for the RC behavior.
 
 ### Git Commits
 
@@ -30,7 +35,11 @@ Added a deterministic PRD convergence check to task.py start, updated workflow a
 
 ### Testing
 
-- [OK] (Add test results)
+- [OK] Release version preflight.
+- [OK] CLI/core TypeScript checks and ESLint.
+- [OK] CLI full Vitest suite: 53 files, 1336 tests, 4 skipped.
+- [OK] Core full Vitest suite: 17 files, 278 tests.
+- [OK] Package-local CLI/core ESLint rerun before commit.
 
 ### Status
 
@@ -61,6 +70,41 @@ Added task progress recovery state via progress.json and task.py progress comman
 | Hash | Message |
 |------|---------|
 | `0eeb102` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
+
+
+## Session 3: Sync Trellis 0.6.0 rc
+
+**Date**: 2026-06-09
+**Task**: Sync Trellis 0.6.0 rc
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Synced DevFlow CLI behavior to local Trellis v0.6.0-rc.0 with Reasonix support, runtime agents, registry-backed spec refresh, bundled skill updates, tests, validation, and spec contracts.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f28376d` | (see git log) |
+| `f577688` | (see git log) |
 
 ### Testing
 
