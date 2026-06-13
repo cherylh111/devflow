@@ -151,3 +151,37 @@ Compared Matt Pocock's skill design with DevFlow, added devflow-diagnose as a bu
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Remove Auto runner implementation
+
+**Date**: 2026-06-13
+**Task**: Remove Auto runner implementation
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Removed the Auto runner command and skill from CLI templates, shared configurator metadata, generated local copies, template hash tracking, and README documentation. Verified the CLI with lint, typecheck, full test suite, and repository searches showing Auto runner references only in archived task records.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f1e5b16` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
