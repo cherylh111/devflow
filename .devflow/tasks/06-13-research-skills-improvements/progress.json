@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "phase": "check",
+  "step": "2.1",
+  "summary": "",
+  "resume_hint": "",
+  "current_item": null,
+  "completed_items": [],
+  "pending_items": [],
+  "last_validation": null,
+  "updated_at": "2026-06-13T12:55:44Z",
+  "updated_by": "agent"
+}
