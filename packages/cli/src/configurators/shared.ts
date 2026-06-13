@@ -269,10 +269,6 @@ const SKILL_DESCRIPTIONS: Record<string, LocalizedText> = {
     en: "Captures executable contracts and coding conventions into .devflow/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions.",
     zh: "把可执行契约和编码约定沉淀到 .devflow/spec/ 文档。用于从调试、实现或讨论中学到需要保留给后续会话的重要内容时。",
   },
-  "auto-run": {
-    en: "Run the approved ready-task queue through the normal DevFlow workflow without requiring manual phase commands between steps. Use only after the user approves the queue and stop on unresolved decisions, failed checks, rejected commit plans, or user stop requests.",
-    zh: "按正常 DevFlow 工作流运行已批准的就绪任务队列，不要求用户在阶段之间手动输入命令。仅在用户批准队列后使用；遇到未解决决策、检查失败、提交计划被拒或用户要求停止时停下。",
-  },
 };
 
 /**
@@ -302,10 +298,6 @@ export function wrapWithSkillFrontmatter(
  * SKILL_DESCRIPTIONS, which is long prose aimed at the skill matcher.
  */
 const COMMAND_DESCRIPTIONS: Record<string, LocalizedText> = {
-  "auto-run": {
-    en: "Run approved ready tasks through the DevFlow workflow queue.",
-    zh: "按 DevFlow 工作流队列运行已批准的就绪任务。",
-  },
   start: {
     en: "Initialize a DevFlow development session.",
     zh: "初始化 DevFlow 开发会话。",

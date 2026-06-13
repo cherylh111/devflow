@@ -1,7 +1,6 @@
 {
   "__version": 2,
   "hashes": {
-    ".codebuddy/commands/devflow/auto-run.md": "2d0870cfb15b2f69b7e56d9fa6f67a59e700bcc7c51b93b2717bafdbfc5fb511",
     ".codebuddy/commands/devflow/continue.md": "8c43ec14783da1773e988c7b13517600f160f8a0676bcd04e8d699fd1c84872f",
     ".codebuddy/commands/devflow/finish-work.md": "31a1c9c200052481f37c7232505c6dfef0bc81539ccad1900666f0a8556c5e94",
     ".codebuddy/skills/devflow-before-dev/SKILL.md": "53949c35f883dc0c89e8d9bd38faaab4eafefdf1eefc927e31aaadc2481ccfae",
@@ -51,7 +50,6 @@
     ".claude/hooks/inject-subagent-context.py": "3d3ad8cde7a36b7c2100458f21f205f47295adb617eb044cbe7338cc0cd5dff0",
     ".claude/hooks/inject-workflow-state.py": "ede65336b82a9e1531c1fc0975a6c30beacab46f4d4cab79322a78a8797a0ce2",
     ".claude/hooks/session-start.py": "2e324d31dec51367a25ea2caebdc4ea7ff2cdb0040606c1caf5df5297b02bfe5",
-    ".claude/commands/devflow/auto-run.md": "79a0436227692d8b165603971923f2c11eac60130cc908d2cadec3135ee5ab00",
     ".claude/commands/devflow/continue.md": "95beff203e61f0a5f0bbc22ec88582c1a3b0a0e80955406b90dc4503769f4aa4",
     ".claude/commands/devflow/finish-work.md": "31a1c9c200052481f37c7232505c6dfef0bc81539ccad1900666f0a8556c5e94",
     ".claude/skills/devflow-before-dev/SKILL.md": "53949c35f883dc0c89e8d9bd38faaab4eafefdf1eefc927e31aaadc2481ccfae",
@@ -87,7 +85,6 @@
     ".claude/skills/devflow-spec-bootstarp/references/spec-task-planning.md": "127901220996a5c3e8f9a84b179411acd4116a4371106da223ab71b86fced0f3",
     ".claude/skills/devflow-spec-bootstarp/references/spec-writing.md": "1175baf03b8dbb29284ce9733a4aebcb595b84de7ac8d895a8c6d25da85f671a",
     ".claude/skills/devflow-spec-bootstarp/SKILL.md": "4e71f07978300374e5d28435259c28cb2abe61547ec373c56d70c7209314150c",
-    ".agents/skills/devflow-auto-run/SKILL.md": "d20c2a3b3ee52431d7a7b8e23479a9f69b35268a18f4099379eb93ce939ed672",
     ".agents/skills/devflow-continue/SKILL.md": "feb9b94822515a5bc7d6392588024674da3d71f50a1492665031e79a786b79b6",
     ".agents/skills/devflow-finish-work/SKILL.md": "37c0e70b6e3d1d0e6ed67fa48d6576f9852a4e88b7fe7f4bb685d1acb27d48cc",
     ".agents/skills/devflow-before-dev/SKILL.md": "53949c35f883dc0c89e8d9bd38faaab4eafefdf1eefc927e31aaadc2481ccfae",

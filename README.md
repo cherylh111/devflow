@@ -159,19 +159,6 @@ DevFlow 区分个人会话日志和项目级历史：
 
 当 `add_session.py` 记录 finish-work 日志时，DevFlow 会为本次 finish-work 归档的每个任务创建一个 session-insight wiki 条目。洞察提取器会读取任务产物、已记录的 commit diff、变更文件和日志摘要，用来捕捉关键决策、坑点和不变量，而不依赖开发者手动记忆知识更新。
 
-## Auto-Run
-
-`/devflow:auto-run` 是面向可信团队的快速路径，适用于已经讨论清楚、可以直接执行的任务。它遵循与手动工作流相同的关卡：
-
-- implement
-- check
-- knowledge review
-- Phase 3.4 work commit
-- finish-work
-- next ready task
-
-它不会跳过未解决需求、失败检查、脏文件分类或提交计划确认。
-
 ## Channel 运行时
 
 `devflow channel` 提供基于追加式事件日志的多代理协作运行时。
