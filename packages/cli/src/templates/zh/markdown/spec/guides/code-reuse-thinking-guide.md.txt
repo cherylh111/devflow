@@ -95,6 +95,22 @@ shared type guard / normalizer / projection before adding a third reader.
 - Trivial one-liner
 - Abstraction would be more complex than duplication
 
+### 删除测试
+
+在创建抽象之前，运行删除测试：
+
+**"如果我删除这个拟议的抽象，代码会更清晰，还是只会重复少量简单逻辑？"**
+
+- **如果是**：抽象可能为时过早。保持简单。
+- **如果不是**：抽象是合理的。继续。
+
+**快速检查清单**：
+- [ ] 删除抽象会需要重复复杂逻辑
+- [ ] 重复的逻辑容易出错或难以维护
+- [ ] 抽象简化了理解，而不仅仅是减少行数
+
+**例子**：一个 3 行的辅助函数只是封装了一个标准库调用？删除测试说保持内联。一个 20 行的解析器在 3 个地方使用且有边界情况？删除测试说抽象它。
+
 ---
 
 ## After Batch Modifications

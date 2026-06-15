@@ -95,6 +95,22 @@ shared type guard / normalizer / projection before adding a third reader.
 - Trivial one-liner
 - Abstraction would be more complex than duplication
 
+### Deletion Test
+
+Before creating an abstraction, run the deletion test:
+
+**"If I deleted this proposed abstraction, would the code be clearer or only duplicate a small amount of simple logic?"**
+
+- **If yes**: The abstraction is probably premature. Keep it simple.
+- **If no**: The abstraction is justified. Proceed.
+
+**Quick checklist**:
+- [ ] Deleting the abstraction would require duplicating complex logic
+- [ ] The duplicated logic would be error-prone or hard to maintain
+- [ ] The abstraction simplifies understanding, not just line count
+
+**Example**: A 3-line helper that just wraps one standard library call? Deletion test says keep it inline. A 20-line parser with edge cases used in 3 places? Deletion test says abstract it.
+
 ---
 
 ## After Batch Modifications
