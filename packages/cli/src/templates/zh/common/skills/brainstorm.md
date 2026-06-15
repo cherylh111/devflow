@@ -158,16 +158,10 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 
 ## 质量标准
 
-- 移除临时 brainstorm 章节，例如 `What I already know`、`Assumptions`、`Open Questions`、`Brainstorm Notes` 和 `Raw Notes`。
-- 把 discovery notes 和已解决问题合并到最终 requirements、constraints、acceptance criteria 或 out-of-scope 章节。
-- 清理占位 bullet，例如 `- TBD`、`- [ ] TBD`、`- TODO` 和 `- [ ] TODO`。
-- 对复杂任务，把技术设计或执行细节移到 `design.md` 或 `implement.md`。
-
-- `prd.md` 已收敛，不再包含临时 brainstorm 章节或占位 bullet。
-
 宣布规划就绪前：
 
 - `prd.md` 包含可测试的验收标准。
+- `prd.md` 已收敛，不再包含临时 brainstorm 章节或占位 bullet。
 - 仓库可回答的问题已经通过检查得到答案。
 - 剩余开放问题确实关于用户意图或范围。
 - 复杂任务具备 `design.md` 和 `implement.md`。
