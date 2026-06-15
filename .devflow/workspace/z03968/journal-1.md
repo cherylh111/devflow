@@ -253,3 +253,37 @@ Added deletion test section to code reuse thinking guide (English/Chinese templa
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: Strengthen devflow-diagnose feedback loop
+
+**Date**: 2026-06-15
+**Task**: Strengthen devflow-diagnose feedback loop
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added loop optimization, non-deterministic bug handling, and hard stop guidance to devflow-diagnose skill (English/Chinese/local). Helps agents build better feedback loops before fixing bugs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b7a058d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
