@@ -1,0 +1,30 @@
+{
+  "id": "skills-improvements-roadmap",
+  "name": "skills-improvements-roadmap",
+  "title": "Skills improvements roadmap",
+  "description": "Plan and track implementation of the 06-13 skills improvements research roadmap.",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": "devflow",
+  "priority": "P0",
+  "creator": "z03968",
+  "assignee": "z03968",
+  "createdAt": "2026-06-15",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "06-15-sync-evidence-first-brainstorm-template",
+    "06-15-strengthen-devflow-diagnose-feedback-loop",
+    "06-15-add-deletion-test-code-reuse-guide"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
