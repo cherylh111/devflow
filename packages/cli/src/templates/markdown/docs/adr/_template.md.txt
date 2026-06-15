@@ -1,0 +1,66 @@
+# {Short Decision Title}
+
+{1-3 sentences: context, decision, and why this choice was made.}
+
+---
+
+## Optional Sections
+
+Add these sections **only when they add value**:
+
+### Status
+
+- **Proposed** - Under discussion
+- **Accepted** - Decided and implemented
+- **Deprecated** - No longer recommended
+- **Superseded by ADR-NNNN** - Replaced by a later decision
+
+### Considered Options
+
+List alternatives that were **rejected** and why. Only include this if the alternatives are worth remembering.
+
+- Option A: {Why it was rejected}
+- Option B: {Why it was rejected}
+
+### Consequences
+
+Non-obvious downstream effects. Only include this if there are surprising or important implications.
+
+- {Effect 1}
+- {Effect 2}
+
+---
+
+## When to Create an ADR
+
+An architectural decision record (ADR) is appropriate **only when all three conditions are true**:
+
+1. **Hard to reverse** - Changing this decision would take significant effort (> 1 week)
+2. **Surprising without context** - Future readers would wonder "why did we do it this way?"
+3. **Result of real trade-off** - Genuine alternatives existed, and we chose for specific reasons
+
+## Examples of Good ADRs
+
+✅ Choice of database (PostgreSQL vs MongoDB)
+✅ API architecture (REST vs GraphQL vs gRPC)
+✅ Monorepo vs multi-repo structure
+✅ Event sourcing for audit trail
+✅ Hand-written SQL instead of ORM (with performance justification)
+
+## Examples of Bad ADRs
+
+❌ "Use async/await" - Standard language feature
+❌ "Add error handling" - Obvious practice
+❌ "Use TypeScript" - Already decided by project setup
+❌ Easily reversible choices (file naming, import order)
+
+---
+
+## Numbering Convention
+
+ADRs use sequential numbering: `0001-slug.md`, `0002-slug.md`, etc.
+
+To find the next number:
+```bash
+ls docs/adr/*.md | tail -1
+```

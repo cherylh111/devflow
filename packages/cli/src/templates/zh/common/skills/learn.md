@@ -23,6 +23,21 @@ python3 ./.devflow/scripts/knowledge.py show <id>
 - 应进入特定 `.devflow/spec/` markdown 文件的硬性实现或评审规则
 - 应进入结构化知识的较长 recipe、reference、decision、template、asset 或 session handoff
 
+**项目特定领域术语**：当捕获具有项目特定含义的术语时，考虑改为更新 `.devflow/spec/wiki/domain-vocabulary.md`：
+
+- 检查术语是否已存在
+- 如果是新术语，使用以下格式添加：`**术语**: 定义。 _避免_: 同义词`
+- 只添加项目特定术语，不添加通用编程概念
+- 示例："订单"（领域概念）vs "函数"（通用概念）
+
+**架构决策**：当捕获架构经验时，检查是否通过 ADR 3-condition 过滤器：
+
+1. 难以逆转？（改变需要 > 1 周）
+2. 缺乏上下文会令人惊讶？（未来读者会疑惑为什么）
+3. 真实权衡的结果？（存在真实的替代方案）
+
+如果三个条件都满足，在 `docs/adr/NNNN-slug.md` 中创建 ADR，而不仅仅是添加到 learnings。
+
 如果学习内容是 agent 在实现期间必须遵守的硬性约定，使用 `devflow-update-spec` 或直接编辑相关 `.devflow/spec/` guide。本地脚本用于可复用知识条目，不用于大范围改写 spec。
 
 ## 查询

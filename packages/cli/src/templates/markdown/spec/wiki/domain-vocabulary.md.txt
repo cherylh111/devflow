@@ -1,0 +1,63 @@
+# Domain Vocabulary
+
+_This file captures **project-specific** terms. General programming concepts don't belong here._
+
+## When to Add a Term
+
+✅ **Do add**:
+- Domain concepts unique to this project (Order, Invoice, Shipment)
+- Terms with project-specific meaning different from common usage
+- Ambiguous terms that need clarification to avoid confusion
+
+❌ **Don't add**:
+- General programming concepts (Function, Class, Module)
+- Standard technology terms (REST, API, Database)
+- Terms that are self-explanatory
+
+## Format
+
+Each term uses this structure:
+
+```markdown
+**TermName**:
+A concise definition (1-2 sentences). Focus on "what it is", not "what it does".
+_Avoid_: synonym1, synonym2, synonym3
+```
+
+The `_Avoid_:` field is **mandatory** - it prevents term sprawl by listing synonyms that should not be used.
+
+---
+
+## Example Terms
+
+### Core Domain
+
+**Order**:
+A customer request to purchase products. Captured at checkout and processed by the fulfillment system.
+_Avoid_: Purchase, Transaction, Cart
+
+**Invoice**:
+A request for payment sent after delivery. Different from an Order (intent) or Receipt (proof of payment).
+_Avoid_: Bill, Payment request
+
+### Integration
+
+**Event**:
+An immutable domain event emitted by one context and consumed by others. Follows the event-sourcing pattern.
+_Avoid_: Message, Notification, Signal
+
+---
+
+## Usage
+
+- **Add terms inline** when you resolve ambiguity during planning or implementation
+- **Group by domain** using `##` headings when natural clustering exists (Core, Integration, Reporting, etc.)
+- **Keep definitions tight** - if you need more than 2 sentences, the concept might be too complex for a vocabulary entry
+- **Be opinionated** - choose the best term and list alternatives in `_Avoid_:`
+
+## Anti-Patterns
+
+❌ Adding every class/function name
+❌ Copying definitions from code comments
+❌ Using this as a glossary of general programming terms
+❌ Letting the file grow beyond ~150 lines without domain grouping

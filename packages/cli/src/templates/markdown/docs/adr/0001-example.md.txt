@@ -1,0 +1,23 @@
+# Use Domain Events for Cross-Context Communication
+
+Status: Accepted
+
+We use asynchronous domain events (published to a message broker) for communication between bounded contexts, rather than synchronous HTTP calls. This decision prioritizes autonomy and resilience over immediate consistency. Each context can evolve independently, and temporary unavailability of one context doesn't block others.
+
+## Considered Options
+
+- **Synchronous HTTP/REST calls** - Rejected because it creates tight coupling and cascading failures. If the Orders context calls Inventory synchronously and Inventory is down, the entire order flow breaks.
+
+- **Direct database access** - Rejected because it violates bounded context boundaries and makes schema changes risky. Multiple contexts writing to the same tables leads to data corruption.
+
+- **GraphQL federation** - Rejected because it still requires synchronous availability and adds complexity for our team's current expertise level.
+
+## Consequences
+
+- **Eventual consistency** - Data may be temporarily out of sync between contexts (e.g., inventory count displayed during checkout might be slightly stale). We mitigate this with refresh mechanisms and clear UI indicators.
+
+- **Event schema evolution** - We must version events carefully and maintain backward compatibility. Introduces operational overhead.
+
+- **Debugging complexity** - Tracing a flow across multiple events is harder than following synchronous call stacks. We address this with correlation IDs and centralized logging.
+
+- **Message broker dependency** - The system requires a message broker (RabbitMQ) to be operational. This is an acceptable trade-off for the autonomy benefits.

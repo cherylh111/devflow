@@ -34,7 +34,12 @@ Use a concise title from the user's request. Use a slug without a date prefix. `
 
 ## Planning Flow
 
-1. Capture the user's request and initial known facts in `prd.md`.
+1. Load domain vocabulary if it exists:
+   ```bash
+   cat .devflow/spec/wiki/domain-vocabulary.md 2>/dev/null || echo "No vocabulary file yet"
+   ```
+   Use it to maintain term consistency during requirements exploration.
+2. Capture the user's request and initial known facts in `prd.md`.
 2. Inspect available evidence before asking questions:
    - code, tests, fixtures, and configs
    - README files, docs, existing specs, and domain notes
@@ -123,6 +128,33 @@ Before start review, converge `prd.md` into its final form:
 - Fold discovery notes and resolved questions into final requirements, constraints, acceptance criteria, or out-of-scope sections.
 - Clear placeholder bullets such as `- TBD`, `- [ ] TBD`, `- TODO`, and `- [ ] TODO`.
 - Move technical design or execution details into `design.md` or `implement.md` for complex tasks.
+
+## Decision Capture
+
+When a design decision is made during brainstorming, check if it warrants an ADR using the 3-condition filter:
+
+1. **Hard to reverse?** - Changing this decision would take significant effort (> 1 week)
+2. **Surprising without context?** - Future readers would wonder "why this way?"
+3. **Result of real trade-off?** - Genuine alternatives existed
+
+If **all three** are true, create an ADR in `docs/adr/NNNN-slug.md` using the minimal format:
+
+```markdown
+# {Short title}
+
+{1-3 sentences: context, decision, why.}
+```
+
+Examples of ADR-worthy decisions:
+- Database choice (PostgreSQL vs MongoDB)
+- API architecture (REST vs GraphQL vs gRPC)
+- Monorepo vs multi-repo structure
+- Event sourcing for audit trail
+
+Not ADR-worthy:
+- Standard language features (async/await)
+- Obvious practices (error handling)
+- Easily reversible choices (file naming)
 
 ## Quality Bar
 

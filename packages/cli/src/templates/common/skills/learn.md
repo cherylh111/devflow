@@ -23,6 +23,21 @@ Good candidates:
 - A hard implementation or review rule that belongs in a specific `.devflow/spec/` markdown file
 - A longer recipe, reference, decision, template, asset, or session handoff that belongs in structured knowledge
 
+**Project-specific domain terms**: When capturing a term with project-specific meaning, consider updating `.devflow/spec/wiki/domain-vocabulary.md` instead:
+
+- Check if the term already exists
+- If new, add using the format: `**Term**: definition. _Avoid_: synonyms`
+- Only add project-specific terms, not general programming concepts
+- Example: "Order" (domain concept) vs "Function" (general concept)
+
+**Architecture decisions**: When capturing an architecture lesson, check if it passes the ADR 3-condition filter:
+
+1. Hard to reverse? (> 1 week to change)
+2. Surprising without context? (future readers would wonder why)
+3. Result of real trade-off? (genuine alternatives existed)
+
+If all three are true, create an ADR in `docs/adr/NNNN-slug.md` instead of only adding to learnings.
+
 If the learning is a hard convention agents must obey during implementation, use `devflow-update-spec` or edit the relevant `.devflow/spec/` guide directly. The local script is for reusable knowledge entries, not broad spec rewrites.
 
 ## Query

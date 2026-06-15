@@ -34,7 +34,12 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 
 ## 规划流程
 
-1. 在 `prd.md` 中记录用户请求和初始已知事实。
+1. 如果存在领域词汇表，先加载：
+   ```bash
+   cat .devflow/spec/wiki/domain-vocabulary.md 2>/dev/null || echo "尚无词汇表文件"
+   ```
+   在需求探索期间使用它保持术语一致性。
+2. 在 `prd.md` 中记录用户请求和初始已知事实。
 2. 提问前检查可用证据：
    - code、tests、fixtures 和 configs
    - README 文件、docs、现有 specs 和领域 notes
@@ -117,8 +122,41 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 
 `implement.md` 不能替代 `implement.jsonl`。仅当任务需要 manifest 风格的 spec 和 research 引用时，才使用 JSONL 文件。
 
-## 质量标准
 在 start review 前，把 `prd.md` 收敛为最终形态：
+
+- 移除临时 brainstorm 章节，例如 `我已知道的`、`假设`、`开放问题`、`Brainstorm Notes` 和 `Raw Notes`。
+- 将发现的 notes 和已解决的问题折叠到最终 requirements、constraints、acceptance criteria 或 out-of-scope 章节中。
+- 清除占位符 bullets，例如 `- TBD`、`- [ ] TBD`、`- TODO` 和 `- [ ] TODO`。
+- 将技术设计或执行细节移至 `design.md` 或 `implement.md`（复杂任务）。
+
+## 决策捕获
+
+在 brainstorming 期间做出设计决策时，用 3-condition 过滤器检查是否值得创建 ADR：
+
+1. **难以逆转？** - 改变此决策需要显著努力（> 1 周）
+2. **缺乏上下文会令人惊讶？** - 未来读者会疑惑"为什么这样做？"
+3. **真实权衡的结果？** - 存在真实的替代方案
+
+如果**三个条件都满足**，在 `docs/adr/NNNN-slug.md` 中创建 ADR，使用极简格式：
+
+```markdown
+# {简短标题}
+
+{1-3 句话：背景、决策、原因。}
+```
+
+值得创建 ADR 的决策示例：
+- 数据库选择（PostgreSQL vs MongoDB）
+- API 架构（REST vs GraphQL vs gRPC）
+- Monorepo vs 多仓库结构
+- 审计追踪的事件溯源
+
+不值得创建 ADR：
+- 标准语言特性（async/await）
+- 显而易见的做法（错误处理）
+- 容易逆转的选择（文件命名）
+
+## 质量标准
 
 - 移除临时 brainstorm 章节，例如 `What I already know`、`Assumptions`、`Open Questions`、`Brainstorm Notes` 和 `Raw Notes`。
 - 把 discovery notes 和已解决问题合并到最终 requirements、constraints、acceptance criteria 或 out-of-scope 章节。

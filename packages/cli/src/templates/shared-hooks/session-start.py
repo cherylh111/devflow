@@ -857,6 +857,24 @@ DevFlow compact SessionStart context. Use it to orient the session; load details
         "Discover more via: "
         "`python3 ./.devflow/scripts/get_context.py --mode packages`\n"
     )
+
+    # Add domain vocabulary and ADR paths
+    output.write("\n")
+    vocab_path = devflow_dir / "spec" / "wiki" / "domain-vocabulary.md"
+    adr_path = repo_root / "docs" / "adr"
+
+    if vocab_path.is_file():
+        output.write(
+            "## Domain vocabulary\n"
+            f"Load project-specific terms: `cat {vocab_path.relative_to(repo_root)}`\n\n"
+        )
+
+    if adr_path.is_dir() and any(adr_path.glob("*.md")):
+        output.write(
+            "## Architecture Decision Records\n"
+            f"Browse decisions: `ls {adr_path.relative_to(repo_root)}/*.md`\n"
+        )
+
     output.write("</guidelines>\n\n")
 
     # Check task status and inject structured tag

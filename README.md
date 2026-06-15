@@ -140,6 +140,24 @@ devflow knowhow add --type recipe --title "Auth setup" --body "..."
 
 知识条目使用 Markdown 内的结构化 `<spec-entry>` 块，因此既适合作为文档阅读，也能被搜索和关联。
 
+### Domain Vocabulary
+
+`.devflow/spec/wiki/domain-vocabulary.md` 是项目特定术语的运行时词汇表。在需求探索和设计阶段按需加载，用于保持术语一致性。
+
+格式：`**Term**: definition. _Avoid_: synonyms`
+
+仅添加项目特定术语（如领域概念），不添加通用编程术语。
+
+### Architecture Decision Records (ADR)
+
+`docs/adr/` 存放架构决策记录。DevFlow 提供 ADR 模板和示例，使用 3-condition 过滤器判断决策是否值得记录：
+
+1. 难以逆转（改变需要 > 1 周）
+2. 缺乏上下文会令人惊讶
+3. 真实权衡的结果
+
+ADR 使用极简格式：1-3 句话描述背景、决策和原因。可选章节包括状态、考虑的选项和后果。
+
 ## Trace 和会话洞察
 
 DevFlow 区分个人会话日志和项目级历史：

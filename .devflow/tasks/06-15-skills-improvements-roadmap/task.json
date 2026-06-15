@@ -21,7 +21,8 @@
   "children": [
     "06-15-sync-evidence-first-brainstorm-template",
     "06-15-strengthen-devflow-diagnose-feedback-loop",
-    "06-15-add-deletion-test-code-reuse-guide"
+    "06-15-add-deletion-test-code-reuse-guide",
+    "06-15-06-15-add-context-adr-system"
   ],
   "parent": null,
   "relatedFiles": [],
