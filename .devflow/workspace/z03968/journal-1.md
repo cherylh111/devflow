@@ -287,3 +287,39 @@ Added loop optimization, non-deterministic bug handling, and hard stop guidance 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: Add domain vocabulary and ADR documentation system
+
+**Date**: 2026-06-15
+**Task**: Add domain vocabulary and ADR documentation system
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Implemented CONTEXT.md/ADR system with templates, skills integration, and session-start hook support. Created 6 templates (vocabulary + ADR in EN/ZH), updated brainstorm/learn skills with vocabulary loading and ADR prompts, added path hints to session-start hook, and created local dogfood files. Fixed 2 test issues (Chinese line count, undefined variable). All 1336 tests passing.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `768814c` | (see git log) |
+| `7e5147f` | (see git log) |
+| `3dc5c7b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
