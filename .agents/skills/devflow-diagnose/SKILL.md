@@ -35,8 +35,48 @@ Try these in roughly this order:
 - throwaway harness around the smallest real code path
 - stress loop for flaky or timing-dependent failures
 - differential loop comparing old/new versions, configs, or inputs
+- property-based or fuzz loop when input space is large
+- bisection harness to narrow down a regression range
+- HITL (human-in-the-loop) script for UI flows requiring manual steps
 
-Refine the loop until it is fast, sharp, and repeatable enough to guide the fix. If no useful loop is possible, write down what you tried in the task `research/` directory and ask the user for a captured artifact, environment access, or permission to add temporary instrumentation.
+### Iterate On The Loop Itself
+
+Before diving into hypothesis testing, optimize the loop for speed and signal:
+
+- **Faster**: Can you reduce fixture size, mock slow dependencies, or run only the failing path?
+- **Sharper**: Does the loop isolate one symptom, or does it conflate multiple failures?
+- **More deterministic**: Can you eliminate timing races, random inputs, or environment variance?
+
+A slow or noisy loop wastes debugging time. Spend minutes improving the loop to save hours on fixes.
+
+### Non-Deterministic Bugs
+
+For flaky, timing-dependent, or probabilistic failures:
+
+1. **Raise the reproduction rate first** — stress loop, tight iteration, remove sleeps, inject timing probes.
+2. **Measure the rate** — "fails 3/10 runs" is more actionable than "sometimes fails."
+3. **Bisect the nondeterminism** — is it input-dependent, concurrency, external state, or true randomness?
+4. **Stabilize or accept** — either determinize the test (mocks, seeds, synchronization) or document the rate and threshold.
+
+Do not attempt a fix until the loop reproduces the failure reliably enough to verify the fix.
+
+### Stop Condition: No Useful Loop
+
+If after trying multiple loop strategies you cannot create a pass/fail reproduction:
+
+**STOP. Do not proceed to speculative hypotheses.**
+
+Instead:
+
+1. Document what you tried in `research/no-loop-<date>.md`.
+2. List what is blocking reproduction: missing environment, unavailable data, UI-only symptom with no automation, external dependency.
+3. Ask the user for:
+   - a captured artifact (log, trace, screenshot, recording)
+   - environment access
+   - permission to add production instrumentation
+   - confirmation that the bug is deprioritized until reproducible
+
+Do not guess at fixes when you cannot verify them.
 
 ## Reproduce
 
