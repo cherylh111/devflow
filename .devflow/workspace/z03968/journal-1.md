@@ -219,3 +219,37 @@ Completed comprehensive analysis of 18 patterns from skills project not yet adop
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: Add deletion test heuristic to code reuse guide
+
+**Date**: 2026-06-15
+**Task**: Add deletion test heuristic to code reuse guide
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added deletion test section to code reuse thinking guide (English/Chinese templates + local spec). Helps agents evaluate whether abstractions are justified.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ab9a393` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
