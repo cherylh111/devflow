@@ -22,31 +22,39 @@ The report recommends implementing the P0 batch first:
 
 - Track the full 06-13 roadmap as a parent task so P0, P1, and P2 follow-up work remains discoverable.
 - Create child tasks only for independently verifiable vertical slices.
-- Implement P0 child tasks before expanding P1/P2 work.
+- Keep completed child work visible from the parent even after child tasks are archived.
 - Keep each child task scoped enough to plan, implement, check, and archive independently.
 - Preserve DevFlow's existing workflow shape; the research report explicitly says these improvements should not change the core Planning -> Execute -> Finish lifecycle.
 - Keep English templates, Chinese templates, local dogfood files, specs, and tests in sync when a child task touches templated DevFlow behavior.
 
 ## Child Task Map
 
-### P0 Children To Create Now
+### Completed Children
 
-1. **Evidence-first template sync**
+1. **Evidence-first template sync** (`06-15-sync-evidence-first-brainstorm-template`)
    - Outcome: bundled/common brainstorm templates include the same mandatory evidence-first rule as the local dogfood `devflow-brainstorm` skill.
-   - Human review: recommended before implementation because wording affects agent behavior.
+   - Status: completed and archived.
 
-2. **Feedback loop strengthening**
+2. **Feedback loop strengthening** (`06-15-strengthen-devflow-diagnose-feedback-loop`)
    - Outcome: `devflow-diagnose` guidance includes loop optimization, non-deterministic bug handling, and a hard stop when no useful feedback loop exists.
-   - Human review: recommended before implementation because wording affects debugging workflow.
+   - Status: completed and archived.
 
-3. **Deletion test integration**
+3. **Deletion test integration** (`06-15-add-deletion-test-code-reuse-guide`)
    - Outcome: the code reuse thinking guide includes a concise deletion-test heuristic for evaluating whether an abstraction is justified.
-   - Human review: optional; this is a narrow spec/guidance update.
+   - Status: completed and archived.
+
+4. **CONTEXT.md/domain vocabulary and ADR system** (`06-15-06-15-add-context-adr-system`)
+   - Outcome: reusable context and ADR documentation guidance is available for future DevFlow work.
+   - Status: completed and archived.
+
+### Active P1 Children
+
+1. **Prototype bundled skill** (`06-15-add-devflow-prototype-skill`)
+   - Outcome: create `devflow-prototype` as a bundled skill with logic/UI prototype guidance, findings capture, brainstorm integration, template parity, and tests.
+   - Status: planning.
 
 ### P1 Backlog
 
-- CONTEXT.md/domain vocabulary and ADR system.
-- `devflow-prototype` bundled skill.
 - Module depth thinking guide.
 - TDD path in `devflow-before-dev`.
 - Vertical slice HITL/AFK guidance.
@@ -63,10 +71,10 @@ The report recommends implementing the P0 batch first:
 
 ## Acceptance Criteria
 
-- [ ] Parent task links the first P0 child tasks.
-- [ ] Each P0 child task has a PRD with concrete requirements and acceptance criteria.
-- [ ] P1 and P2 items remain captured in this parent task for later expansion.
-- [ ] The parent task is not used for direct production edits unless a cross-child integration review requires it.
+- [x] Parent task links the first P0 child tasks.
+- [x] Each P0 child task has a PRD with concrete requirements and acceptance criteria.
+- [x] P1 and P2 items remain captured in this parent task for later expansion.
+- [x] The parent task is not used for direct production edits unless a cross-child integration review requires it.
 - [ ] Final roadmap completion includes a cross-child review against the archived 06-13 research report.
 
 ## Out Of Scope

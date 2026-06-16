@@ -20,14 +20,15 @@ Current repository state overrides stale research findings. Each child must insp
 ## Batch Order
 
 1. P0 batch:
-   - Evidence-first template parity.
-   - Diagnose feedback-loop strengthening.
-   - Deletion-test guide integration.
+   - Evidence-first template parity. Completed.
+   - Diagnose feedback-loop strengthening. Completed.
+   - Deletion-test guide integration. Completed.
 2. P1 documentation system:
-   - Domain vocabulary / CONTEXT-style guidance.
-   - ADR system.
+   - Domain vocabulary / CONTEXT-style guidance. Completed.
+   - ADR system. Completed.
 3. P1 skill and guide expansion:
-   - Prototype, module depth, TDD, vertical slice, seam/adapter, skill-authoring guidance.
+   - Prototype. Planning as `06-15-add-devflow-prototype-skill`.
+   - Module depth, TDD, vertical slice, seam/adapter, skill-authoring guidance.
 4. P2 exploration:
    - Caveman, zoom-out, handoff, triage, teach.
 
@@ -48,3 +49,7 @@ Each child task should be reviewed against:
 - active repository evidence at implementation time.
 
 The parent is complete only after the selected roadmap scope has been implemented or intentionally deferred with notes.
+
+## Current Resume Point
+
+The completed child set covers the original P0 batch plus the P1 documentation-system item. The active P1 skill-expansion child is `06-15-add-devflow-prototype-skill`. After that child completes, the next parent decision is whether to expand another P1 child task, defer the remaining P1/P2 backlog, or run the final cross-child review and archive the parent.
