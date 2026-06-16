@@ -404,6 +404,14 @@ describe("collectPlatformTemplates", () => {
       expect(
         result?.has(`${skillRoot}/devflow-diagnose/SKILL.md`),
       ).toBe(true);
+      expect(
+        result?.has(`${skillRoot}/devflow-prototype/SKILL.md`),
+      ).toBe(true);
+      expect(
+        result?.has(
+          `${skillRoot}/devflow-prototype/prototype-findings-template.md`,
+        ),
+      ).toBe(true);
     }
   });
 

@@ -56,6 +56,16 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 
 不要虚构项目特定的 product/spec 层级。如果仓库已有 product、domain 或 spec docs，就使用它们。如果没有，就基于现有证据继续。
 
+## 何时使用原型
+
+如果关键设计问题有较高可行性风险，且无法通过代码检查或现有测试回答，在最终确定设计前考虑使用 `devflow-prototype`：
+
+- 状态机或生命周期边界情况不清楚；
+- 需要比较多个 UI 方案；
+- 性能或集成假设尚未验证。
+
+原型必须在实现开始前，把 findings 写入任务的 `research/` 目录。
+
 ## 垂直切片拆分
 
 当一个请求包含多个可以独立验收的交付物时，考虑拆成 parent/child task。

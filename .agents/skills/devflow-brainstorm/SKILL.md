@@ -56,6 +56,16 @@ Use a concise title from the user's request. Use a slug without a date prefix. `
 
 Do not invent a project-specific product/spec hierarchy. If the repository already has product, domain, or spec docs, use them. If it does not, proceed with the evidence that exists.
 
+## When To Use Prototyping
+
+If a key design question has high feasibility risk and cannot be answered through code inspection or existing tests, consider using `devflow-prototype` before finalizing the design:
+
+- state machine or lifecycle edge cases are unclear;
+- multiple UI approaches need comparison;
+- performance or integration assumptions are unvalidated.
+
+The prototype must produce findings in the task `research/` directory before implementation starts.
+
 ## Vertical Slice Decomposition
 
 When the request contains several independently verifiable deliverables, consider a parent/child task split.

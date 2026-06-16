@@ -39,6 +39,7 @@ import {
 const BUNDLED_SKILL_NAMES = [
   "devflow-meta",
   "devflow-diagnose",
+  "devflow-prototype",
   "devflow-spec-bootstrap",
   "devflow-session-insight",
   "devflow-use",
@@ -54,6 +55,10 @@ const SPEC_BOOTSTARP_REFERENCE = path.join(
   "devflow-spec-bootstrap",
   "references",
   "spec-writing.md",
+);
+const PROTOTYPE_REFERENCE = path.join(
+  "devflow-prototype",
+  "prototype-findings-template.md",
 );
 
 function readConfiguredFile(root: string, relativePath: string): string {
@@ -300,6 +305,12 @@ describe("configurePlatform", () => {
     expect(
       fs.existsSync(path.join(skillsRoot, "devflow-diagnose", "SKILL.md")),
     ).toBe(true);
+    expect(
+      fs.existsSync(path.join(skillsRoot, "devflow-prototype", "SKILL.md")),
+    ).toBe(true);
+    expect(fs.existsSync(path.join(skillsRoot, PROTOTYPE_REFERENCE))).toBe(
+      true,
+    );
   });
 
   it("configurePlatform('codex') writes custom agents and config", async () => {
@@ -394,6 +405,9 @@ describe("configurePlatform", () => {
       expect(fs.readFileSync(skillPath, "utf-8")).toBe(skill.content);
     }
     expect(fs.existsSync(path.join(skillsRoot, BUNDLED_REFERENCE))).toBe(true);
+    expect(fs.existsSync(path.join(skillsRoot, PROTOTYPE_REFERENCE))).toBe(
+      true,
+    );
   });
 
   it("configurePlatform('gemini') creates .gemini directory", async () => {
