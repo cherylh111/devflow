@@ -323,3 +323,38 @@ Implemented CONTEXT.md/ADR system with templates, skills integration, and sessio
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: Add devflow prototype skill
+
+**Date**: 2026-06-16
+**Task**: Add devflow prototype skill
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added the bundled devflow-prototype skill with English and Chinese templates, local dogfood copy, brainstorm routing guidance, and configurator/init test coverage. Validation passed with focused tests, lint, typecheck, diff check, and the full CLI suite.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b5a45ee` | (see git log) |
+| `6e5e050` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
