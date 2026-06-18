@@ -426,3 +426,37 @@ Added a module-depth thinking guide, registered it in the shared thinking guide 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 13: Improve vertical slice readiness guidance
+
+**Date**: 2026-06-18
+**Task**: Improve vertical slice readiness guidance
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Updated devflow-brainstorm guidance across English template, Chinese overlay, and local dogfood skill with implementation-readiness, AFK-ready, and HITL-required planning labels. Validated with focused configurator/language parity tests, lint, typecheck, and diff check.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7078229` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
