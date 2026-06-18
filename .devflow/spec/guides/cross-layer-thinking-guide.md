@@ -51,6 +51,52 @@ For each boundary:
 
 ---
 
+## Seam And Adapter Decisions
+
+A seam is the place where volatility is allowed to enter the system. An adapter
+is the code that translates that volatility into the stable shape the rest of
+the project uses.
+
+Introduce a seam or adapter when:
+
+- an external provider, CLI, registry, hook payload, or platform can change
+  independently from DevFlow;
+- two sides use different formats, error models, auth methods, or lifecycle
+  assumptions;
+- multiple consumers would otherwise repeat provider-specific parsing,
+  branching, or normalization;
+- tests need to swap an unstable dependency for a deterministic local boundary.
+
+Avoid an adapter when the code is stable internal logic and the wrapper only
+renames a call. That is usually a shallow module, not a useful boundary. See
+[Module Depth Thinking Guide](./module-depth-thinking-guide.md) before adding a
+wrapper that does not absorb real volatility.
+
+Decision checks:
+
+| Case | Decision |
+| ---- | -------- |
+| Good | Git and HTTP registry backends expose one template-download result while hiding auth and ref/path lookup differences. |
+| Base | A command calls a shared parser for hook payloads, then owns only command-specific display. |
+| Bad | A `FooAdapter` wraps one stable helper with the same parameters and no format, error, or dependency boundary. |
+
+DevFlow examples where seams are often justified:
+
+- platform adapters for Claude, Codex, OpenCode, Gemini, Qoder, and similar CLI
+  differences;
+- registry backends that hide HTTP vs Git access and preserve precise error
+  categories;
+- template rendering boundaries that separate source templates from installed
+  files;
+- hook payload decoders that normalize platform-specific event shapes before
+  workflow logic reads them.
+
+When you add a seam, document the stable contract on the DevFlow side and keep
+provider-specific behavior behind the boundary. Callers should not need to know
+which provider, transport, or raw payload shape produced the data.
+
+---
+
 ## Common Cross-Layer Mistakes
 
 ### Mistake 1: Implicit Format Assumptions

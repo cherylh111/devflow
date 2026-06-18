@@ -3,7 +3,7 @@
   "name": "add-seam-adapter-cross-layer-guidance",
   "title": "Add seam adapter cross-layer guidance",
   "description": "Extend the cross-layer thinking guide with seam and adapter guidance.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": "devflow",
