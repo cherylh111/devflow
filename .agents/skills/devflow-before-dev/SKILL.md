@@ -40,12 +40,24 @@ Execute these steps:
    cat .devflow/spec/guides/index.md
    ```
 
-7. If a loaded knowledge entry is required for this task and sub-agents will run later, add it to the task context manifest:
+7. **Consider optional TDD path** for behavior-changing work:
+   - Use test-first when the task changes public behavior, APIs, command output,
+     parser/validator behavior, complex business logic, or refactors that must
+     preserve existing behavior.
+   - Read the relevant `.devflow/spec/<package>/unit-test/` guidance for concrete
+     test conventions before writing tests.
+   - Prefer a vertical red-green-refactor loop: write one behavior test through a
+     public interface, add the minimal implementation, refactor, then repeat.
+   - Do not test private implementation details just to force TDD.
+   - Skip TDD for documentation-only work, exploratory prototypes, mechanical
+     renames, generated-output churn, or changes where no stable behavior is known yet.
+
+8. If a loaded knowledge entry is required for this task and sub-agents will run later, add it to the task context manifest:
    ```bash
    python ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "knowledge:<id>" "<reason>"
    python ./.devflow/scripts/task.py add-context "$TASK_DIR" check "knowledge:<id>" "<reason>"
    ```
 
-8. Understand the coding standards and patterns you need to follow, then proceed with your development plan.
+9. Understand the coding standards and patterns you need to follow, then proceed with your development plan.
 
 This step is **mandatory** before writing any code.

@@ -3,7 +3,7 @@
   "name": "add-tdd-before-dev-guidance",
   "title": "Add TDD guidance to before-dev",
   "description": "Add optional TDD path guidance to devflow-before-dev and related templates/spec references.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": "devflow",
