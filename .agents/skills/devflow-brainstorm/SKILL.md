@@ -89,6 +89,28 @@ Before creating children, draft the proposed slice list in the parent `prd.md` o
 
 Dependencies must be written in child artifacts. Do not rely on tree position to imply ordering.
 
+### Implementation Readiness
+
+Before activating a child task, classify each slice as planning-ready, not as a
+new task status:
+
+- AFK-ready: the child has enough context, constraints, target files, validation
+  commands, and acceptance criteria for autonomous implementation.
+- HITL-required: the child still depends on a human decision, manual review,
+  credential/access step, external system, or unresolved product scope.
+
+A child is implementation-ready only when:
+
+- the outcome can be verified without completing sibling tasks;
+- blockers and ordering constraints are written in the child `prd.md`,
+  `design.md`, or `implement.md`;
+- HITL dependencies are explicit, including who must act and what unblocks work;
+- validation expectations are concrete enough for the implementation agent to run.
+
+Do not introduce new workflow phases or task statuses for AFK/HITL. Treat them
+as planning labels that decide whether to start the child now, defer it, or ask
+one more product/scope question.
+
 ## Question Rules
 
 Ask only one question per message.

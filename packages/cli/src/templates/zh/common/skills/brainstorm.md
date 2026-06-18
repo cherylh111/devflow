@@ -89,6 +89,28 @@ TASK_DIR=$({{PYTHON_CMD}} ./.devflow/scripts/task.py create "<short task title>"
 
 依赖关系必须写入 child artifacts。不要依赖任务树位置来暗示顺序。
 
+### 实现就绪度
+
+激活 child task 前，将每个切片归类为规划就绪情况，而不是
+新的任务状态：
+
+- AFK-ready：child 已有足够的上下文、约束、目标文件、验证命令
+  和验收标准，可以自主实现。
+- HITL-required：child 仍依赖人工决策、人工 review、凭据/访问步骤、
+  外部系统或未解决的产品范围。
+
+只有满足以下条件时，child 才算实现就绪：
+
+- 无需完成 sibling tasks 就能验证结果；
+- blockers 和 ordering constraints 已写入 child 的 `prd.md`、
+  `design.md` 或 `implement.md`；
+- HITL 依赖是显式的，包括谁需要行动，以及什么会解除阻塞；
+- 验证期望足够具体，implementation agent 可以直接运行。
+
+不要为 AFK/HITL 引入新的 workflow phases 或 task statuses。它们只是
+规划标签，用来判断现在启动 child、暂缓 child，还是再问一个
+产品/范围问题。
+
 ## 提问规则
 
 每条消息只问一个问题。

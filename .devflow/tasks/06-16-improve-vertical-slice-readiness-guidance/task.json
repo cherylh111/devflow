@@ -3,7 +3,7 @@
   "name": "improve-vertical-slice-readiness-guidance",
   "title": "Improve vertical slice readiness guidance",
   "description": "Refine vertical-slice planning guidance with implementation readiness and HITL/AFK terminology.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": "devflow",
