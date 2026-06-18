@@ -51,34 +51,32 @@ The report recommends implementing the P0 batch first:
    - Outcome: create `devflow-prototype` as a bundled skill with logic/UI prototype guidance, findings capture, brainstorm integration, template parity, and tests.
    - Status: completed and archived.
 
-### Planned P1 Skill/Guide Expansion Children
-
-1. **Module depth thinking guide** (`06-16-add-module-depth-thinking-guide`)
+6. **Module depth thinking guide** (`06-16-add-module-depth-thinking-guide`)
    - Outcome: add a guide for evaluating module depth, interface shape, shallow wrappers, and abstraction value.
-   - Status: planned.
+   - Status: completed and archived.
 
-2. **TDD path in before-dev** (`06-16-add-tdd-before-dev-guidance`)
+7. **TDD path in before-dev** (`06-16-add-tdd-before-dev-guidance`)
    - Outcome: add optional red-green-refactor guidance to `devflow-before-dev` for behavior-changing work.
-   - Status: planned.
+   - Status: completed and archived.
 
-3. **Vertical slice readiness guidance** (`06-16-improve-vertical-slice-readiness-guidance`)
+8. **Vertical slice readiness guidance** (`06-16-improve-vertical-slice-readiness-guidance`)
    - Outcome: refine `devflow-brainstorm` vertical-slice guidance with implementation-readiness and AFK/HITL terminology.
-   - Status: planned.
+   - Status: completed and archived.
 
-4. **Seam/adapter cross-layer guidance** (`06-16-add-seam-adapter-cross-layer-guidance`)
+9. **Seam/adapter cross-layer guidance** (`06-16-add-seam-adapter-cross-layer-guidance`)
    - Outcome: extend the cross-layer thinking guide with seam and adapter decision checks.
-   - Status: planned.
+   - Status: completed and archived.
 
-5. **Skill authoring guidance update** (`06-16-update-skill-authoring-guidance`)
+10. **Skill authoring guidance update** (`06-16-update-skill-authoring-guidance`)
    - Outcome: strengthen skill authoring guidance with SKILL.md length targets, utility script rules, and description-routing clarity.
-   - Status: planned.
+   - Status: completed and archived.
 
 ### P1 Backlog
 
-- All currently selected P1 skill/guide expansion items have planning child tasks.
-- Remaining P1 scope should be added here only if a later review finds a missed recommendation from the 06-13 report.
+- All selected P1 work from the 06-13 report's priority roadmap has been completed through child tasks.
+- The 06-13 report has a minor internal classification inconsistency around handoff: the executive summary mentions it near P1, while the prioritized implementation list places handoff in P2 exploration. This parent follows the prioritized implementation list and leaves handoff deferred.
 
-### P2 Backlog
+### Deferred P2 Backlog
 
 - Caveman token compression mode.
 - Zoom-out architecture review skill.
@@ -86,13 +84,24 @@ The report recommends implementing the P0 batch first:
 - Triage partial absorption.
 - Teach framework evaluation.
 
+These items are intentionally deferred as exploratory follow-up work. Do not create child tasks for them unless a later session explicitly chooses a P2 exploration slice.
+
+## Final Cross-Child Review
+
+Reviewed against `.devflow/tasks/archive/2026-06/06-13-research-skills-improvements/research/skills-analysis.md`:
+
+- P0 recommendations are complete: evidence-first template sync, diagnose feedback-loop strengthening, and deletion-test guide integration.
+- P1 selected implementation scope is complete: context/ADR guidance, prototype skill, module-depth guide, TDD before-dev guidance, vertical-slice readiness, seam/adapter guidance, and skill-authoring guidance.
+- P2 recommendations remain visible as deferred exploratory backlog rather than active work.
+- No production integration gap was found that requires direct edits in this parent task.
+
 ## Acceptance Criteria
 
 - [x] Parent task links the first P0 child tasks.
 - [x] Each P0 child task has a PRD with concrete requirements and acceptance criteria.
 - [x] P1 and P2 items remain captured in this parent task for later expansion.
 - [x] The parent task is not used for direct production edits unless a cross-child integration review requires it.
-- [ ] Final roadmap completion includes a cross-child review against the archived 06-13 research report.
+- [x] Final roadmap completion includes a cross-child review against the archived 06-13 research report.
 
 ## Out Of Scope
 

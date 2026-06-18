@@ -20,20 +20,20 @@
      - [x] `06-16-add-seam-adapter-cross-layer-guidance`
      - [x] `06-16-update-skill-authoring-guidance`
    - [x] Implement `06-16-update-skill-authoring-guidance`.
+   - [x] Implement `06-16-add-module-depth-thinking-guide`.
+   - [x] Implement `06-16-improve-vertical-slice-readiness-guidance`.
+   - [x] Implement `06-16-add-seam-adapter-cross-layer-guidance`.
+   - [x] Implement `06-16-add-tdd-before-dev-guidance`.
 4. Final parent review:
-   - [ ] Compare completed/deferred work against the 06-13 research report.
-   - [ ] Record intentional deferrals.
-   - [ ] Archive parent only after child links and final notes are coherent.
+   - [x] Compare completed/deferred work against the 06-13 research report.
+   - [x] Record intentional deferrals.
+   - [x] Archive parent only after child links and final notes are coherent.
 
 ## Current Resume Point
 
-The P0 batch, documentation-system child, and prototype child have been completed and archived. The remaining selected P1 skill/guide expansion items have been planned as child tasks.
+The P0 batch, P1 documentation-system child, prototype child, and all selected P1 skill/guide expansion children have been completed and archived. P2 exploratory items are intentionally deferred.
 
-Next choose one of:
-
-1. Start one P1 child task and execute it independently.
-2. Defer one or more planned P1 child tasks with notes.
-3. Keep the parent active as a roadmap tracker until the user selects the next child.
+Next archive the parent task, record the session journal, and push the completed roadmap history to the remote.
 
 ## Validation
 
