@@ -460,3 +460,37 @@ Updated devflow-brainstorm guidance across English template, Chinese overlay, an
 ### Next Steps
 
 - None - task complete
+
+
+## Session 14: Add seam adapter cross-layer guidance
+
+**Date**: 2026-06-18
+**Task**: Add seam adapter cross-layer guidance
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Extended the cross-layer thinking guide with seam and adapter decision guidance, DevFlow-specific examples, and anti-pattern language for shallow wrappers. Validated with diff check, lint, and typecheck.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `36f179e` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

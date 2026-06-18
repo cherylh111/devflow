@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
+- **Total Sessions**: 14
 - **Last Active**: 2026-06-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~462 | Active |
+| `journal-1.md` | ~496 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 14 | 2026-06-18 | Add seam adapter cross-layer guidance | `36f179e` | `main` |
 | 13 | 2026-06-18 | Improve vertical slice readiness guidance | `7078229` | `main` |
 | 12 | 2026-06-18 | Add module depth thinking guide | `9968ad0` | `main` |
 | 11 | 2026-06-18 | Update skill authoring guidance | `135f24a` | `main` |
