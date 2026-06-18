@@ -12,7 +12,14 @@
 3. After P0 batch completion:
    - [x] Decide whether to create the P1 documentation-system child task next.
    - [x] Decide whether to split P1 skills/guides into separate child tasks or one batch.
-   - [ ] Complete `06-15-add-devflow-prototype-skill`.
+   - [x] Complete `06-15-add-devflow-prototype-skill`.
+   - [x] Plan second P1 skill/guide expansion batch:
+     - [x] `06-16-add-module-depth-thinking-guide`
+     - [x] `06-16-add-tdd-before-dev-guidance`
+     - [x] `06-16-improve-vertical-slice-readiness-guidance`
+     - [x] `06-16-add-seam-adapter-cross-layer-guidance`
+     - [x] `06-16-update-skill-authoring-guidance`
+   - [x] Implement `06-16-update-skill-authoring-guidance`.
 4. Final parent review:
    - [ ] Compare completed/deferred work against the 06-13 research report.
    - [ ] Record intentional deferrals.
@@ -20,15 +27,13 @@
 
 ## Current Resume Point
 
-The P0 batch and the documentation-system child have been completed and archived. The next P1 skill-expansion child is:
+The P0 batch, documentation-system child, and prototype child have been completed and archived. The remaining selected P1 skill/guide expansion items have been planned as child tasks.
 
-1. `06-15-add-devflow-prototype-skill` - planning.
+Next choose one of:
 
-After that child is resolved, choose one of:
-
-1. Create the next P1 child for one of the remaining skill/guide expansion items.
-2. Defer remaining P1/P2 items with notes and run the final parent review.
-3. Keep the parent active as a roadmap tracker without starting direct implementation.
+1. Start one P1 child task and execute it independently.
+2. Defer one or more planned P1 child tasks with notes.
+3. Keep the parent active as a roadmap tracker until the user selects the next child.
 
 ## Validation
 

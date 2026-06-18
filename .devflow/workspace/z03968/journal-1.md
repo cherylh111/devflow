@@ -358,3 +358,37 @@ Added the bundled devflow-prototype skill with English and Chinese templates, lo
 ### Next Steps
 
 - None - task complete
+
+
+## Session 11: Update skill authoring guidance
+
+**Date**: 2026-06-18
+**Task**: Update skill authoring guidance
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Updated the built-in skill authoring spec with SKILL.md length guidance, utility script criteria, and trigger-specific description guidance. Validated with diff check, lint, typecheck, and tests.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `135f24a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

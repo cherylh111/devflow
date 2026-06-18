@@ -27,8 +27,12 @@ Current repository state overrides stale research findings. Each child must insp
    - Domain vocabulary / CONTEXT-style guidance. Completed.
    - ADR system. Completed.
 3. P1 skill and guide expansion:
-   - Prototype. Planning as `06-15-add-devflow-prototype-skill`.
-   - Module depth, TDD, vertical slice, seam/adapter, skill-authoring guidance.
+   - Prototype. Completed.
+   - Module depth. Planned as `06-16-add-module-depth-thinking-guide`.
+   - TDD before-dev path. Planned as `06-16-add-tdd-before-dev-guidance`.
+   - Vertical slice readiness. Planned as `06-16-improve-vertical-slice-readiness-guidance`.
+   - Seam/adapter cross-layer guidance. Planned as `06-16-add-seam-adapter-cross-layer-guidance`.
+   - Skill authoring guidance. Planned as `06-16-update-skill-authoring-guidance`.
 4. P2 exploration:
    - Caveman, zoom-out, handoff, triage, teach.
 
@@ -52,4 +56,4 @@ The parent is complete only after the selected roadmap scope has been implemente
 
 ## Current Resume Point
 
-The completed child set covers the original P0 batch plus the P1 documentation-system item. The active P1 skill-expansion child is `06-15-add-devflow-prototype-skill`. After that child completes, the next parent decision is whether to expand another P1 child task, defer the remaining P1/P2 backlog, or run the final cross-child review and archive the parent.
+The completed child set covers the original P0 batch plus the P1 documentation-system and prototype items. The second P1 skill/guide batch has been planned as five independent child tasks. The next parent decision is which child to implement first, or whether to defer some of the planned P1 children before starting execution.

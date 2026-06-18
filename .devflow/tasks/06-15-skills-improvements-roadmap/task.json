@@ -23,7 +23,12 @@
     "06-15-strengthen-devflow-diagnose-feedback-loop",
     "06-15-add-deletion-test-code-reuse-guide",
     "06-15-06-15-add-context-adr-system",
-    "06-15-add-devflow-prototype-skill"
+    "06-15-add-devflow-prototype-skill",
+    "06-16-add-module-depth-thinking-guide",
+    "06-16-add-tdd-before-dev-guidance",
+    "06-16-improve-vertical-slice-readiness-guidance",
+    "06-16-add-seam-adapter-cross-layer-guidance",
+    "06-16-update-skill-authoring-guidance"
   ],
   "parent": null,
   "relatedFiles": [],

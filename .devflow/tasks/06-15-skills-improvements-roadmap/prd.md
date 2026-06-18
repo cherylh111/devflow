@@ -47,19 +47,36 @@ The report recommends implementing the P0 batch first:
    - Outcome: reusable context and ADR documentation guidance is available for future DevFlow work.
    - Status: completed and archived.
 
-### Active P1 Children
-
-1. **Prototype bundled skill** (`06-15-add-devflow-prototype-skill`)
+5. **Prototype bundled skill** (`06-15-add-devflow-prototype-skill`)
    - Outcome: create `devflow-prototype` as a bundled skill with logic/UI prototype guidance, findings capture, brainstorm integration, template parity, and tests.
-   - Status: planning.
+   - Status: completed and archived.
+
+### Planned P1 Skill/Guide Expansion Children
+
+1. **Module depth thinking guide** (`06-16-add-module-depth-thinking-guide`)
+   - Outcome: add a guide for evaluating module depth, interface shape, shallow wrappers, and abstraction value.
+   - Status: planned.
+
+2. **TDD path in before-dev** (`06-16-add-tdd-before-dev-guidance`)
+   - Outcome: add optional red-green-refactor guidance to `devflow-before-dev` for behavior-changing work.
+   - Status: planned.
+
+3. **Vertical slice readiness guidance** (`06-16-improve-vertical-slice-readiness-guidance`)
+   - Outcome: refine `devflow-brainstorm` vertical-slice guidance with implementation-readiness and AFK/HITL terminology.
+   - Status: planned.
+
+4. **Seam/adapter cross-layer guidance** (`06-16-add-seam-adapter-cross-layer-guidance`)
+   - Outcome: extend the cross-layer thinking guide with seam and adapter decision checks.
+   - Status: planned.
+
+5. **Skill authoring guidance update** (`06-16-update-skill-authoring-guidance`)
+   - Outcome: strengthen skill authoring guidance with SKILL.md length targets, utility script rules, and description-routing clarity.
+   - Status: planned.
 
 ### P1 Backlog
 
-- Module depth thinking guide.
-- TDD path in `devflow-before-dev`.
-- Vertical slice HITL/AFK guidance.
-- Seam/adapter guidance in cross-layer thinking.
-- Skill authoring updates for 100-line targets and utility scripts.
+- All currently selected P1 skill/guide expansion items have planning child tasks.
+- Remaining P1 scope should be added here only if a later review finds a missed recommendation from the 06-13 report.
 
 ### P2 Backlog
 
