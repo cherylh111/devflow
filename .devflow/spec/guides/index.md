@@ -22,6 +22,7 @@ These guides help you **ask the right questions before coding**.
 | Guide | Purpose | When to Use |
 |-------|---------|-------------|
 | [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md) | Identify patterns and reduce duplication | When you notice repeated patterns |
+| [Module Depth Thinking Guide](./module-depth-thinking-guide.md) | Judge when a module should deepen, stay shallow, or expose a smaller interface | When a module feels too thin, too wide, or too generic |
 | [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) | Think through data flow across layers | Features spanning multiple layers |
 
 ---
@@ -50,6 +51,16 @@ These guides help you **ask the right questions before coding**.
 - [ ] Multiple branches update the same derived state from `kind` / `action`
 
 → Read [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md)
+
+### When to Think About Module Depth
+
+- [ ] A module is mostly thin wrappers around other code
+- [ ] Public surface is larger than the actual behavior inside
+- [ ] A helper became generic before it proved reusable
+- [ ] The implementation logic is spread across too many small files
+- [ ] You are deciding whether to deepen one module or split it further
+
+→ Read [Module Depth Thinking Guide](./module-depth-thinking-guide.md)
 
 ### When Verifying AI Cross-Review Results
 
