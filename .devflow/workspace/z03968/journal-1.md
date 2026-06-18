@@ -494,3 +494,37 @@ Extended the cross-layer thinking guide with seam and adapter decision guidance,
 ### Next Steps
 
 - None - task complete
+
+
+## Session 15: Add TDD guidance to before-dev
+
+**Date**: 2026-06-18
+**Task**: Add TDD guidance to before-dev
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added optional test-first guidance to devflow-before-dev across English template, Chinese overlay, and local dogfood skill. Guidance points to unit-test specs, uses a vertical red-green-refactor loop, and explicitly skips unsuitable work. Validated with focused template/language parity tests, lint, typecheck, and diff check.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0cb6294` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
