@@ -392,3 +392,37 @@ Updated the built-in skill authoring spec with SKILL.md length guidance, utility
 ### Next Steps
 
 - None - task complete
+
+
+## Session 12: Add module depth thinking guide
+
+**Date**: 2026-06-18
+**Task**: Add module depth thinking guide
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Added a module-depth thinking guide, registered it in the shared thinking guide index, and validated the documentation-only change with diff check, lint, typecheck, and tests.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9968ad0` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
