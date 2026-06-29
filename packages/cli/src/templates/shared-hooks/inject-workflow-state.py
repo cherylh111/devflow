@@ -18,9 +18,11 @@ missing or a tag is absent, the breadcrumb degrades to a generic
 the broken state instead of the hook silently masking it.
 
 Shared across all hook-capable platforms (Claude, Cursor, Codex, Qoder,
-CodeBuddy, Droid, Gemini, Copilot). Kiro is not wired (no per-turn
-hook entry point). Written to each platform's hooks directory via
-writeSharedHooks() at init time.
+CodeBuddy, Droid, Gemini, Copilot, Kiro). Kiro wires this via the CLI
+custom agent's ``hooks.userPromptSubmit`` and the IDE ``.kiro.hook``
+``promptSubmit`` event; its output branch emits a plain-text breadcrumb
+(Kiro adds hook stdout directly to the conversation context). Written to
+each platform's hooks directory via writeSharedHooks() at init time.
 
 Silent exit 0 cases (no output):
   - No .devflow/ directory found (not a DevFlow project)
@@ -32,6 +34,8 @@ import json
 import os
 import re
 import sys
+import queue
+import threading
 from pathlib import Path
 
 # Force UTF-8 on stdin/stdout/stderr on Windows. Default codepage there is
@@ -100,6 +104,7 @@ def _detect_platform(input_data: dict) -> str | None:
         "QODER_PROJECT_DIR": "qoder",
         "KIRO_PROJECT_DIR": "kiro",
         "COPILOT_PROJECT_DIR": "copilot",
+        "TRAE_PROJECT_DIR": "trae",
     }
     for env_name, platform in env_map.items():
         if os.environ.get(env_name):
@@ -121,6 +126,8 @@ def _detect_platform(input_data: dict) -> str | None:
         return "droid"
     if ".kiro" in script_parts:
         return "kiro"
+    if ".trae" in script_parts:
+        return "trae"
     return None
 
 
@@ -216,11 +223,6 @@ def _read_devflow_config(root: Path) -> dict:
         return {}
 
 
-def _is_zh(config: dict) -> bool:
-    language = config.get("language") if isinstance(config, dict) else None
-    return str(language or "").strip().lower() in {"zh", "cn", "zh-cn", "chinese", "han"}
-
-
 def _codex_mode_banner(config: dict) -> str:
     """Emit a `<codex-mode>` banner for the additionalContext payload.
 
@@ -240,21 +242,15 @@ def _codex_mode_banner(config: dict) -> str:
             if cfg_mode in ("inline", "sub-agent"):
                 mode = cfg_mode
     if mode == "sub-agent":
-        if _is_zh(config):
-            meaning = "sub-agent：实现/检查默认交给 DevFlow sub-agent；主会话仍负责协调、澄清、更新 spec、提交和收尾。"
-        else:
-            meaning = (
-                "sub-agent: implement/check work defaults to DevFlow sub-agents; "
-                "the main session still coordinates, clarifies, updates specs, commits, and finishes."
-            )
+        meaning = (
+            "sub-agent: implement/check work defaults to DevFlow sub-agents; "
+            "the main session still coordinates, clarifies, updates specs, commits, and finishes."
+        )
     else:
-        if _is_zh(config):
-            meaning = "inline：主会话直接实现/检查；不要分派 implement/check sub-agent。"
-        else:
-            meaning = (
-                "inline: the main session implements/checks directly; "
-                "do not dispatch implement/check sub-agents."
-            )
+        meaning = (
+            "inline: the main session implements/checks directly; "
+            "do not dispatch implement/check sub-agents."
+        )
     return f"<codex-mode>{meaning}</codex-mode>"
 
 
@@ -301,32 +297,54 @@ def build_breadcrumb(
     body = templates.get(lookup_key)
     if body is None and lookup_key != status:
         body = templates.get(status)
-    config = _CURRENT_CONFIG
     if body is None:
-        body = "请参考 workflow.md 判断当前步骤。" if _is_zh(config) else "Refer to workflow.md for current step."
-    header = (
-        f"状态：{status}" if task_id is None else f"任务：{task_id} ({status})"
-    ) if _is_zh(config) else (
-        f"Status: {status}" if task_id is None else f"Task: {task_id} ({status})"
-    )
+        body = "Refer to workflow.md for current step."
+    header = f"Status: {status}" if task_id is None else f"Task: {task_id} ({status})"
     return f"<workflow-state>\n{header}\n{body}\n</workflow-state>"
-
-
-_CURRENT_CONFIG: dict = {}
 
 
 # ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
 
+def _load_hook_input() -> dict:
+    """Read hook JSON without trusting host runners to close stdin.
+
+    Kiro IDE `runCommand` and similar hook runners can leave stdin open while
+    sending no payload. A plain `json.load(sys.stdin)` then blocks forever.
+    Normal hook runners write the complete JSON payload and close stdin, so the
+    short daemon read preserves that path while failing closed to `{}` for
+    non-piping hosts.
+    """
+    result_queue: "queue.Queue[str | BaseException]" = queue.Queue(maxsize=1)
+
+    def _read() -> None:
+        try:
+            result_queue.put(sys.stdin.read())
+        except BaseException as exc:
+            result_queue.put(exc)
+
+    reader = threading.Thread(target=_read, daemon=True)
+    reader.start()
+    try:
+        raw = result_queue.get(timeout=0.2)
+    except queue.Empty:
+        return {}
+
+    if isinstance(raw, BaseException):
+        return {}
+    try:
+        data = json.loads(raw) if raw.strip() else {}
+    except (json.JSONDecodeError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def main() -> int:
     if os.environ.get("DEVFLOW_HOOKS") == "0" or os.environ.get("DEVFLOW_DISABLE_HOOKS") == "1":
         return 0
 
-    try:
-        data = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError):
-        data = {}
+    data = _load_hook_input()
 
     cwd_str = data.get("cwd") or os.getcwd()
     cwd = Path(cwd_str)
@@ -338,8 +356,6 @@ def main() -> int:
     templates = load_breadcrumbs(root)
     platform = _detect_platform(data)
     config = _read_devflow_config(root)
-    global _CURRENT_CONFIG
-    _CURRENT_CONFIG = config
     task = get_active_task(root, data)
     if task is None:
         # No active task — still emit a breadcrumb nudging AI toward
@@ -358,16 +374,18 @@ def main() -> int:
     if platform == "codex":
         parts: list[str] = []
         if task is None:
-            parts.append(
-                """<devflow-bootstrap>
-如果本会话还没有加载 DevFlow 上下文，请先读取一次 `devflow-start` skill。
-</devflow-bootstrap>"""
-                if _is_zh(config)
-                else CODEX_NO_TASK_BOOTSTRAP_NOTICE
-            )
+            parts.append(CODEX_NO_TASK_BOOTSTRAP_NOTICE)
         parts.append(_codex_mode_banner(config))
         parts.append(breadcrumb)
         breadcrumb = "\n\n".join(parts)
+
+    # Kiro (CLI userPromptSubmit / IDE promptSubmit) adds a hook's stdout
+    # directly to the conversation context — no JSON envelope. Emit the bare
+    # breadcrumb text. Conditionally isolated: all other platforms keep the
+    # hookSpecificOutput JSON path below unchanged.
+    if platform == "kiro":
+        print(breadcrumb)
+        return 0
 
     # Gemini CLI 0.40.x rejects "UserPromptSubmit" — its per-turn event is
     # named "BeforeAgent". Other platforms (Claude/Cursor/Qoder/CodeBuddy/

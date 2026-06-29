@@ -14,14 +14,6 @@ Confirms: current task, git state, recent commits.
 
 ## Step 2: Load the Phase Index
 
-If available, first load the compact recovery context:
-
-```bash
-{{PYTHON_CMD}} ./.devflow/scripts/task.py progress recover
-```
-
-Use it as a resume hint. If it reports missing `progress.json` or the command is unavailable in an older project, continue with the artifact/status routing below.
-
 ```bash
 {{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase
 ```
@@ -38,7 +30,7 @@ Shows the Phase Index (Plan / Execute / Finish) with routing + skill mapping.
 - `status=planning` + required artifacts complete + required jsonl curated or inline mode → **1.4** (ask for start review; only run `task.py start` after user confirms)
 - `status=in_progress` + implementation not started → **2.1**
 - `status=in_progress` + implementation done, not yet checked → **2.2**
-- `status=in_progress` + check passed → **3.1**
+- `status=in_progress` + check passed → **3.3** (spec update) → **3.4** (commit)
 - `status=completed` (rare; usually archived immediately) → archive flow
 
 Phase rules (full detail in `.devflow/workflow.md`):

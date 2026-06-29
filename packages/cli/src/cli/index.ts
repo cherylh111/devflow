@@ -357,7 +357,7 @@ program
   .command("mem")
   .description(
     localized(
-      "Search/recall AI conversation history across Claude Code, Codex, OpenCode (run 'devflow mem help' for subcommands and flags)",
+      "Search/recall AI conversation history across Claude Code, Codex, OpenCode, Pi (run 'devflow mem help' for subcommands and flags)",
       "搜索/召回 Claude Code、Codex、OpenCode 的 AI 会话历史（运行 'devflow mem help' 查看子命令和参数）",
     ),
   )

@@ -1,4 +1,4 @@
-﻿# Spec Task Planning
+# Spec Task Planning
 
 Use a single agent as the default execution model. The agent may create DevFlow tasks for traceability, but the skill should not require a specific platform, CLI, or parallel worker model.
 
@@ -59,4 +59,3 @@ Helper tasks must have clear ownership:
 - Verification tasks should check placeholder removal, broken links, and consistency.
 
 Do not encode helper-agent names, vendor-specific commands, or platform-specific routing in the skill. Put only the required work and acceptance criteria in the task.
-

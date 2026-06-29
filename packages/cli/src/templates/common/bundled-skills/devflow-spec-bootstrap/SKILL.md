@@ -1,4 +1,4 @@
-﻿---
+---
 name: devflow-spec-bootstrap
 description: "Bootstrap project-specific DevFlow coding specs with a platform-neutral single-agent workflow. Use when creating or refreshing .devflow/spec guidelines, analyzing a codebase with GitNexus, ABCoder, or source inspection, decomposing package/layer spec work, and writing real codebase-backed spec docs without placeholder text."
 ---
@@ -39,4 +39,3 @@ Use this skill to create or refresh `.devflow/spec/` guidelines from the real co
 - Non-applicable template sections are removed.
 - `index.md` files match the final spec file set.
 - Any required setup or analysis assumptions are documented in the relevant spec or task notes.
-

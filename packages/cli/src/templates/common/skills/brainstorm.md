@@ -34,12 +34,7 @@ Use a concise title from the user's request. Use a slug without a date prefix. `
 
 ## Planning Flow
 
-1. Load domain vocabulary if it exists:
-   ```bash
-   cat .devflow/spec/wiki/domain-vocabulary.md 2>/dev/null || echo "No vocabulary file yet"
-   ```
-   Use it to maintain term consistency during requirements exploration.
-2. Capture the user's request and initial known facts in `prd.md`.
+1. Capture the user's request and initial known facts in `prd.md`.
 2. Inspect available evidence before asking questions:
    - code, tests, fixtures, and configs
    - README files, docs, existing specs, and domain notes
@@ -53,63 +48,9 @@ Use a concise title from the user's request. Use a slug without a date prefix. `
 5. Include your recommended answer with the question.
 6. After each user answer, update `prd.md` before continuing.
 7. For complex tasks, create or update `design.md` and `implement.md` before implementation starts.
+8. Before final review or `task.py start`, run the PRD convergence pass below.
 
 Do not invent a project-specific product/spec hierarchy. If the repository already has product, domain, or spec docs, use them. If it does not, proceed with the evidence that exists.
-
-## When To Use Prototyping
-
-If a key design question has high feasibility risk and cannot be answered through code inspection or existing tests, consider using `devflow-prototype` before finalizing the design:
-
-- state machine or lifecycle edge cases are unclear;
-- multiple UI approaches need comparison;
-- performance or integration assumptions are unvalidated.
-
-The prototype must produce findings in the task `research/` directory before implementation starts.
-
-## Vertical Slice Decomposition
-
-When the request contains several independently verifiable deliverables, consider a parent/child task split.
-
-Use this mapping:
-
-- Parent task: owns the source requirement set, shared research, task map, cross-child acceptance criteria, and final integration review.
-- Child task: owns one thin, end-to-end vertical slice that can be planned, implemented, checked, and archived independently.
-
-Prefer tracer-bullet slices over horizontal layer slices:
-
-- Good: one narrow behavior path through schema/config, command/API, user-visible output, and tests.
-- Bad: one child for "types", one child for "backend", one child for "tests" when none is independently verifiable.
-
-Before creating children, draft the proposed slice list in the parent `prd.md` or `design.md`:
-
-- title
-- independently verifiable outcome
-- blocked-by relationship, if any
-- whether human review is required before implementation
-
-Dependencies must be written in child artifacts. Do not rely on tree position to imply ordering.
-
-### Implementation Readiness
-
-Before activating a child task, classify each slice as planning-ready, not as a
-new task status:
-
-- AFK-ready: the child has enough context, constraints, target files, validation
-  commands, and acceptance criteria for autonomous implementation.
-- HITL-required: the child still depends on a human decision, manual review,
-  credential/access step, external system, or unresolved product scope.
-
-A child is implementation-ready only when:
-
-- the outcome can be verified without completing sibling tasks;
-- blockers and ordering constraints are written in the child `prd.md`,
-  `design.md`, or `implement.md`;
-- HITL dependencies are explicit, including who must act and what unblocks work;
-- validation expectations are concrete enough for the implementation agent to run.
-
-Do not introduce new workflow phases or task statuses for AFK/HITL. Treat them
-as planning labels that decide whether to start the child now, defer it, or ask
-one more product/scope question.
 
 ## Question Rules
 
@@ -123,6 +64,49 @@ Each question must include:
 - the trade-off if the user chooses differently
 
 Do not ask process questions such as whether to search, inspect files, or continue brainstorming. Do the evidence work directly. Ask the user only when the remaining issue is a product decision, preference, scope boundary, or risk tolerance choice.
+
+## Thinking Framework: First Principles Analysis
+
+When requirements are vague, solutions feel over-engineered, or you're about to add complexity "because everyone does" — decompose to fundamental truths before reasoning upward.
+
+### Step 1: Restate the Problem
+
+Strip away implementation details to one sentence.
+
+> Bad: "We need to add Redis caching to the user profile endpoint"
+> Good: "User profile data takes too long to load"
+
+### Step 2: List Fundamental Truths
+
+What is absolutely true (not opinion or convention)?
+
+| Category | Examples |
+|----------|----------|
+| **Physical constraints** | Network latency ≥ 0, disk I/O has limits |
+| **Business rules** | "Users must see their own data" |
+| **Technical invariants** | "Data must be consistent" |
+| **User needs** | "The user wants X within Y seconds" |
+
+### Step 3: Challenge Assumptions
+
+For each component of the current plan:
+
+- **Fact or convention?** "We always use REST" — why?
+- **What if we removed this?** If nothing breaks, it's unnecessary.
+- **Solving the actual problem or a symptom?** Trace the causal chain.
+- **Who benefits from this complexity?** If "nobody", simplify.
+
+### Step 4: Build Up from Truths
+
+1. Start with the minimum viable mechanism satisfying all truths
+2. Add complexity only when a specific truth demands it
+3. Each addition must answer: "Which truth requires this?"
+
+### Step 5: Validate
+
+- Does the solution solve the original problem?
+- What assumptions need verification?
+- What's the simplest experiment to test this?
 
 ## Artifact Rules
 
@@ -152,51 +136,33 @@ Do not ask process questions such as whether to search, inspect files, or contin
 
 Lightweight tasks may have only `prd.md`. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
 
-`implement.md` is not a replacement for `implement.jsonl`. Use JSONL files only for manifest-style spec and research references when the task needs them.
+`implement.md` is not a replacement for `implement.jsonl`. On sub-agent-dispatch workflows, `implement.jsonl` and `check.jsonl` must each contain at least one real spec/research entry before `task.py start`; the seed `_example` row does not count. Inline workflows skip this JSONL gate because Phase 2 loads context through `devflow-before-dev`.
 
-Before start review, converge `prd.md` into its final form:
+## PRD Convergence Pass
 
-- Remove temporary brainstorm sections such as `What I already know`, `Assumptions`, `Open Questions`, `Brainstorm Notes`, and `Raw Notes`.
-- Fold discovery notes and resolved questions into final requirements, constraints, acceptance criteria, or out-of-scope sections.
-- Clear placeholder bullets such as `- TBD`, `- [ ] TBD`, `- TODO`, and `- [ ] TODO`.
-- Move technical design or execution details into `design.md` or `implement.md` for complex tasks.
+Before declaring planning ready or running `task.py start`, rewrite `prd.md` once against the final structure described in the artifact rules above. This is not optional cleanup; it is the final planning gate.
 
-## Decision Capture
+The pass must be lossless:
 
-When a design decision is made during brainstorming, check if it warrants an ADR using the 3-condition filter:
+- Collapse repeated facts into one authoritative section.
+- Fold temporary brainstorm sections such as `What I already know`, `Assumptions`, and resolved `Open Questions` into Goal, Background, Requirements, Technical Notes, or Acceptance Criteria.
+- Remove resolved open questions instead of leaving empty or already-answered sections.
+- Merge parallel bug and requirement lists when they describe the same work; keep each defect's severity, evidence, and file:line anchors on the owning requirement.
+- Preserve every file:line anchor, decision, constraint, requirement ID, and acceptance-criteria mapping.
+- Keep only genuinely blocking open questions.
 
-1. **Hard to reverse?** - Changing this decision would take significant effort (> 1 week)
-2. **Surprising without context?** - Future readers would wonder "why this way?"
-3. **Result of real trade-off?** - Genuine alternatives existed
-
-If **all three** are true, create an ADR in `docs/adr/NNNN-slug.md` using the minimal format:
-
-```markdown
-# {Short title}
-
-{1-3 sentences: context, decision, why.}
-```
-
-Examples of ADR-worthy decisions:
-- Database choice (PostgreSQL vs MongoDB)
-- API architecture (REST vs GraphQL vs gRPC)
-- Monorepo vs multi-repo structure
-- Event sourcing for audit trail
-
-Not ADR-worthy:
-- Standard language features (async/await)
-- Obvious practices (error handling)
-- Easily reversible choices (file naming)
+After the pass, read `prd.md` top to bottom and verify that no fact is repeated across sections unless the repetition adds new information.
 
 ## Quality Bar
 
 Before declaring planning ready:
 
 - `prd.md` contains testable acceptance criteria.
-- `prd.md` has been converged and no longer contains temporary brainstorm sections or placeholder bullets.
+- `prd.md` has passed the PRD convergence pass: no unresolved temporary brainstorm sections, no duplicate facts across sections, and no lost anchors, decisions, or acceptance mappings.
 - Repository-answerable questions have already been answered through inspection.
 - Remaining open questions are genuinely about user intent or scope.
 - Complex tasks have `design.md` and `implement.md`.
+- Sub-agent-dispatch tasks have real curated entries in both `implement.jsonl` and `check.jsonl`; seed-only manifests are not ready.
 - The user has reviewed the final planning artifacts or explicitly approved proceeding.
 
 Do not start implementation until the user approves or asks for implementation.

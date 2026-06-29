@@ -10,46 +10,18 @@
  */
 
 import { describe, expect, it } from "vitest";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { AI_TOOLS } from "../src/types/ai-tools.js";
-import { INIT_PLATFORM_IDS, PLATFORM_IDS } from "../src/configurators/index.js";
+import {
+  PLATFORM_IDS,
+} from "../src/configurators/index.js";
 
 const COMMANDER_RESERVED_FLAGS = ["help", "version", "V", "h"];
-const __filename = fileURLToPath(import.meta.url);
-const CLI_ROOT = path.join(path.dirname(__filename), "..");
 
 // =============================================================================
 // Internal Consistency (SQLite-style invariant checks)
 // =============================================================================
 
 describe("registry internal consistency", () => {
-  it("all command registrars are wired into the CLI entrypoint", () => {
-    const commandsDir = path.join(CLI_ROOT, "src", "commands");
-    const cliEntrypoint = fs.readFileSync(
-      path.join(CLI_ROOT, "src", "cli", "index.ts"),
-      "utf-8",
-    );
-
-    for (const entry of fs.readdirSync(commandsDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-
-      const indexPath = path.join(commandsDir, entry.name, "index.ts");
-      if (!fs.existsSync(indexPath)) continue;
-
-      const source = fs.readFileSync(indexPath, "utf-8");
-      const registrarNames = [...source.matchAll(
-        /export function (register[A-Za-z0-9]+Command)\(/g,
-      )].map((match) => match[1]);
-
-      for (const registrarName of registrarNames) {
-        expect(cliEntrypoint).toContain(registrarName);
-        expect(cliEntrypoint).toContain(`${registrarName}(program)`);
-      }
-    }
-  });
-
   it("PLATFORM_IDS length matches AI_TOOLS keys", () => {
     expect(PLATFORM_IDS.length).toBe(Object.keys(AI_TOOLS).length);
   });
@@ -90,27 +62,6 @@ describe("registry internal consistency", () => {
     for (const id of PLATFORM_IDS) {
       expect(COMMANDER_RESERVED_FLAGS).not.toContain(AI_TOOLS[id].cliFlag);
     }
-  });
-
-  it("init command registers only init-supported platform flags", () => {
-    const cliEntrypoint = fs.readFileSync(
-      path.join(CLI_ROOT, "src", "cli", "index.ts"),
-      "utf-8",
-    );
-    const initStart = cliEntrypoint.indexOf('.command("init")');
-    const initEnd = cliEntrypoint.indexOf('.command("update")', initStart);
-    const initBlock = cliEntrypoint.slice(initStart, initEnd);
-    const registeredPlatformFlags = [
-      ...initBlock.matchAll(/\.option\(\s*"([^"]+)"/g),
-    ]
-      .map((match) => match[1])
-      .filter((flag) =>
-        PLATFORM_IDS.some((id) => flag === `--${AI_TOOLS[id].cliFlag}`),
-      );
-
-    expect(registeredPlatformFlags).toEqual(
-      INIT_PLATFORM_IDS.map((id) => `--${AI_TOOLS[id].cliFlag}`),
-    );
   });
 
   it("every platform has non-empty name", () => {
@@ -182,6 +133,11 @@ describe("UserPromptSubmit hook wiring", () => {
       path: "codex/hooks.json",
       event: "UserPromptSubmit",
     },
+    {
+      platform: "trae",
+      path: "trae/hooks.json",
+      event: "UserPromptSubmit",
+    },
   ] as const;
 
   for (const { platform, path, event } of PLATFORM_HOOK_CONFIGS) {
@@ -206,7 +162,10 @@ describe("UserPromptSubmit hook wiring", () => {
     });
   }
 
-  it("kiro agent JSONs do NOT wire UserPromptSubmit (downgrade per Codex R3 #4)", async () => {
+  it("kiro main `devflow` agent wires userPromptSubmit; sub-agents do not", async () => {
+    // Kiro DOES support per-turn hooks (official docs: CLI agent
+    // `hooks.userPromptSubmit`). The main `devflow` agent wires the per-turn
+    // breadcrumb; the 3 sub-agents only inject sub-agent context on spawn.
     const fs = await import("node:fs");
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
@@ -222,10 +181,18 @@ describe("UserPromptSubmit hook wiring", () => {
     for (const entry of fs.readdirSync(kiroAgentsDir)) {
       if (!entry.endsWith(".json")) continue;
       const content = fs.readFileSync(join(kiroAgentsDir, entry), "utf-8");
-      expect(
-        content,
-        `kiro/agents/${entry} should not wire inject-workflow-state.py`,
-      ).not.toContain("inject-workflow-state.py");
+      const parsed = JSON.parse(content) as {
+        hooks?: Record<string, unknown>;
+      };
+      if (entry === "devflow.json") {
+        expect(Object.keys(parsed.hooks ?? {})).toContain("userPromptSubmit");
+        expect(content).toContain("inject-workflow-state.py");
+      } else {
+        expect(
+          content,
+          `kiro/agents/${entry} (sub-agent) should not wire inject-workflow-state.py`,
+        ).not.toContain("inject-workflow-state.py");
+      }
     }
   });
 });

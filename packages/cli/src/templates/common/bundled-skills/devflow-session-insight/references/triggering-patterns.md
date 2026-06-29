@@ -1,4 +1,4 @@
-﻿# Triggering Patterns
+# Triggering Patterns
 
 Verbatim user phrasings that should make an AI reach for `devflow mem`. Calibrate instinct against these — if a user message hits one of these patterns and you do not reach for `mem`, you probably missed an obvious recall.
 

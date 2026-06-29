@@ -17,7 +17,7 @@ This directory is for local AI working in a user project where DevFlow was insta
 
 ## General Operation Order
 
-1. **Confirm platform and directories**: inspect which directories exist, such as `.claude/`, `.codex/`, `.cursor/`.
+1. **Confirm platform and directories**: inspect which directories exist, such as `.claude/`, `.codex/`, `.cursor/`, `.zcode/`.
 2. **Confirm the current active task**: run `python3 ./.devflow/scripts/task.py current --source`.
 3. **Read the local source of truth**: prefer `.devflow/workflow.md`, `.devflow/config.yaml`, and relevant platform files.
 4. **Modify narrowly**: edit only files related to the user's request.
@@ -32,7 +32,7 @@ This directory is for local AI working in a user project where DevFlow was insta
 | Task material | `.devflow/tasks/<task>/` |
 | Project specs | `.devflow/spec/` |
 | Runtime scripts | `.devflow/scripts/` |
-| Platform integration | `.claude/`, `.codex/`, `.cursor/`, `.opencode/`, and similar directories |
+| Platform integration | `.claude/`, `.codex/`, `.cursor/`, `.opencode/`, `.zcode/`, and similar directories |
 | Shared skill | `.agents/skills/` |
 
 ## Things Not To Do By Default

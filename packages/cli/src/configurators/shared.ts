@@ -12,6 +12,20 @@ import {
 } from "../templates/language.js";
 
 /**
+ * Per-platform configure options threaded from `devflow init` flags.
+ * Defined here (not in index.ts) so configurators can reference it without
+ * a circular import.
+ */
+export interface PlatformConfigureOptions {
+  /**
+   * Claude Code only: install the opt-in DevFlow statusLine
+   * (`devflow init --with-statusline`). Off by default — see
+   * `configureClaude` in `claude.ts`.
+   */
+  withStatusline?: boolean;
+}
+
+/**
  * Module-level resolved Python command, set by the init flow after probing.
  *
  * Windows commonly has Python under one of: `python`, `python3`, `py -3` —
@@ -359,16 +373,23 @@ export interface ResolvedSkillFile {
 /**
  * Filter command templates based on platform capabilities.
  *
- * `start.md` is only emitted for agent-less platforms (kilo, antigravity,
- * windsurf). On agent-capable platforms, the session-start hook / plugin
- * already injects the workflow overview, so a user-facing `start` command
- * would be redundant.
+ * `start.md` is stripped only on platforms that are BOTH `agentCapable` AND
+ * `hasHooks` — those platforms (Claude Code, Cursor, Kiro, Gemini, Qoder,
+ * CodeBuddy, Copilot, Droid, Pi) have a SessionStart-style hook that
+ * auto-injects the workflow overview, so a user-facing `start` would be
+ * redundant.
+ *
+ * `agentCapable && !hasHooks` platforms (Codex, ZCode, OpenCode, Reasonix)
+ * have no such hook (or use an out-of-band plugin), so they need the
+ * user-invocable `devflow-start` skill / `start.md` command as fallback.
+ * Agent-less platforms (Kilo, Antigravity, Devin) also keep `start` since
+ * they rely entirely on user-triggered workflows.
  */
 function filterCommands(
   templates: CommonTemplate[],
   ctx: TemplateContext,
 ): CommonTemplate[] {
-  if (ctx.agentCapable) {
+  if (ctx.agentCapable && ctx.hasHooks) {
     return templates.filter((t) => t.name !== "start");
   }
   return templates;
@@ -460,38 +481,6 @@ export function resolveAllAsSkillsNeutral(
       resolvePlaceholdersNeutral(tmpl.content, ctx),
     ),
   }));
-}
-
-/**
- * Codex needs a `devflow-start` skill in `.agents/skills/` so the
- * `<devflow-bootstrap>` notice from `inject-workflow-state.py` resolves
- * to an actual skill file (the bootstrap notice tells the AI to invoke
- * `$devflow-start` once on the first `no_task` turn — added in 0.5.5
- * after the Codex SessionStart hook was removed for de-recursion).
- *
- * Built from `common/commands/start.md` + skill frontmatter; renders
- * neutrally so init and update produce byte-identical output. Returns
- * `null` if the template is missing (defensive — should never happen).
- *
- * Used by both `configureCodex()` (init path, file write) and
- * `collectPlatformTemplates.codex` (update path, manifest map). Both
- * paths must agree, otherwise upgraded users miss the file (which broke
- * 0.4.x → 0.5.5/0.5.6 upgrades — see #247-style symptom: AI reports
- * "no .agents/skills/devflow-start/SKILL.md" because update only ran
- * `collectTemplates` and never wrote the file).
- */
-export function resolveCodexDevFlowStartSkill(
-  ctx: TemplateContext,
-): ResolvedTemplate | null {
-  const startTemplate = getCommandTemplates().find((t) => t.name === "start");
-  if (!startTemplate) return null;
-  return {
-    name: "devflow-start",
-    content: wrapWithSkillFrontmatter(
-      "devflow-start",
-      resolvePlaceholdersNeutral(startTemplate.content, ctx),
-    ),
-  };
 }
 
 /**
@@ -780,6 +769,8 @@ function mapLegacyToolToCopilot(tool: string): string[] {
       return ["web", "exa/*"];
     case "mcp__chrome-devtools__*":
       return ["chrome-devtools/*"];
+    case "mcp__*":
+      return ["web", "exa/*", "chrome-devtools/*"];
     case "Skill":
       return [];
     default:

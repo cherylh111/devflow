@@ -28,6 +28,26 @@ vi.mock("node:child_process", () => ({
   }),
 }));
 
+const registryDownload = vi.hoisted(() => ({
+  files: new Map<string, string>(),
+}));
+
+vi.mock("giget", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  return {
+    downloadTemplate: vi.fn(
+      async (_source: string, options: { dir: string }) => {
+        for (const [relativePath, content] of registryDownload.files) {
+          const targetPath = path.join(options.dir, relativePath);
+          fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+          fs.writeFileSync(targetPath, content, "utf-8");
+        }
+      },
+    ),
+  };
+});
+
 // === Imports ===
 
 import { init } from "../../src/commands/init.js";
@@ -37,7 +57,7 @@ import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
 import { computeHash } from "../../src/utils/template-hash.js";
 import { workflowMdTemplate } from "../../src/templates/devflow/index.js";
 import { replacePythonCommandLiterals } from "../../src/configurators/shared.js";
-import { setTemplateLanguage } from "../../src/templates/language.js";
+import { configurePlatform } from "../../src/configurators/index.js";
 
 // A managed template file that update always handles (Python script)
 const MANAGED_FILE = `${PATHS.SCRIPTS}/get_context.py`;
@@ -141,6 +161,7 @@ describe("update() integration", () => {
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-update-int-"));
     vi.spyOn(process, "cwd").mockReturnValue(tmpDir);
+    registryDownload.files.clear();
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const noop = () => {};
     vi.spyOn(console, "log").mockImplementation(noop);
@@ -158,7 +179,6 @@ describe("update() integration", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    setTemplateLanguage("en");
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -221,22 +241,25 @@ describe("update() integration", () => {
     expect(entries.filter((e) => e.startsWith(".backup-")).length).toBe(0);
   });
 
-  it("uses project language config when updating managed templates", async () => {
+  it("[issue-zcode-codex-upgrade] zcode .agents skills do not trigger legacy Codex backfill", async () => {
     await setupProject();
+    await configurePlatform("zcode", tmpDir);
 
-    const configPath = projectFile(`${DIR_NAMES.WORKFLOW}/config.yaml`);
-    fs.writeFileSync(
-      configPath,
-      `${fs.readFileSync(configPath, "utf-8").trimEnd()}\n\nlanguage: zh\n`,
-      "utf-8",
-    );
+    expect(
+      fs.existsSync(projectFile(".zcode/commands/devflow/start.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(projectFile(".agents/skills/devflow-start/SKILL.md")),
+    ).toBe(false);
+    expect(
+      fs.existsSync(projectFile(".agents/skills/devflow-continue/SKILL.md")),
+    ).toBe(false);
 
-    await update({ force: true });
+    await update({});
 
-    expect(readProjectFile(FILE_NAMES.AGENTS)).toContain("DevFlow 使用说明");
-    expect(readProjectFile(".claude/agents/devflow-implement.md")).toContain(
-      "代码实现专家",
-    );
+    const logOutput = vi.mocked(console.log).mock.calls.flat().join("\n");
+    expect(logOutput).not.toContain("Legacy Codex detected");
+    expect(fs.existsSync(projectFile(".codex"))).toBe(false);
   });
 
   it("#2 dry run makes no file changes even when changes exist", async () => {
@@ -585,9 +608,11 @@ describe("update() integration", () => {
     expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).toBe(expectedWorkflow);
     expect(readProjectFile(MANAGED_FILE)).toBe(expectedGetContext);
     expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).toContain(
-      "[codex-inline, Kilo, Antigravity, Windsurf]",
+      "[codex-inline, Kilo, Antigravity, Devin]",
     );
-    expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).not.toContain("[Codex]");
+    expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).not.toContain(
+      "[Codex]",
+    );
 
     // Version-specific additive config sections still apply to a user-modified
     // config.yaml, while preserving the local content around the append.
@@ -600,7 +625,9 @@ describe("update() integration", () => {
 
     // User-modified template files are skipped under skipAll and their hashes
     // are not rewritten to bless the local modification as a template.
-    expect(readProjectFile(userModifiedScript)).toBe(userModifiedScriptContent);
+    expect(readProjectFile(userModifiedScript)).toBe(
+      userModifiedScriptContent,
+    );
     const hashes = readHashesV2(hashFilePath());
     expect(hashes[PATHS.WORKFLOW_GUIDE_FILE]).toBe(
       computeHash(expectedWorkflow),
@@ -640,6 +667,131 @@ describe("update() integration", () => {
     expect(fs.existsSync(specDir)).toBe(false);
   });
 
+  it("#14b registry-backed pristine spec is refreshed by update", async () => {
+    await setupProject();
+
+    const specFile = `${PATHS.SPEC}/index.md`;
+    writeProjectFile(specFile, "# remote spec v1\n");
+    writeProjectFile(
+      `${DIR_NAMES.WORKFLOW}/config.yaml`,
+      `${readProjectFile(`${DIR_NAMES.WORKFLOW}/config.yaml`)}\nregistry:\n  spec:\n    source: gitlab:local/registry/spec\n`,
+    );
+    const hashes = readHashesV2(hashFilePath());
+    hashes[specFile] = computeHash("# remote spec v1\n");
+    writeHashesV2(hashFilePath(), hashes);
+
+    registryDownload.files.set("index.md", "# remote spec v2\n");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((input: string | URL) => {
+        const url = String(input);
+        if (url.includes("registry.npmjs.org")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ version: VERSION }),
+          });
+        }
+        return Promise.resolve({ status: 404, ok: false });
+      }),
+    );
+
+    await update({ force: true });
+
+    expect(readProjectFile(specFile)).toBe("# remote spec v2\n");
+    expect(readHashesV2(hashFilePath())[specFile]).toBe(
+      computeHash("# remote spec v2\n"),
+    );
+    expect(readProjectFile(`${DIR_NAMES.WORKFLOW}/config.yaml`)).toContain(
+      "source: gitlab:local/registry/spec",
+    );
+  });
+
+  it("#14c registry-backed user-modified spec is preserved under skipAll", async () => {
+    await setupProject();
+
+    const specFile = `${PATHS.SPEC}/index.md`;
+    writeProjectFile(specFile, "# local edits\n");
+    writeProjectFile(
+      `${DIR_NAMES.WORKFLOW}/config.yaml`,
+      `${readProjectFile(`${DIR_NAMES.WORKFLOW}/config.yaml`)}\nregistry:\n  spec:\n    source: gitlab:local/registry/spec\n`,
+    );
+    const hashes = readHashesV2(hashFilePath());
+    hashes[specFile] = computeHash("# remote spec v1\n");
+    writeHashesV2(hashFilePath(), hashes);
+
+    registryDownload.files.set("index.md", "# remote spec v2\n");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((input: string | URL) => {
+        const url = String(input);
+        if (url.includes("registry.npmjs.org")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ version: VERSION }),
+          });
+        }
+        return Promise.resolve({ status: 404, ok: false });
+      }),
+    );
+
+    await update({ skipAll: true });
+
+    expect(readProjectFile(specFile)).toBe("# local edits\n");
+    expect(readHashesV2(hashFilePath())[specFile]).toBe(
+      computeHash("# remote spec v1\n"),
+    );
+  });
+
+  it("#14d registry-backed marketplace template spec is refreshed by update", async () => {
+    await setupProject();
+
+    const specFile = `${PATHS.SPEC}/index.md`;
+    writeProjectFile(specFile, "# golang spec v1\n");
+    writeProjectFile(
+      `${DIR_NAMES.WORKFLOW}/config.yaml`,
+      `${readProjectFile(`${DIR_NAMES.WORKFLOW}/config.yaml`)}\nregistry:\n  spec:\n    source: gitlab:local/registry/marketplace\n    template: golang-spec\n`,
+    );
+    const hashes = readHashesV2(hashFilePath());
+    hashes[specFile] = computeHash("# golang spec v1\n");
+    writeHashesV2(hashFilePath(), hashes);
+
+    registryDownload.files.set("index.md", "# golang spec v2\n");
+    const index = JSON.stringify({
+      version: 1,
+      templates: [
+        {
+          id: "golang-spec",
+          type: "spec",
+          name: "Golang",
+          path: "backend",
+        },
+      ],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((input: string | URL) => {
+        const url = String(input);
+        if (url.includes("registry.npmjs.org")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ version: VERSION }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(index),
+        });
+      }),
+    );
+
+    await update({ force: true });
+
+    expect(readProjectFile(specFile)).toBe("# golang spec v2\n");
+    expect(readHashesV2(hashFilePath())[specFile]).toBe(
+      computeHash("# golang spec v2\n"),
+    );
+  });
+
   it("#15 truly new file (no stored hash) is still added", async () => {
     await setupProject();
 
@@ -664,31 +816,6 @@ describe("update() integration", () => {
 
     // File SHOULD be created (no hash = truly new)
     expect(fs.existsSync(targetPath)).toBe(true);
-  });
-
-  it("#15b backfills channel runtime agents for projects installed before they existed", async () => {
-    await setupProject();
-
-    fs.writeFileSync(versionFilePath(), "0.6.0-beta.22");
-    fs.rmSync(projectFile(PATHS.AGENTS), { recursive: true, force: true });
-    const hashes = readHashesV2(hashFilePath());
-    const pruned = removeHashEntry(
-      removeHashEntry(hashes, `${PATHS.AGENTS}/implement.md`),
-      `${PATHS.AGENTS}/check.md`,
-    ) as Record<string, string>;
-    writeHashesV2(hashFilePath(), pruned);
-
-    await update({ force: true });
-
-    expect(readProjectFile(`${PATHS.AGENTS}/implement.md`)).toContain(
-      "Implement Agent",
-    );
-    expect(readProjectFile(`${PATHS.AGENTS}/check.md`)).toContain(
-      "Check Agent",
-    );
-    const updatedHashes = readHashesV2(hashFilePath());
-    expect(updatedHashes[`${PATHS.AGENTS}/implement.md`]).toBeDefined();
-    expect(updatedHashes[`${PATHS.AGENTS}/check.md`]).toBeDefined();
   });
 
   it("#16 config.yaml update.skip prevents file from being updated", async () => {
@@ -879,6 +1006,56 @@ describe("update() integration", () => {
     ) as Record<string, unknown>;
     expect(updatedSettings.statusLine).toEqual(statusLineConfig);
     expect(updatedSettings.hooks).toBeDefined();
+  });
+
+  it("#22a does not install statusline on update for opted-out projects", async () => {
+    await init({ yes: true, force: true, claude: true });
+
+    const statusLinePath = path.join(
+      tmpDir,
+      ".claude",
+      "hooks",
+      "statusline.py",
+    );
+    expect(fs.existsSync(statusLinePath)).toBe(false);
+
+    await update({ force: true });
+
+    // statusline.py must NOT enter the template walk as a `newFiles` install
+    expect(fs.existsSync(statusLinePath)).toBe(false);
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(tmpDir, ".claude", "settings.json"), "utf-8"),
+    ) as Record<string, unknown>;
+    expect(settings).not.toHaveProperty("statusLine");
+  });
+
+  it("#22b preserves a --with-statusline install across update", async () => {
+    await init({ yes: true, force: true, claude: true, withStatusline: true });
+
+    const settingsPath = path.join(tmpDir, ".claude", "settings.json");
+    const statusLinePath = path.join(
+      tmpDir,
+      ".claude",
+      "hooks",
+      "statusline.py",
+    );
+
+    expect(fs.existsSync(statusLinePath)).toBe(true);
+    const hookContentBefore = fs.readFileSync(statusLinePath, "utf-8");
+    const settingsBefore = fs.readFileSync(settingsPath, "utf-8");
+    expect(
+      (JSON.parse(settingsBefore) as Record<string, unknown>).statusLine,
+    ).toBeDefined();
+
+    await update({ force: true });
+
+    expect(fs.existsSync(statusLinePath)).toBe(true);
+    expect(fs.readFileSync(statusLinePath, "utf-8")).toBe(hookContentBefore);
+    // Byte-identical, not just deep-equal: init's injectStatusLine must
+    // produce exactly what preserveExistingClaudeStatusLine re-derives
+    // (statusLine appended last). Any drift — even key order — makes update
+    // flag a phantom settings.json change on every fresh opted-in project.
+    expect(fs.readFileSync(settingsPath, "utf-8")).toBe(settingsBefore);
   });
 
   // --- Breaking-change migration gate (v0.5.0-beta.0+) ---
@@ -1097,8 +1274,13 @@ describe("update() integration", () => {
 
     const updated = fs.readFileSync(workflowPath, "utf-8");
     expect(updated).toBe(replacePythonCommandLiterals(workflowMdTemplate));
-    expect(updated).toContain("[codex-sub-agent]");
-    expect(updated).toContain("[codex-inline, Kilo, Antigravity, Windsurf]");
+    expect(updated).toContain(
+      "[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]",
+    );
+    expect(updated).toContain(
+      "[/Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi]",
+    );
+    expect(updated).toContain("[codex-inline, Kilo, Antigravity, Devin]");
     expect(updated).not.toContain("[Codex]");
     expect(updated).not.toContain("[Kilo, Antigravity, Windsurf]");
     expect(updated).not.toContain("legacy body");

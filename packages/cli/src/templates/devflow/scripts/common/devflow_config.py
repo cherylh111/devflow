@@ -129,31 +129,3 @@ def read_devflow_config(repo_root: Optional[Path] = None) -> dict:
     except Exception:
         return {}
     return parsed if isinstance(parsed, dict) else {}
-
-
-def normalize_language(value: object) -> str:
-    """Return the supported DevFlow language code for a config/env value."""
-    normalized = str(value or "").strip().lower()
-    if normalized in ("zh", "cn", "zh-cn", "chinese", "han"):
-        return "zh"
-    return "en"
-
-
-def get_language(repo_root: Optional[Path] = None) -> str:
-    """Resolve the generated-project language from env or .devflow/config.yaml."""
-    import os
-
-    env_lang = os.environ.get("DEVFLOW_LANG")
-    if env_lang:
-        return normalize_language(env_lang)
-    config = read_devflow_config(repo_root)
-    return normalize_language(config.get("language"))
-
-
-def is_zh(repo_root: Optional[Path] = None) -> bool:
-    return get_language(repo_root) == "zh"
-
-
-def tr(en: str, zh: str, repo_root: Optional[Path] = None) -> str:
-    """Translate a short runtime message, preserving English as the default."""
-    return zh if is_zh(repo_root) else en

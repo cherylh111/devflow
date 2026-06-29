@@ -2,7 +2,7 @@
 name: devflow-check
 description: |
   Code quality check expert. Reviews changes against DevFlow specs, fixes issues directly, and verifies quality gates.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: read, write, edit, bash, find, grep
 ---
 # Check Agent
 

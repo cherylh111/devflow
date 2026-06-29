@@ -29,7 +29,6 @@ from .config import (
     resolve_package,
     validate_package,
 )
-from .devflow_config import tr as _tr
 from .git import run_git
 from .io import read_json, write_json
 from .log import Colors, colored
@@ -54,7 +53,6 @@ from .task_utils import (
     resolve_task_dir,
     run_task_hooks,
 )
-from .trace import record_task_archived
 
 
 # =============================================================================
@@ -77,17 +75,7 @@ def ensure_tasks_dir(repo_root: Path) -> Path:
 
     if not tasks_dir.exists():
         tasks_dir.mkdir(parents=True)
-        print(
-            colored(
-                _tr(
-                    f"Created tasks directory: {tasks_dir}",
-                    f"已创建任务目录：{tasks_dir}",
-                    repo_root,
-                ),
-                Colors.GREEN,
-            ),
-            file=sys.stderr,
-        )
+        print(colored(f"Created tasks directory: {tasks_dir}", Colors.GREEN), file=sys.stderr)
 
     if not archive_dir.exists():
         archive_dir.mkdir(parents=True)
@@ -127,7 +115,7 @@ def _repo_relative_path(path: Path, repo_root: Path) -> str:
 # Keep in sync with src/types/ai-tools.ts AI_TOOLS entries — these are the
 # platforms listed in workflow.md's "agent-capable" Skill Routing block
 # (Class-1 hook-inject + Class-2 pull-based preludes). Kilo / Antigravity /
-# Windsurf are NOT in this list: they do not consume JSONL.
+# Devin are NOT in this list: they do not consume JSONL.
 _SUBAGENT_CONFIG_DIRS: tuple[str, ...] = (
     ".claude",
     ".cursor",
@@ -140,13 +128,13 @@ _SUBAGENT_CONFIG_DIRS: tuple[str, ...] = (
     ".factory",   # Factory Droid
     ".github/copilot",
     ".pi",        # Pi Agent
+    ".trae",      # Trae IDE
 )
 
 _SEED_EXAMPLE = (
     "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. "
-    "You may also use {\"knowledge\": \"<id>\", \"type\": \"knowledge\", \"reason\": \"<why>\"}. "
-    "Put spec/research/knowledge context only — no code paths. "
-    "Run `python3 .devflow/scripts/get_context.py --mode packages` to list specs and `python3 .devflow/scripts/knowledge.py search <query>` to find knowledge. "
+    "Put spec/research files only — no code paths. "
+    "Run `python3 .devflow/scripts/get_context.py --mode packages` to list available specs. "
     "Delete this line once real entries are added."
 )
 
@@ -175,35 +163,10 @@ def _write_seed_jsonl(path: Path) -> None:
     path.write_text(json.dumps(seed, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def _default_prd_content(
-    title: str,
-    description: str | None = None,
-    repo_root: Path | None = None,
-) -> str:
+def _default_prd_content(title: str, description: str | None = None) -> str:
     """Return the default PRD skeleton created with every task."""
     goal = (description or "").strip() or "TBD."
     heading = title.strip() or "Untitled task"
-    if _tr("en", "zh", repo_root) == "zh":
-        return f"""# {heading}
-
-## 目标
-
-{goal}
-
-## 需求
-
-- 待补充
-
-## 验收标准
-
-- [ ] 待补充
-
-## 备注
-
-- `prd.md` 只写需求、约束和验收标准。
-- 轻量任务可以只保留 PRD。
-- 复杂任务需要在 `task.py start` 前补充技术设计 `design.md` 和执行计划 `implement.md`。
-"""
     return f"""# {heading}
 
 ## Goal
@@ -235,13 +198,7 @@ def cmd_create(args: argparse.Namespace) -> int:
     repo_root = get_repo_root()
 
     if not args.title:
-        print(
-            colored(
-                _tr("Error: title is required", "错误：必须提供标题", repo_root),
-                Colors.RED,
-            ),
-            file=sys.stderr,
-        )
+        print(colored("Error: title is required", Colors.RED), file=sys.stderr)
         return 1
 
     # Validate --package (CLI source: fail-fast)
@@ -249,33 +206,13 @@ def cmd_create(args: argparse.Namespace) -> int:
     if not is_monorepo(repo_root):
         # Single-repo: ignore --package, no package prefix
         if package:
-            print(
-                colored(
-                    _tr(
-                        "Warning: --package ignored in single-repo project",
-                        "警告：单仓库项目会忽略 --package",
-                        repo_root,
-                    ),
-                    Colors.YELLOW,
-                ),
-                file=sys.stderr,
-            )
+            print(colored(f"Warning: --package ignored in single-repo project", Colors.YELLOW), file=sys.stderr)
         package = None
     elif package:
         if not validate_package(package, repo_root):
             packages = get_packages(repo_root)
             available = ", ".join(sorted(packages.keys())) if packages else "(none)"
-            print(
-                colored(
-                    _tr(
-                        f"Error: unknown package '{package}'. Available: {available}",
-                        f"错误：未知 package '{package}'。可用项：{available}",
-                        repo_root,
-                    ),
-                    Colors.RED,
-                ),
-                file=sys.stderr,
-            )
+            print(colored(f"Error: unknown package '{package}'. Available: {available}", Colors.RED), file=sys.stderr)
             return 1
     else:
         # Inferred: default_package → None (no task.json yet for create)
@@ -286,17 +223,7 @@ def cmd_create(args: argparse.Namespace) -> int:
     if not assignee:
         assignee = get_developer(repo_root)
         if not assignee:
-            print(
-                colored(
-                    _tr(
-                        "Error: No developer set. Run init_developer.py first or use --assignee",
-                        "错误：未设置开发者。请先运行 init_developer.py，或使用 --assignee",
-                        repo_root,
-                    ),
-                    Colors.RED,
-                ),
-                file=sys.stderr,
-            )
+            print(colored("Error: No developer set. Run init_developer.py first or use --assignee", Colors.RED), file=sys.stderr)
             return 1
 
     ensure_tasks_dir(repo_root)
@@ -307,17 +234,7 @@ def cmd_create(args: argparse.Namespace) -> int:
     # Generate slug if not provided
     slug = args.slug or _slugify(args.title)
     if not slug:
-        print(
-            colored(
-                _tr(
-                    "Error: could not generate slug from title",
-                    "错误：无法根据标题生成 slug",
-                    repo_root,
-                ),
-                Colors.RED,
-            ),
-            file=sys.stderr,
-        )
+        print(colored("Error: could not generate slug from title", Colors.RED), file=sys.stderr)
         return 1
 
     # Create task directory with MM-DD-slug format
@@ -329,34 +246,13 @@ def cmd_create(args: argparse.Namespace) -> int:
 
     archived_task_dir = _find_archived_task_by_dir_name(tasks_dir, dir_name)
     if archived_task_dir:
-        archived_path = _repo_relative_path(archived_task_dir, repo_root)
-        print(
-            colored(
-                _tr(
-                    f"Error: Task already archived: {dir_name}",
-                    f"错误：任务已归档：{dir_name}",
-                    repo_root,
-                ),
-                Colors.RED,
-            ),
-            file=sys.stderr,
-        )
-        print(_tr(f"Archived at: {archived_path}", f"归档位置：{archived_path}", repo_root), file=sys.stderr)
-        print(_tr("Use a new slug if you intend to create a new task.", "如果要创建新任务，请使用新的 slug。", repo_root), file=sys.stderr)
+        print(colored(f"Error: Task already archived: {dir_name}", Colors.RED), file=sys.stderr)
+        print(f"Archived at: {_repo_relative_path(archived_task_dir, repo_root)}", file=sys.stderr)
+        print("Use a new slug if you intend to create a new task.", file=sys.stderr)
         return 1
 
     if task_dir.exists():
-        print(
-            colored(
-                _tr(
-                    f"Warning: Task directory already exists: {dir_name}",
-                    f"警告：任务目录已存在：{dir_name}",
-                    repo_root,
-                ),
-                Colors.YELLOW,
-            ),
-            file=sys.stderr,
-        )
+        print(colored(f"Warning: Task directory already exists: {dir_name}", Colors.YELLOW), file=sys.stderr)
     else:
         task_dir.mkdir(parents=True)
 
@@ -398,13 +294,13 @@ def cmd_create(args: argparse.Namespace) -> int:
     prd_path = task_dir / "prd.md"
     if not prd_path.exists():
         prd_path.write_text(
-            _default_prd_content(args.title, args.description, repo_root),
+            _default_prd_content(args.title, args.description),
             encoding="utf-8",
         )
 
     # Seed implement.jsonl / check.jsonl for sub-agent-capable platforms.
     # Agent curates real entries during planning when the task needs them.
-    # Agent-less platforms (Kilo / Antigravity / Windsurf) skip this — they
+    # Agent-less platforms (Kilo / Antigravity / Devin) skip this — they
     # load specs via the devflow-before-dev skill instead of JSONL.
     seeded_jsonl = False
     if _has_subagent_platform(repo_root):
@@ -419,17 +315,7 @@ def cmd_create(args: argparse.Namespace) -> int:
         parent_dir = resolve_task_dir(args.parent, repo_root)
         parent_json_path = parent_dir / FILE_TASK_JSON
         if not parent_json_path.is_file():
-            print(
-                colored(
-                    _tr(
-                        f"Warning: Parent task.json not found: {args.parent}",
-                        f"警告：未找到父任务 task.json：{args.parent}",
-                        repo_root,
-                    ),
-                    Colors.YELLOW,
-                ),
-                file=sys.stderr,
-            )
+            print(colored(f"Warning: Parent task.json not found: {args.parent}", Colors.YELLOW), file=sys.stderr)
         else:
             parent_data = read_json(parent_json_path)
             if parent_data:
@@ -444,17 +330,7 @@ def cmd_create(args: argparse.Namespace) -> int:
                 task_data["parent"] = parent_dir.name
                 write_json(task_json_path, task_data)
 
-                print(
-                    colored(
-                        _tr(
-                            f"Linked as child of: {parent_dir.name}",
-                            f"已关联为子任务，父任务：{parent_dir.name}",
-                            repo_root,
-                        ),
-                        Colors.GREEN,
-                    ),
-                    file=sys.stderr,
-                )
+                print(colored(f"Linked as child of: {parent_dir.name}", Colors.GREEN), file=sys.stderr)
 
     # Auto-activate the new task so the per-turn breadcrumb fires planning
     # state. Best-effort: gracefully degrade if no session identity (CLI run
@@ -472,22 +348,18 @@ def cmd_create(args: argparse.Namespace) -> int:
     except Exception:
         pass
 
-    print(colored(_tr(f"Created task: {dir_name}", f"已创建任务：{dir_name}", repo_root), Colors.GREEN), file=sys.stderr)
+    print(colored(f"Created task: {dir_name}", Colors.GREEN), file=sys.stderr)
     print("", file=sys.stderr)
-    print(colored(_tr("Next steps:", "下一步：", repo_root), Colors.BLUE), file=sys.stderr)
-    print(_tr("  - Fill prd.md with requirements and acceptance criteria", "  - 在 prd.md 中补充需求和验收标准", repo_root), file=sys.stderr)
-    print(_tr("  - Lightweight task: PRD-only is valid", "  - 轻量任务：只保留 PRD 即可", repo_root), file=sys.stderr)
-    print(_tr("  - Complex task: add design.md and implement.md before task.py start", "  - 复杂任务：在 task.py start 前补充 design.md 和 implement.md", repo_root), file=sys.stderr)
+    print(colored("Next steps:", Colors.BLUE), file=sys.stderr)
+    print("  - Fill prd.md with requirements and acceptance criteria", file=sys.stderr)
+    print("  - Lightweight task: PRD-only is valid", file=sys.stderr)
+    print("  - Complex task: add design.md and implement.md before task.py start", file=sys.stderr)
     if seeded_jsonl:
         print(
-            _tr(
-                "  - Curate implement.jsonl / check.jsonl as spec/research/knowledge manifests when sub-agents need context",
-                "  - sub-agent 需要上下文时，整理 implement.jsonl / check.jsonl 作为 spec/research/knowledge 清单",
-                repo_root,
-            ),
+            "  - Curate implement.jsonl / check.jsonl as spec/research manifests when sub-agents need context",
             file=sys.stderr,
         )
-    print(_tr("  - Use /devflow:continue or phase context to decide the next step", "  - 使用 /devflow:continue 或 phase context 判断下一步", repo_root), file=sys.stderr)
+    print("  - Use /devflow:continue or phase context to decide the next step", file=sys.stderr)
     print("", file=sys.stderr)
 
     # Output relative path for script chaining
@@ -568,7 +440,6 @@ def cmd_archive(args: argparse.Namespace) -> int:
         archive_dest = Path(result["archived_to"])
         year_month = archive_dest.parent.name
         print(colored(f"Archived: {dir_name} -> archive/{year_month}/", Colors.GREEN), file=sys.stderr)
-        record_task_archived(repo_root, task_dir, archive_dest)
 
         # Auto-commit unless --no-commit
         if not getattr(args, "no_commit", False):

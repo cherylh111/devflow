@@ -1,4 +1,4 @@
-﻿---
+---
 name: devflow-session-insight
 description: "Reach into past AI conversation history through the `devflow mem` CLI. Use whenever the user asks 'how did we solve X last time', 'have we discussed this before', 'what was the decision on X', 'remind me what we did in this task', '上次怎么解的', '之前讨论过吗', '想起一段对话', or when starting a brainstorm that overlaps prior work, debugging a familiar bug, continuing a task across sessions, or doing a finish-work review. Returns raw past dialogue; decide for the moment whether to update spec, append to task notes, quote inline in the answer, or just internalize."
 ---
@@ -11,7 +11,7 @@ It is intentionally a **capability skill, not a workflow**. There is no fixed ou
 
 ## What `devflow mem` is
 
-A local CLI that indexes the user's past Claude Code and Codex conversation logs (the JSONL files each platform stores under `~/.claude/projects/` and `~/.codex/sessions/`) and lets you list, search, slice by DevFlow task boundaries, and dump cleaned dialogue from them. OpenCode logs are not yet indexable (provider adapter pending) — when an OpenCode session is the obvious target, surface that limitation rather than guessing.
+A local CLI that indexes the user's past Claude Code, Codex, and Pi Agent conversation logs (the JSONL files each platform stores under `~/.claude/projects/`, `~/.codex/sessions/`, and `~/.pi/agent/sessions/`) and lets you list, search, slice by DevFlow task boundaries, and dump cleaned dialogue from them. OpenCode logs are not yet indexable (provider adapter pending) — when an OpenCode session is the obvious target, surface that limitation rather than guessing.
 
 Nothing in `mem` is uploaded. All reads are local.
 
@@ -64,7 +64,7 @@ devflow mem extract <session-id> --grep "<keyword>"
 devflow mem context <session-id> --turns 3 --around 2
 
 # When you do not know the session id yet, start with list + filter.
-devflow mem list --task <task-dir>
+devflow mem list --cwd <project-path>
 devflow mem projects   # → list active project cwds, then narrow
 ```
 

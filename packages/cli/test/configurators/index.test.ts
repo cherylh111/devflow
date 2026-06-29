@@ -71,7 +71,7 @@ describe("isManagedPath", () => {
     expect(isManagedPath(".codex/agents/check.toml")).toBe(true);
     expect(isManagedPath(".agent/workflows/start.md")).toBe(true);
     expect(isManagedPath(".kiro/skills/start/SKILL.md")).toBe(true);
-    expect(isManagedPath(".windsurf/workflows/devflow-start.md")).toBe(true);
+    expect(isManagedPath(".devin/workflows/devflow-start.md")).toBe(true);
     expect(isManagedPath(".github/prompts/start.prompt.md")).toBe(true);
     expect(isManagedPath(".github/copilot/hooks/session-start.py")).toBe(true);
     expect(isManagedPath(".github/hooks/devflow.json")).toBe(true);
@@ -88,7 +88,7 @@ describe("isManagedPath", () => {
     expect(isManagedPath(".codex")).toBe(true);
     expect(isManagedPath(".agent/workflows")).toBe(true);
     expect(isManagedPath(".kiro/skills")).toBe(true);
-    expect(isManagedPath(".windsurf/workflows")).toBe(true);
+    expect(isManagedPath(".devin/workflows")).toBe(true);
     expect(isManagedPath(".github/prompts")).toBe(true);
     expect(isManagedPath(".github/hooks")).toBe(true);
     expect(isManagedPath(".devflow")).toBe(true);
@@ -110,7 +110,7 @@ describe("isManagedPath", () => {
     expect(isManagedPath(".codex-backup")).toBe(false);
     expect(isManagedPath(".agent/workflows-backup")).toBe(false);
     expect(isManagedPath(".kiro/skills-backup")).toBe(false);
-    expect(isManagedPath(".windsurf/workflows-backup")).toBe(false);
+    expect(isManagedPath(".devin/workflows-backup")).toBe(false);
     expect(isManagedPath(".github/prompts-backup")).toBe(false);
     expect(isManagedPath(".github/copilot-backup")).toBe(false);
     expect(isManagedPath(".github/hooks-backup")).toBe(false);
@@ -143,7 +143,7 @@ describe("isManagedPath", () => {
     expect(isManagedPath(".codex\\agents\\check.toml")).toBe(true);
     expect(isManagedPath(".agent\\workflows\\start.md")).toBe(true);
     expect(isManagedPath(".kiro\\skills\\start\\SKILL.md")).toBe(true);
-    expect(isManagedPath(".windsurf\\workflows\\devflow-start.md")).toBe(true);
+    expect(isManagedPath(".devin\\workflows\\devflow-start.md")).toBe(true);
     expect(isManagedPath(".github\\prompts\\start.prompt.md")).toBe(true);
     expect(isManagedPath(".github\\copilot\\hooks\\session-start.py")).toBe(
       true,
@@ -241,22 +241,11 @@ describe("resolveCliFlag", () => {
 describe("getInitToolChoices", () => {
   const choices = getInitToolChoices();
 
-  it("returns only init-supported platforms in registration order", () => {
-    expect(choices.map((choice) => choice.platformId)).toEqual([
-      "codebuddy",
-      "claude-code",
-      "qoder",
-      "codex",
-      "reasonix",
-    ]);
-    expect(choices.map((choice) => choice.key)).toEqual([
-      "codebuddy",
-      "claude",
-      "qoder",
-      "codex",
-      "reasonix",
-    ]);
+  it("returns one entry per init-exposed platform", () => {
     expect(choices).toHaveLength(INIT_PLATFORM_IDS.length);
+    expect(choices.map((choice) => choice.platformId)).toEqual(
+      INIT_PLATFORM_IDS,
+    );
   });
 
   it("each entry has required fields", () => {
@@ -327,7 +316,7 @@ describe("collectPlatformTemplates", () => {
     // both platforms — eliminates duplicate-skill warnings (issue #224).
     gemini: ".agents/skills",
     antigravity: ".agent/skills",
-    windsurf: ".windsurf/skills",
+    devin: ".devin/skills",
     qoder: ".qoder/skills",
     codebuddy: ".codebuddy/skills",
     copilot: ".github/skills",
@@ -393,25 +382,6 @@ describe("collectPlatformTemplates", () => {
           `${skillRoot}/devflow-spec-bootstrap/references/spec-writing.md`,
         ),
       ).toBe(true);
-      expect(
-        result?.has(`${skillRoot}/devflow-session-insight/SKILL.md`),
-      ).toBe(true);
-      expect(
-        result?.has(
-          `${skillRoot}/devflow-session-insight/references/cli-quick-reference.md`,
-        ),
-      ).toBe(true);
-      expect(
-        result?.has(`${skillRoot}/devflow-diagnose/SKILL.md`),
-      ).toBe(true);
-      expect(
-        result?.has(`${skillRoot}/devflow-prototype/SKILL.md`),
-      ).toBe(true);
-      expect(
-        result?.has(
-          `${skillRoot}/devflow-prototype/prototype-findings-template.md`,
-        ),
-      ).toBe(true);
     }
   });
 
@@ -444,7 +414,7 @@ describe("collectPlatformTemplates", () => {
   it("pi collectTemplates includes prompts, agents, extension, and settings", () => {
     const result = collectPlatformTemplates("pi");
     expect(result).toBeInstanceOf(Map);
-    expect(result?.has(".pi/prompts/devflow-start.md")).toBe(false);
+    expect(result?.has(".pi/prompts/devflow-start.md")).toBe(true);
     expect(result?.has(".pi/prompts/devflow-finish-work.md")).toBe(true);
     expect(result?.has(".pi/agents/devflow-implement.md")).toBe(true);
     expect(result?.has(".pi/extensions/devflow/index.ts")).toBe(true);

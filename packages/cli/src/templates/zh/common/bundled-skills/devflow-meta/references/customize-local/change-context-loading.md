@@ -1,8 +1,8 @@
-# 更改本地上下文加载
+# Change Local Context Loading
 
-上下文加载决定 AI 何时读取工作流、任务、规范、研究、工作区和 git 状态。当用户说“AI 不知道当前任务”“代理没有读取规范”或“上下文太多/太少”时，阅读本页。
+Context loading determines when AI reads workflow, task, spec, research, workspace, and git status. Read this page when the user says "AI does not know the current task," "the agent did not read specs," or "there is too much/too little context."
 
-## 先读取这些文件
+## Read These Files First
 
 1. `.devflow/workflow.md`
 2. `.devflow/scripts/get_context.py`
@@ -12,68 +12,67 @@
 6. Current platform hooks or agent files
 7. The current task's `implement.jsonl` / `check.jsonl`
 
-## 上下文来源
+## Context Sources
 
-| 来源 | 用途 |
+| Source | Purpose |
 | --- | --- |
-| `.devflow/workflow.md` | 工作流和下一步提示。 |
-| `.devflow/tasks/<task>/prd.md` | 当前任务需求。 |
-| `.devflow/tasks/<task>/design.md` | 复杂任务技术设计。 |
-| `.devflow/tasks/<task>/implement.md` | 复杂任务执行计划。 |
-| `.devflow/tasks/<task>/implement.jsonl` | 实现前要读取的 spec/research。 |
-| `.devflow/tasks/<task>/check.jsonl` | 检查期间要读取的 spec/research。 |
-| `.devflow/spec/` | 项目规范。 |
-| `.devflow/workspace/` | 会话记录。 |
-| git status | 当前工作树变更。 |
+| `.devflow/workflow.md` | Workflow and next-action hints. |
+| `.devflow/tasks/<task>/prd.md` | Current task requirements. |
+| `.devflow/tasks/<task>/design.md` | Complex task technical design. |
+| `.devflow/tasks/<task>/implement.md` | Complex task execution plan. |
+| `.devflow/tasks/<task>/implement.jsonl` | Spec/research to read before implementation. |
+| `.devflow/tasks/<task>/check.jsonl` | Spec/research to read during checking. |
+| `.devflow/spec/` | Project specs. |
+| `.devflow/workspace/` | Session records. |
+| git status | Current working tree changes. |
 
-## 常见需求和编辑点
+## Common Needs And Edit Points
 
-| 需求 | 编辑点 |
+| Need | Edit point |
 | --- | --- |
-| 在新会话中注入更多/更少信息 | `session_context.py` 或平台 `session-start` hook。 |
-| 更改每次用户输入的提示 | `.devflow/workflow.md` 中的 `[workflow-state:STATUS]` 块。`inject-workflow-state` hook 只负责解析并逐字读取该块。 |
-| Agent 没有读取 specs | 任务 JSONL、agent prelude、`inject-subagent-context` hook。 |
-| 活动任务丢失 | `active_task.py` 和平台会话身份传递。 |
-| 更改 JSONL 验证规则 | `task_context.py`。 |
+| Inject more/less information in new sessions | `session_context.py` or the platform `session-start` hook. |
+| Change hints on each user input | `[workflow-state:STATUS]` block in `.devflow/workflow.md`. The `inject-workflow-state` hook is parser-only and reads the block verbatim. |
+| Agent did not read specs | Task JSONL, agent prelude, `inject-subagent-context` hook. |
+| Active task is lost | `active_task.py` and platform session identity propagation. |
+| Change JSONL validation rules | `task_context.py`. |
 
-## JSONL 规则
+## JSONL Rules
 
-`implement.jsonl` / `check.jsonl` 是关键上下文加载接口：
+`implement.jsonl` / `check.jsonl` are the key context loading interface:
 
 ```jsonl
 {"file": ".devflow/spec/backend/index.md", "reason": "Backend conventions"}
 {"file": ".devflow/tasks/04-28-x/research/api.md", "reason": "API research"}
-{"knowledge": "DFL-20260526-example", "type": "knowledge", "reason": "Relevant learning"}
 ```
 
-只包含 spec/research 文件和聚焦知识条目。不要把即将修改的代码文件放进这些清单；agents 会在实现期间自行读取代码文件。
+Include only spec/research files. Do not put code files that will be modified into these manifests; agents read code files themselves during implementation.
 
-## 更改会话上下文
+## Change Session Context
 
-如果用户希望每个新会话看到更多项目状态，编辑：
+If the user wants every new session to see more project state, edit:
 
 - `.devflow/scripts/common/session_context.py`
 - the corresponding platform `session-start` hook
 
-上下文不能无限增长。优先注入索引和路径，让 AI 按需读取详细文件。
+Context cannot grow without bound. Prefer injecting indexes and paths so the AI can read detailed files on demand.
 
-## 更改子代理上下文
+## Change Sub-Agent Context
 
-先确定平台使用哪种模式：
+First determine which mode the platform uses:
 
-- hook push：编辑 `inject-subagent-context` hook。
-- agent pull：编辑对应 `devflow-implement` / `devflow-check` agent 文件中的读取步骤。
+- hook push: edit the `inject-subagent-context` hook.
+- agent pull: edit the read steps in the corresponding `devflow-implement` / `devflow-check` agent file.
 
-两种模式下，都要确保 agent 最终读取：
+In both modes, make sure the agent ultimately reads:
 
-1. 活动任务
-2. 对应 JSONL
-3. JSONL 引用的 spec/research/knowledge
+1. active task
+2. the corresponding JSONL
+3. spec/research referenced by the JSONL
 4. `prd.md`
 5. `design.md` if present
 6. `implement.md` if present
 
-## 排查顺序
+## Troubleshooting Order
 
 ```bash
 python3 ./.devflow/scripts/task.py current --source
@@ -82,4 +81,4 @@ python3 ./.devflow/scripts/task.py validate <task>
 python3 ./.devflow/scripts/get_context.py --mode packages
 ```
 
-编辑 hooks/agents 前，先确认任务和 JSONL 正确。
+Confirm the task and JSONL are correct before editing hooks/agents.

@@ -121,7 +121,7 @@ python3 ./.devflow/scripts/get_context.py --mode phase --step <X.Y>  # detailed 
     [workflow-state:no_task]      → no active task; before Phase 1
     [workflow-state:planning]     → all of Phase 1 (status='planning')
     [workflow-state:planning-inline] → Codex inline variant of Phase 1
-    [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.4
+    [workflow-state:in_progress]  → Phase 2 + Phase 3.2-3.4
                                     (status stays 'in_progress' from
                                     task.py start until task.py archive)
     [workflow-state:in_progress-inline] → Codex inline variant of Phase 2/3
@@ -162,8 +162,6 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 - `implement.md` — execution plan for complex tasks: ordered checklist, validation commands, review gates, and rollback points.
 - `implement.jsonl` / `check.jsonl` — spec and research manifests for sub-agent context. They do not replace `implement.md`.
 - Lightweight tasks may be PRD-only. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
-- Before start review, converge `prd.md` into final requirements and acceptance criteria: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets.
-- `task.py start` enforces the start gate: `prd.md` must exist, must not be the generated `TBD` placeholder, and must not contain unresolved brainstorm headings or placeholder bullets. For complex tasks, set `task.json.meta.complex: true`; for sub-agent tasks that require manifest context, set `task.json.meta.requires_subagent_context: true` and curate real JSONL entries.
 
 ### Parent / Child Task Trees
 
@@ -185,7 +183,7 @@ Complex task: ask the user if you can create a DevFlow task and enter the planni
 - 1.0 Create task `[required · once]` (only after task-creation consent)
 - 1.1 Requirement exploration `[required · repeatable]` (`prd.md`; complex tasks also need `design.md` + `implement.md`)
 - 1.2 Research `[optional · repeatable]`
-- 1.3 Configure context `[conditional · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi
+- 1.3 Configure context `[required · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix (sub-agent-dispatch platforms only; inline platforms skip)
 - 1.4 Activate task `[required · once]` (review gate, then `task.py start`; status → in_progress)
 - 1.5 Completion criteria
 
@@ -193,10 +191,9 @@ Complex task: ask the user if you can create a DevFlow task and enter the planni
 
 [workflow-state:planning]
 Load `devflow-brainstorm`; stay in planning.
-Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`, and set `task.json.meta.complex: true`; ask for review before `task.py start`.
-Before start review, converge `prd.md`: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets.
+Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Sub-agent mode: if Phase 2 needs manifest context, set `task.json.meta.requires_subagent_context: true` and curate `implement.jsonl` / `check.jsonl` with real spec/research/knowledge entries before start.
+Sub-agent mode: curate `implement.jsonl` and `check.jsonl` as spec/research manifests before start.
 [/workflow-state:planning]
 
 <!-- Per-turn breadcrumb: shown throughout Phase 1 when codex.dispatch_mode=inline.
@@ -207,10 +204,9 @@ Sub-agent mode: if Phase 2 needs manifest context, set `task.json.meta.requires_
 
 [workflow-state:planning-inline]
 Load `devflow-brainstorm`; stay in planning.
-Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`, and set `task.json.meta.complex: true`; ask for review before `task.py start`.
-Before start review, converge `prd.md`: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets.
+Lightweight: `prd.md` can be enough. Complex: finish `prd.md`, `design.md`, and `implement.md`; ask for review before `task.py start`.
 Multi-deliverable scope: consider a parent task plus independently verifiable child tasks; dependencies must be written in child artifacts, not implied by tree position.
-Inline mode: leave `task.json.meta.requires_subagent_context` unset, skip jsonl curation, and load artifacts/specs via `devflow-before-dev` in Phase 2.
+Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `devflow-before-dev`.
 [/workflow-state:planning-inline]
 
 ### Phase 2: Execute
@@ -219,19 +215,18 @@ Inline mode: leave `task.json.meta.requires_subagent_context` unset, skip jsonl 
 - 2.3 Rollback `[on demand]`
 
 <!-- Per-turn breadcrumb: shown while status='in_progress'.
-     Scope: all of Phase 2 + Phase 3.1-3.4 (status stays 'in_progress' from
+     Scope: all of Phase 2 + Phase 3.2-3.4 (status stays 'in_progress' from
      task.py start until task.py archive; only archive flips it). The body
      therefore must cover every required step from implementation through
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
-Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Copilot/Gemini/Qoder and `devflow-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
+Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Gemini/Qoder/Copilot/ZCode/Reasonix/Trae and `devflow-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
 
 [workflow-state:in_progress]
 Tools: `devflow-implement` / `devflow-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `devflow-update-spec` is a skill. `devflow-check` exists as both; prefer the Agent form when verifying after code changes.
 Flow: `devflow-implement` -> `devflow-check` -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
 Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `devflow-implement`, do NOT spawn another `devflow-implement` or `devflow-check`; if already running as `devflow-check`, do NOT spawn another `devflow-check` or `devflow-implement`. Dispatch is main session only.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
-For long-running work, update `task.py progress set <task> ...` at meaningful implementation, check, and finish boundaries so `/devflow:continue` can recover quickly.
 [/workflow-state:in_progress]
 
 <!-- Per-turn breadcrumb: shown while status='in_progress' when
@@ -243,15 +238,15 @@ For long-running work, update `task.py progress set <task> ...` at meaningful im
 Flow: `devflow-before-dev` -> edit -> `devflow-check` -> validation -> `devflow-update-spec` -> commit (Phase 3.4) -> `/devflow:finish-work`.
 Do not dispatch implement/check sub-agents in inline mode.
 Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
-For long-running work, update `task.py progress set <task> ...` at meaningful implementation, check, and finish boundaries so `/devflow:continue` can recover quickly.
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
-- 3.1 Quality verification `[required · repeatable]`
 - 3.2 Debug retrospective `[on demand]`
 - 3.3 Spec update `[required · once]`
 - 3.4 Commit changes `[required · once]`
 - 3.5 Wrap-up reminder
+
+> Note: step 3.1 was folded into 2.2 (last-iteration full-scope check) and 3.4 (commit preamble). Numbering kept stable to avoid breaking external references.
 
 <!-- Per-turn breadcrumb: shown while status='completed'.
      Currently DEAD in normal flow: cmd_archive writes status='completed' in
@@ -277,30 +272,27 @@ Code committed. Run `/devflow:finish-work`; if dirty, return to Phase 3.4 first.
 
 When a user request matches one of these intents inside an active task, route first, then load the detailed phase step if needed.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
 - Planning or unclear requirements -> `devflow-brainstorm`.
-- Bug, failing behavior, unclear root cause, or performance regression -> `devflow-diagnose`.
 - `in_progress` implementation/check -> dispatch `devflow-implement` / `devflow-check`.
 - Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
-[codex-inline, Kilo, Antigravity, Windsurf]
+[codex-inline, Kilo, Antigravity, Devin]
 
 - Planning or unclear requirements -> `devflow-brainstorm`.
-- Bug, failing behavior, unclear root cause, or performance regression -> `devflow-diagnose`.
 - Before editing -> `devflow-before-dev`; after editing -> `devflow-check`.
 - Repeated debugging -> `devflow-break-loop`; spec updates -> `devflow-update-spec`.
 
-[/codex-inline, Kilo, Antigravity, Windsurf]
+[/codex-inline, Kilo, Antigravity, Devin]
 
 ### Guardrails
 
 - Task creation approval is not implementation approval; implementation waits for `task.py start` after artifact review.
 - PRD-only is valid for lightweight tasks; complex tasks need `design.md` + `implement.md`.
 - Planning must be persisted to task artifacts; checks must run before reporting completion.
-- Progress hints in `progress.json` are advisory recovery state only; they must not replace `task.json.status`, PRD/design/implement artifacts, or validation evidence.
 
 ### Loading Step Detail
 
@@ -346,7 +338,6 @@ The brainstorm skill will guide you to:
 - Update `prd.md` immediately after each user answer
 - Split large scopes into a parent task plus child tasks when the deliverables can be verified independently
 - Keep `prd.md` focused on requirements and acceptance criteria
-- Converge `prd.md` before start review: remove temporary brainstorm headings, fold discovery notes into final sections, and clear placeholder bullets
 - For complex tasks, produce `design.md` and `implement.md` before implementation starts
 
 When considering a parent/child split:
@@ -362,7 +353,7 @@ Return to this step whenever requirements change and revise the relevant artifac
 
 Research can happen at any time during requirement exploration. It isn't limited to local code — you can use any available tool (MCP servers, skills, web search, etc.) to look up external information, including third-party library docs, industry practices, API references, etc.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
 Spawn the research sub-agent:
 
@@ -370,13 +361,13 @@ Spawn the research sub-agent:
 - **Task description**: Research <specific question>
 - **Key requirement**: Research output MUST be persisted to `{TASK_DIR}/research/`
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
-[codex-inline, Kilo, Antigravity, Windsurf]
+[codex-inline, Kilo, Antigravity, Devin]
 
 Do the research in the main session directly and write findings into `{TASK_DIR}/research/`. (For `codex-inline` this avoids the `fork_turns="none"` isolation that prevents `devflow-research` sub-agents from resolving the active task path.)
 
-[/codex-inline, Kilo, Antigravity, Windsurf]
+[/codex-inline, Kilo, Antigravity, Devin]
 
 **Research artifact conventions**:
 - One file per research topic (e.g. `research/auth-library-comparison.md`)
@@ -389,26 +380,17 @@ Brainstorm and research can interleave freely — pause to research a technical 
 
 #### 1.3 Configure context `[required · once]`
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
 Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the right spec/research context. These files were seeded on `task create` with a single self-describing `_example` line; your job here is to fill in real entries.
 
 **Location**: `{TASK_DIR}/implement.jsonl` and `{TASK_DIR}/check.jsonl` (already exist).
 
-**Format**: one JSON object per line. Supported context entries:
-
-```jsonl
-{"file": "<repo-relative path>", "reason": "<why>"}
-{"file": "<repo-relative dir>/", "type": "directory", "reason": "<why>"}
-{"knowledge": "<entry-id>", "type": "knowledge", "reason": "<why>"}
-```
-
-`file` paths are repo-root relative. `knowledge` ids are structured entries searchable via `python3 ./.devflow/scripts/knowledge.py search`, including wiki entries under `.devflow/spec/wiki/` and learnings under `.devflow/spec/guides/learnings.md`.
+**Format**: one JSON object per line — `{"file": "<path>", "reason": "<why>"}`. Paths are repo-root relative.
 
 **What to put in**:
 - **Spec files** — `.devflow/spec/<package>/<layer>/index.md` and any specific guideline files (`error-handling.md`, `conventions.md`, etc.) relevant to this task
 - **Research files** — `{TASK_DIR}/research/*.md` that the sub-agent will need to consult
-- **Knowledge entries** — specific reusable learnings, wiki notes, knowhow references, or spec entries that should be injected without loading an entire markdown file
 
 **What NOT to put in**:
 - Code files (`src/**`, `packages/**/*.ts`, etc.) — those are read by the sub-agent during implementation, not pre-registered here
@@ -418,17 +400,15 @@ Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the rig
 - `implement.jsonl` → specs + research the implement sub-agent needs to write code correctly
 - `check.jsonl` → specs for the check sub-agent (quality guidelines, check conventions, same research if needed)
 
-These manifests do not replace `implement.md`. `implement.md` is the human-readable execution plan for a complex task; jsonl files only list context files or knowledge entries to inject or load.
+These manifests do not replace `implement.md`. `implement.md` is the human-readable execution plan for a complex task; jsonl files only list context files to inject or load.
 
 **How to discover relevant specs**:
 
 ```bash
 python3 ./.devflow/scripts/get_context.py --mode packages
-python3 ./.devflow/scripts/knowledge.py search "<query>"
-python3 ./.devflow/scripts/knowledge.py load <id>
 ```
 
-The context script lists every package + its spec layers with paths. `knowledge.py search` finds focused structured entries; `knowledge.py load` shows the exact content before you add its id to JSONL.
+Lists every package + its spec layers with paths. Pick the entries that match this task's domain.
 
 **How to append entries**:
 
@@ -437,21 +417,21 @@ Either edit the jsonl file directly in your editor, or use:
 ```bash
 python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "<path>" "<reason>"
 python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "<path>" "<reason>"
-python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" implement "knowledge:<id>" "<reason>"
-python3 ./.devflow/scripts/task.py add-context "$TASK_DIR" check "wiki:<id>" "<reason>"
 ```
 
 Delete the seed `_example` line once real entries exist (optional — it's skipped automatically by consumers).
 
-Skip when: `implement.jsonl` and `check.jsonl` have agent-curated entries (the seed row alone doesn't count).
+Ready gate: both `implement.jsonl` and `check.jsonl` must contain at least one real `{"file": "...", "reason": "..."}` entry before `task.py start`. The seed `_example` row alone is not ready.
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+Skip this step only when both files already have real curated entries.
 
-[codex-inline, Kilo, Antigravity, Windsurf]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
+
+[codex-inline, Kilo, Antigravity, Devin]
 
 Skip this step. Context is loaded directly by the `devflow-before-dev` skill in Phase 2.
 
-[/codex-inline, Kilo, Antigravity, Windsurf]
+[/codex-inline, Kilo, Antigravity, Devin]
 
 #### 1.4 Activate task `[required · once]`
 
@@ -461,11 +441,9 @@ After artifact review, flip the task status to `in_progress`:
 python3 ./.devflow/scripts/task.py start <task-dir>
 ```
 
-For lightweight tasks, `prd.md` can be enough, but it must not still contain the generated `TBD` placeholders, unresolved brainstorm headings, or placeholder bullets. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist, be reviewed, and the task must declare `task.json.meta.complex: true` before start. For sub-agent tasks that require manifest context, declare `task.json.meta.requires_subagent_context: true` and curate real `implement.jsonl` / `check.jsonl` entries; seed-only manifests are blocked by `task.py start` only when that metadata flag is true. Codex inline tasks leave that flag unset and load context through `devflow-before-dev`.
+For lightweight tasks, `prd.md` can be enough. For complex tasks, `prd.md`, `design.md`, and `implement.md` must exist and be reviewed before start. On sub-agent-dispatch platforms, `implement.jsonl` and `check.jsonl` must both have real curated entries before start. Runtime consumers tolerate missing or seed-only manifests for compatibility, but that tolerance is not a planning-ready state.
 
 After this command succeeds, the breadcrumb auto-switches to `[workflow-state:in_progress]`, and the rest of Phase 2 / 3 follows.
-
-If `task.py start` reports start-gate validation errors, return to Phase 1 and fix the artifacts or metadata. Use `--force` only when the bypass is intentional and you can explain why the task should enter implementation anyway.
 
 If `task.py start` errors with a session-identity message (no context key from hook input, `DEVFLOW_CONTEXT_ID`, or platform-native session env), follow the hint in the error to set up session identity, then retry.
 
@@ -479,13 +457,12 @@ If `task.py start` errors with a session-identity message (no context key from h
 | `research/` has artifacts (complex tasks) | recommended |
 | `design.md` exists (complex tasks) | ✅ |
 | `implement.md` exists (complex tasks) | ✅ |
-| `task.json.meta.complex: true` for complex tasks | ✅ |
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
-| `task.json.meta.requires_subagent_context: true` plus curated `implement.jsonl` / `check.jsonl` when sub-agent manifest context is required | ✅ |
+| `implement.jsonl` and `check.jsonl` each contain at least one real curated entry (seed row does not count) | ✅ |
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
 ---
 
@@ -495,9 +472,7 @@ Goal: turn reviewed planning artifacts into code that passes quality checks.
 
 #### 2.1 Implement `[required · repeatable]`
 
-For bug fixes, failing behavior, unclear root cause, or performance regressions, load `devflow-diagnose` before editing unless the root cause and fix are already proven by evidence.
-
-[Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi]
 
 Spawn the implement sub-agent:
 
@@ -506,12 +481,12 @@ Spawn the implement sub-agent:
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `devflow-implement` sub-agent and must implement directly, not spawn another `devflow-implement` / `devflow-check`.
 
 The platform hook/plugin auto-handles:
-- Reads `implement.jsonl` and injects referenced spec/research files and knowledge entries into the agent prompt
+- Reads `implement.jsonl` and injects referenced spec/research files into the agent prompt
 - Injects `prd.md`, `design.md` if present, and `implement.md` if present
 
-[/Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi]
 
-[codex-sub-agent]
+[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]
 
 Spawn the implement sub-agent:
 
@@ -519,11 +494,11 @@ Spawn the implement sub-agent:
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
 - **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then explicitly say the spawned agent is already `devflow-implement` and must implement directly without spawning another `devflow-implement` / `devflow-check`.
 
-The Codex sub-agent definition auto-handles the context load requirement:
+The pull-based sub-agent definition auto-handles the context load requirement:
 - Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
-- Reads `implement.jsonl` and requires the agent to load each referenced spec/research file or knowledge entry before coding
+- Reads `implement.jsonl` and requires the agent to load each referenced spec/research file before coding
 
-[/codex-sub-agent]
+[/codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]
 
 [Kiro]
 
@@ -534,12 +509,12 @@ Spawn the implement sub-agent:
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `devflow-implement` sub-agent and must implement directly, not spawn another `devflow-implement` / `devflow-check`.
 
 The platform prelude auto-handles the context load requirement:
-- Reads `implement.jsonl` and injects referenced spec/research files and knowledge entries into the agent prompt
+- Reads `implement.jsonl` and injects referenced spec/research files into the agent prompt
 - Injects `prd.md`, `design.md` if present, and `implement.md` if present
 
 [/Kiro]
 
-[codex-inline, Kilo, Antigravity, Windsurf]
+[codex-inline, Kilo, Antigravity, Devin]
 
 1. Load the `devflow-before-dev` skill to read project guidelines
 2. Read `{TASK_DIR}/prd.md`, then `design.md` if present, then `implement.md` if present
@@ -547,11 +522,11 @@ The platform prelude auto-handles the context load requirement:
 4. Implement the code per reviewed artifacts
 5. Run project lint and type-check
 
-[/codex-inline, Kilo, Antigravity, Windsurf]
+[/codex-inline, Kilo, Antigravity, Devin]
 
 #### 2.2 Quality check `[required · repeatable]`
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
 Spawn the check sub-agent:
 
@@ -565,9 +540,9 @@ The check agent's job:
 - Auto-fix issues it finds
 - Run lint and typecheck to verify
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix, Trae]
 
-[codex-inline, Kilo, Antigravity, Windsurf]
+[codex-inline, Kilo, Antigravity, Devin]
 
 Load the `devflow-check` skill and verify the code per its guidance:
 - Spec compliance
@@ -576,7 +551,9 @@ Load the `devflow-check` skill and verify the code per its guidance:
 
 If issues are found → fix → re-check, until green.
 
-[/codex-inline, Kilo, Antigravity, Windsurf]
+[/codex-inline, Kilo, Antigravity, Devin]
+
+**Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.devflow/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
 
 #### 2.3 Rollback `[on demand]`
 
@@ -589,15 +566,6 @@ If issues are found → fix → re-check, until green.
 ## Phase 3: Finish
 
 Goal: ensure code quality, capture lessons, record the work.
-
-#### 3.1 Quality verification `[required · repeatable]`
-
-Load the `devflow-check` skill and do a final verification:
-- Spec compliance
-- lint / type-check / tests
-- Cross-layer consistency (when changes span layers)
-
-If issues are found → fix → re-check, until green.
 
 #### 3.2 Debug retrospective `[on demand]`
 
@@ -618,6 +586,8 @@ Load the `devflow-update-spec` skill and review whether this task produced new k
 Update the docs under `.devflow/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment.
 
 #### 3.4 Commit changes `[required · once]`
+
+**Spec-sync preamble**: before drafting commits, ask: did this task fix a bug or surface non-obvious knowledge that should land in `.devflow/spec/` so future-you (or future-AI) doesn't repeat the mistake? If yes, return to Phase 3.3 first — spec writes belong in the same task's commit batch, not as a forgotten follow-up.
 
 The AI drives a batched commit of this task's code changes so `/finish-work` can run cleanly afterwards. Goal: produce work commits FIRST, then bookkeeping (archive + journal) commits land after — never interleaved.
 
@@ -691,8 +661,8 @@ All tag blocks live in the `## Phase Index` section above, immediately after eac
 | No active task (before Phase 1) | `[workflow-state:no_task]` (after the Phase Index ASCII art) |
 | All of Phase 1 (task created → ready for implementation) | `[workflow-state:planning]` (after Phase 1 summary) |
 | Codex inline Phase 1 | `[workflow-state:planning-inline]` |
-| Phase 2 + Phase 3.1–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
-| Codex inline Phase 2 + Phase 3.1–3.4 | `[workflow-state:in_progress-inline]` |
+| Phase 2 + Phase 3.2–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
+| Codex inline Phase 2 + Phase 3.2–3.4 | `[workflow-state:in_progress-inline]` |
 | After Phase 3.5 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
 
 ### Changing the per-turn prompt text

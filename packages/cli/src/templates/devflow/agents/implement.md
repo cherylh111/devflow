@@ -1,4 +1,4 @@
-﻿---
+---
 name: implement
 description: |
   Code implementation expert for the DevFlow channel runtime. Understands specs and task artifacts, then implements features. No git commit allowed.

@@ -1,10 +1,10 @@
-# 平台文件地图
+# Platform File Map
 
-本页按平台列出用户项目中常见的 DevFlow 文件位置。实际项目中是否存在某个平台目录，取决于用户运行过哪些 `devflow init --<platform>` 命令。
+This page lists common DevFlow file locations in a user project by platform. Whether a platform directory exists in an actual project depends on which `devflow init --<platform>` commands the user ran.
 
-## 矩阵
+## Matrix
 
-| 平台 | CLI 标志 | 主目录 | 技能目录 | 代理目录 | Hooks/extensions |
+| Platform | CLI flag | Main directory | Skill directory | Agent directory | Hooks/extensions |
 | --- | --- | --- | --- | --- | --- |
 | Claude Code | `--claude` | `.claude/` | `.claude/skills/` | `.claude/agents/` | `.claude/hooks/` + `.claude/settings.json` |
 | Cursor | `--cursor` | `.cursor/` | `.cursor/skills/` | `.cursor/agents/` | `.cursor/hooks.json` + `.cursor/hooks/` |
@@ -14,18 +14,21 @@
 | Kiro | `--kiro` | `.kiro/` | `.kiro/skills/` | `.kiro/agents/` | `.kiro/hooks/` |
 | Gemini CLI | `--gemini` | `.gemini/` | `.agents/skills/` | `.gemini/agents/` | `.gemini/settings.json` + `.gemini/hooks/` |
 | Antigravity | `--antigravity` | `.agent/` | `.agent/skills/` | Usually none | `.agent/workflows/` |
-| Windsurf | `--windsurf` | `.windsurf/` | `.windsurf/skills/` | Usually none | `.windsurf/workflows/` |
+| Devin | `--devin` | `.devin/` | `.devin/skills/` | Usually none | `.devin/workflows/` |
 | Qoder | `--qoder` | `.qoder/` | `.qoder/skills/` | `.qoder/agents/` | `.qoder/hooks/` + `.qoder/settings.json` |
 | CodeBuddy | `--codebuddy` | `.codebuddy/` | `.codebuddy/skills/` | `.codebuddy/agents/` | `.codebuddy/hooks/` + `.codebuddy/settings.json` |
 | GitHub Copilot | `--copilot` | `.github/` | `.github/skills/` | `.github/agents/` | `.github/copilot/hooks/` + prompts |
 | Factory Droid | `--droid` | `.factory/` | `.factory/skills/` | `.factory/droids/` | `.factory/hooks/` + settings |
-| Pi Agent | `--pi` | `.pi/` | `.pi/skills/` | `.pi/agents/` | `.pi/extensions/devflow/` + `.pi/settings.json` |
+| Pi Agent | `--pi` | `.pi/` | `.pi/skills/` | `.pi/agents/` | `.pi/extensions/devflow/` (native `devflow_subagent` tool) + `.pi/settings.json` |
+| Trae IDE | `--trae` | `.trae/` | `.trae/skills/` | `.trae/agents/` | `.trae/hooks/` + `.trae/hooks.json` |
+| Reasonix | `--reasonix` | `.reasonix/` | `.reasonix/skills/` | None — sub-agents are skills with `runAs: subagent` frontmatter | None |
+| ZCode | `--zcode` | `.zcode/` | `.agents/skills/` | `.zcode/cli/agents/` | pull-based prelude (no hooks) |
 
-## 能力分组
+## Capability Groups
 
-### DevFlow 子代理支持
+### DevFlow Sub-Agent Support
 
-这些平台通常有 `devflow-research`、`devflow-implement` 和 `devflow-check` 文件：
+These platforms usually have `devflow-research`, `devflow-implement`, and `devflow-check` files:
 
 - Claude Code
 - Cursor
@@ -38,37 +41,48 @@
 - GitHub Copilot
 - Factory Droid
 - Pi Agent
+- Trae IDE
+- Reasonix (delivered as skills with `runAs: subagent` under `.reasonix/skills/`, not as a separate `agents/` directory)
+- ZCode
 
-更改实现/检查/研究行为时，先查找对应平台的代理文件。
+When changing implementation/check/research behavior, look for the corresponding platform agent files first.
 
-### 主会话工作流平台
+### Native DevFlow Sub-Agent Tool
 
-这些平台更多依赖 workflows/skills 来引导主会话：
+Some platforms expose a first-class tool that the host runtime understands. The model calls it like any other tool and the host renders progress cards, validates the agent name against `.<platform>/agents/`, and enforces dispatch modes.
+
+- Pi Agent — `devflow_subagent` tool, defined in `.pi/extensions/devflow/index.ts`. Supports `single` / `parallel` / `chain` dispatch modes and emits live `devflow-subagent-progress` events.
+
+When changing sub-agent dispatch behavior on these platforms, edit the extension file, **not** the agent markdown — the agent markdown defines responsibilities, but the host extension owns dispatch, validation, and progress rendering.
+
+### Main-Session Workflow Platforms
+
+These platforms rely more on workflows/skills to guide the main session:
 
 - Kilo
 - Antigravity
-- Windsurf
+- Devin
 
-更改行为时，先检查 workflows 和 skills。不要假设 DevFlow 子代理一定存在。
+When changing behavior, inspect workflows and skills first. Do not assume DevFlow sub-agents exist.
 
 ### Shared `.agents/skills/`
 
-Codex 会写入共享 `.agents/skills/` 层。一些支持 agentskills.io 的工具也能读取此目录。如果用户希望多个兼容工具共享一个技能，优先考虑 `.agents/skills/`，但不要假设每个平台都会读取它。
+Codex writes the shared `.agents/skills/` layer. Some tools that support agentskills.io can also read this directory. If the user wants multiple compatible tools to share one skill, consider `.agents/skills/` first, but do not assume every platform reads it.
 
-## 修改平台文件时的决策规则
+## Decision Rules When Modifying Platform Files
 
-1. 用户指定平台：只修改该平台目录，除非共享 workflow/spec 文件也必须更改。
-2. 用户说“所有平台都应这样”：逐个平台同步等价入口点；不要只修改一个目录。
-3. 用户只说“我的 AI”：检查项目中实际存在的配置目录，并推断当前 AI 平台。
-4. 用户想要项目规则：优先使用 `.devflow/spec/` 或项目本地技能。
-5. 用户想要 DevFlow 行为：编辑 `.devflow/workflow.md` 以及平台 hooks/agents/skills/commands。
+1. User specified a platform: modify only that platform directory unless shared workflow/spec files must also change.
+2. User says "all platforms should do this": synchronize equivalent entry points platform by platform; do not modify only one directory.
+3. User only says "my AI": inspect the configuration directories that actually exist in the project and infer the current AI platform.
+4. User wants project rules: prefer `.devflow/spec/` or a project-local skill.
+5. User wants DevFlow behavior: edit `.devflow/workflow.md` plus platform hooks/agents/skills/commands.
 
-## 路径不一致时
+## When Paths Differ
 
-平台生态会变化，用户项目也可能已被定制。如果此表与本地文件不一致，以用户项目中的实际 settings/config 为准：
+Platform ecosystems change, and user projects may already be customized. If this table disagrees with local files, use the actual settings/config in the user project as authoritative:
 
-- 检查 settings 注册的 hook。
-- 检查 command/prompt/workflow 指向的脚本。
-- 根据代理文件中当前写明的读取规则判断行为。
+- Check the hook that settings registers.
+- Check the script that a command/prompt/workflow points to.
+- Judge behavior by the read rules currently written in the agent file.
 
-不要仅因为某个自定义文件不在此路径表中就删除它。
+Do not delete a custom file just because it is not listed in this path table.

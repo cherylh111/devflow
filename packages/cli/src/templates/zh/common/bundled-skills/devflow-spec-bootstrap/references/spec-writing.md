@@ -1,47 +1,47 @@
-# 规范编写
+# Spec Writing
 
-DevFlow specs 是给未来代理使用的编码指南。它们应解释如何在这个仓库中工作，而不是描述通用项目可能如何组织。
+DevFlow specs are coding guidance for future agents. They should explain how to work in this repository, not how a generic project might be organized.
 
-## 基于证据编写
+## Write From Evidence
 
-每条重要规则都应由以下之一支撑：
+Each important rule should be backed by one of these:
 
-- 展示推荐模式的源码文件。
-- 展示期望行为的测试文件。
-- 定义约定的项目文档。
-- 在多个文件中重复出现的模式。
+- A source file that demonstrates the preferred pattern.
+- A test file that shows expected behavior.
+- A project document that defines the convention.
+- A repeated pattern across multiple files.
 
-只有当短 snippet 能让规则更清晰时才使用它。优先链接到文件路径，并命名符号或行为。
+Use short snippets only when they make the rule clearer. Prefer linking to the file path and naming the symbol or behavior.
 
-## 文件结构
+## File Structure
 
-让 spec 树与项目保持一致：
+Keep the spec tree aligned with the project:
 
-- 保留 `index.md` 作为规范目录的导航文件。
-- 当开发者会独立查找主题时拆分 topic。
-- 当分开的文件会重复同一规则时合并 topic。
-- 删除不适用的模板文件。
-- 为模板遗漏的重要本地模式添加新文件。
+- Keep `index.md` as the navigation file for the spec directory.
+- Split topics when developers would look for them independently.
+- Merge topics when separate files would repeat the same rule.
+- Delete template files that do not apply.
+- Add new files for important local patterns the template missed.
 
-## 内容标准
+## Content Standards
 
-好的 spec section 包括：
+Good spec sections include:
 
-- 规则适用时机。
-- 要遵循的本地模式。
-- 证明该模式的源码或测试文件。
-- 常见错误或反模式。
-- 当验证命令或检查具体且可靠时，写出它们。
+- When the rule applies.
+- The local pattern to follow.
+- The source or test files that prove the pattern.
+- Common mistakes or anti-patterns.
+- Verification commands or checks when they are specific and reliable.
 
-避免：
+Avoid:
 
-- 占位 prose。
-- 通用框架建议。
-- 只能在一个代理宿主中工作的工具说明。
-- 长篇复制代码块。
-- 基于单个偶然实现细节的规则。
+- Placeholder prose.
+- Generic framework advice.
+- Tool instructions that only work in one agent host.
+- Long copied code blocks.
+- Rules based on a single accidental implementation detail.
 
-## 示例形状
+## Example Shape
 
 ```markdown
 ## Command Handlers
@@ -59,13 +59,12 @@ Reference files:
 Avoid passing raw `process.argv` or unvalidated config objects into shared helpers.
 ```
 
-## 最终检查
+## Final Pass
 
-完成前：
+Before finishing:
 
 ```bash
 grep -R "To be filled\\|TODO: fill\\|placeholder" .devflow/spec
 ```
 
-还要检查链接、index 文件，以及是否仍有任何 spec 描述的是模板而不是这个仓库。
-
+Also check links, index files, and whether any spec still describes a template rather than this repository.

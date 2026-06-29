@@ -1,4 +1,4 @@
-﻿---
+---
 name: check
 description: |
   Code quality auditor for the DevFlow channel runtime. Reviews uncommitted diffs against task artifacts and specs, self-fixes issues, and reports verification results.

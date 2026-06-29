@@ -1,15 +1,12 @@
 import { describe, expect, it, afterEach } from "vitest";
 import {
-  buildPullBasedPrelude,
   getPythonCommandForPlatform,
   replacePythonCommandLiterals,
   resolveAllAsSkillsNeutral,
   resolvePlaceholders,
   resolvePlaceholdersNeutral,
   resolveSkillsNeutral,
-  wrapWithSkillFrontmatter,
 } from "../../src/configurators/shared.js";
-import { setTemplateLanguage } from "../../src/templates/language.js";
 import { AI_TOOLS } from "../../src/types/ai-tools.js";
 import type { TemplateContext } from "../../src/types/ai-tools.js";
 
@@ -148,41 +145,6 @@ describe("getPythonCommandForPlatform", () => {
   it("returns python3 on macOS and Linux", () => {
     expect(getPythonCommandForPlatform("darwin")).toBe("python3");
     expect(getPythonCommandForPlatform("linux")).toBe("python3");
-  });
-});
-
-describe("localized skill wrappers and pull-based preludes", () => {
-  afterEach(() => {
-    setTemplateLanguage("en");
-  });
-
-  it("keeps English skill frontmatter and pull-based prelude as defaults", () => {
-    const skill = wrapWithSkillFrontmatter("devflow-before-dev", "Body");
-    expect(skill).toContain(
-      "Discovers and injects project-specific coding guidelines",
-    );
-    expect(skill).not.toContain("在实现前发现并注入");
-
-    const prelude = buildPullBasedPrelude("implement");
-    expect(prelude).toContain("Required: Load DevFlow Context First");
-    expect(prelude).toContain("Read the task's `prd.md`");
-    expect(prelude).not.toContain("必须先加载 DevFlow 上下文");
-  });
-
-  it("localizes skill frontmatter and pull-based prelude when language is zh", () => {
-    setTemplateLanguage("zh");
-
-    const skill = wrapWithSkillFrontmatter("devflow-before-dev", "Body");
-    expect(skill).toContain("在实现前发现并注入");
-    expect(skill).not.toContain(
-      "Discovers and injects project-specific coding guidelines",
-    );
-
-    const prelude = buildPullBasedPrelude("check");
-    expect(prelude).toContain("必须先加载 DevFlow 上下文");
-    expect(prelude).toContain("读取任务的 `prd.md`（需求）");
-    expect(prelude).not.toContain("Required: Load DevFlow Context First");
-    expect(prelude).not.toContain("Read the task's `prd.md`");
   });
 });
 
@@ -593,15 +555,15 @@ describe("resolveSkillsNeutral / resolveAllAsSkillsNeutral", () => {
     }
   });
 
-  it("resolveAllAsSkillsNeutral keeps the 5 shared skills byte-identical to resolveSkillsNeutral", () => {
+  it("resolveAllAsSkillsNeutral keeps shared common skills byte-identical to resolveSkillsNeutral", () => {
     const all = resolveAllAsSkillsNeutral(AI_TOOLS.codex.templateContext);
-    const fiveOnly = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
-    const sharedNames = new Set(fiveOnly.map((s) => s.name));
+    const commonSkills = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
+    const sharedNames = new Set(commonSkills.map((s) => s.name));
     const allShared = all.filter((s) => sharedNames.has(s.name));
-    expect(allShared.length).toBe(fiveOnly.length);
-    for (const five of fiveOnly) {
-      const match = allShared.find((s) => s.name === five.name);
-      expect(match?.content).toBe(five.content);
+    expect(allShared.length).toBe(commonSkills.length);
+    for (const skill of commonSkills) {
+      const match = allShared.find((s) => s.name === skill.name);
+      expect(match?.content).toBe(skill.content);
     }
   });
 });

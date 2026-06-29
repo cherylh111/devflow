@@ -1,4 +1,4 @@
-﻿# Spec Writing
+# Spec Writing
 
 DevFlow specs are coding guidance for future agents. They should explain how to work in this repository, not how a generic project might be organized.
 
@@ -68,4 +68,3 @@ grep -R "To be filled\\|TODO: fill\\|placeholder" .devflow/spec
 ```
 
 Also check links, index files, and whether any spec still describes a template rather than this repository.
-

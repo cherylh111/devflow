@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pyright: reportUnusedImport=false
 """
 Git and Session Context utilities.
 

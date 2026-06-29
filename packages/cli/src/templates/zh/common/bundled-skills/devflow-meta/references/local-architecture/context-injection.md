@@ -1,70 +1,68 @@
-# 本地上下文注入系统
+# Local Context Injection System
 
-DevFlow 上下文注入的目标是让 AI 在正确时间读取正确文件，而不是依赖模型记忆。在用户项目中，注入由 `.devflow/` 脚本与平台 hooks、agents 和 skills 共同实现。
+DevFlow context injection aims to make AI read the right files at the right time instead of relying on model memory. In a user project, injection is implemented by `.devflow/` scripts together with platform hooks, agents, and skills.
 
-## 注入的上下文类型
+## Injected Context Types
 
-| 类型 | 来源 | 用途 |
+| Type | Source | Purpose |
 | --- | --- | --- |
-| session context | `.devflow/scripts/get_context.py` | 当前开发者、git 状态、活动任务、活动任务列表、日志、包。 |
-| workflow context | `.devflow/workflow.md` | 当前 DevFlow 流程和下一步动作。 |
-| spec context | `.devflow/spec/` + task JSONL | 实现/检查期间必须遵循的规范和结构化知识。 |
-| task context | `.devflow/tasks/<task>/prd.md`, `design.md`, `implement.md`, `research/` | 当前任务需求、设计、执行计划、研究和选定知识条目。 |
-| platform context | Platform hooks/settings/agents | 让不同 AI 工具通过自身机制读取上述文件。 |
+| session context | `.devflow/scripts/get_context.py` | Current developer, git status, active task, active tasks, journal, packages. |
+| workflow context | `.devflow/workflow.md` | Current DevFlow flow and next action. |
+| spec context | `.devflow/spec/` + task JSONL | Specs that must be followed during implementation/checking. |
+| task context | `.devflow/tasks/<task>/prd.md`, `design.md`, `implement.md`, `research/` | Current task requirements, design, execution plan, and research. |
+| platform context | Platform hooks/settings/agents | Lets different AI tools read the files above through their own mechanisms. |
 
 ## session-start
 
-支持 session-start 的平台会在会话开始、清空、压缩或收到类似事件时注入 DevFlow 概览。注入内容通常包括：
+Platforms with session-start support inject a DevFlow overview when a session starts, clears, compacts, or receives a similar event. Injected content usually includes:
 
-- 工作流摘要。
-- 当前任务状态。
-- 活动任务。
-- 规范索引路径。
-- 开发者身份和 git 状态。
+- workflow summary.
+- current task status.
+- active tasks.
+- spec index paths.
+- developer identity and git status.
 
-如果用户觉得 AI 在新会话中不知道当前任务，先检查平台的 session-start hook 或等价机制是否已安装并运行。
+If the user feels the AI does not know the current task in a new session, first check whether the platform's session-start hook or equivalent mechanism is installed and running.
 
 ## workflow-state
 
-workflow-state 是围绕每个用户回合注入的轻量提示。它根据当前任务状态，从 `.devflow/workflow.md` 中选择一个块，例如 `no_task`、`planning`、`in_progress` 或 `completed`。
+workflow-state is a lightweight hint injected around each user turn. Based on current task status, it selects a block from `.devflow/workflow.md`, such as `no_task`, `planning`, `in_progress`, or `completed`.
 
-如果用户想更改“AI 在某个状态下接下来应该做什么”，先编辑 `.devflow/workflow.md` 中对应状态块。
+If the user wants to change "what the AI should do next in a given state," edit the corresponding state block in `.devflow/workflow.md` first.
 
-## 子代理上下文
+## sub-agent context
 
-实现和检查代理需要任务上下文。DevFlow 有两种加载模式：
+Implement and check agents need task context. DevFlow has two loading modes:
 
-1. **hook push**：平台 hook 在代理启动前注入 JSONL 引用的文件/知识，以及 `prd.md`、存在时的 `design.md` 和存在时的 `implement.md`。
-2. **agent pull**：代理定义指示代理在启动后读取活动任务、JSONL 上下文、知识条目和任务产物。
+1. **hook push**: a platform hook injects jsonl-referenced files plus `prd.md`, `design.md` if present, and `implement.md` if present before the agent starts.
+2. **agent pull**: the agent definition instructs the agent to read the active task, jsonl context, and task artifacts after startup.
 
-两种模式下，任务目录中的 JSONL 文件都是规范/研究/知识上下文清单。任务产物按以下顺序单独读取：`prd.md` -> `design.md if present` -> `implement.md if present`。
+In both modes, JSONL files in the task directory are the manifest for spec/research context. Task artifacts are read separately in this order: `prd.md` -> `design.md if present` -> `implement.md if present`.
 
-## JSONL 读取规则
+## JSONL Reading Rules
 
-`implement.jsonl` 和 `check.jsonl` 每行包含一个 JSON 对象：
+`implement.jsonl` and `check.jsonl` contain one JSON object per line:
 
 ```jsonl
 {"file": ".devflow/spec/backend/index.md", "reason": "Backend rules"}
-{"file": ".devflow/spec/backend/", "type": "directory", "reason": "Backend docs"}
-{"knowledge": "DFL-20260526-example", "type": "knowledge", "reason": "Relevant learning"}
 ```
 
-读取器应跳过没有 context 字段的种子行。`file` 条目加载仓库相对文件/目录。`knowledge`、`wiki` 或 `{"type":"knowledge","id":"..."}` 条目按 id 从 `.devflow/spec`、`.devflow/tasks` 或 `.devflow/workspace` 加载聚焦的结构化知识。配置 JSONL 时，AI 只应包含规范/研究/知识上下文，不要预注册即将修改的代码文件。
+Readers should skip seed rows without a `file` field. When configuring JSONL, the AI should include only spec/research files, not pre-register code files that will be modified.
 
-## 活动任务与上下文键
+## Active Task And Context Key
 
-活动任务状态位于 `.devflow/.runtime/sessions/`，并按会话隔离。Hooks 会尝试从平台事件、环境变量、转录路径或 `DEVFLOW_CONTEXT_ID` 解析上下文键。
+Active task state lives in `.devflow/.runtime/sessions/` and is isolated per session. Hooks try to resolve the context key from platform events, environment variables, transcript paths, or `DEVFLOW_CONTEXT_ID`.
 
-如果 shell 命令看不到相同上下文键，`task.py current --source` 可能报告没有活动任务。这种情况下，检查平台是否把会话身份传入 shell，而不是手写全局当前任务文件。
+If shell commands cannot see the same context key, `task.py current --source` may report no active task. In that case, check whether the platform passes session identity into the shell instead of hand-writing a global current-task file.
 
-## 本地定制点
+## Local Customization Points
 
-| 需求 | 编辑位置 |
+| Need | Edit location |
 | --- | --- |
-| 更改 session-start 注入内容 | 平台的 `session-start` hook 或插件文件。 |
-| 更改每回合 workflow-state 规则 | `.devflow/workflow.md` 中的 `[workflow-state:STATUS]` 块。平台 workflow-state hook 会逐字解析这些块，不嵌入后备文本。 |
-| 更改子代理如何读取上下文 | 平台代理定义、`inject-subagent-context` hook 或代理 prelude。 |
-| 更改 JSONL 验证/显示 | `.devflow/scripts/common/task_context.py`。 |
-| 更改活动任务解析 | `.devflow/scripts/common/active_task.py`。 |
+| Change session-start injected content | The platform's `session-start` hook or plugin file. |
+| Change per-turn workflow-state rules | `[workflow-state:STATUS]` block in `.devflow/workflow.md`. The platform workflow-state hook parses these blocks verbatim and embeds no fallback text. |
+| Change how sub-agents read context | Platform agent definitions, the `inject-subagent-context` hook, or agent preludes. |
+| Change JSONL validation/display | `.devflow/scripts/common/task_context.py`. |
+| Change active task resolution | `.devflow/scripts/common/active_task.py`. |
 
-修改上下文注入时，验证两件事：新会话能看到正确任务，子代理能看到正确任务产物/规范/研究/知识。
+When modifying context injection, verify two things: new sessions can see the correct task, and sub-agents can see the correct task artifacts/spec/research.

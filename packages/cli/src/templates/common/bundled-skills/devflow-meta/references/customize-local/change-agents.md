@@ -24,6 +24,8 @@ When the user wants to change `devflow-research`, `devflow-implement`, or `devfl
 | CodeBuddy | `.codebuddy/agents/devflow-*.md` |
 | Factory Droid | `.factory/droids/devflow-*.md` |
 | Pi Agent | `.pi/agents/devflow-*.md` |
+| Reasonix | `.reasonix/skills/devflow-*/SKILL.md` (subagent frontmatter) |
+| ZCode | `.zcode/cli/agents/devflow-*.md` |
 
 Use the actual paths in the user project as authoritative.
 

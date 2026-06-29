@@ -1,18 +1,18 @@
-# 更改本地 Agents
+# Change Local Agents
 
-当用户想更改 `devflow-research`、`devflow-implement` 或 `devflow-check` 行为时，编辑用户项目中的平台 agent 文件。
+When the user wants to change `devflow-research`, `devflow-implement`, or `devflow-check` behavior, edit platform agent files in the user project.
 
-## 先读取这些文件
+## Read These Files First
 
-1. 目标平台 agent 目录
+1. Target platform agent directory
 2. `.devflow/workflow.md` Phase 2 / research routing
-3. 当前任务 `prd.md`
-4. 当前任务 `implement.jsonl` / `check.jsonl`
-5. 相关 hook 或 agent prelude
+3. Current task `prd.md`
+4. Current task `implement.jsonl` / `check.jsonl`
+5. Relevant hook or agent prelude
 
-## 常见路径
+## Common Paths
 
-| 平台 | 路径 |
+| Platform | Path |
 | --- | --- |
 | Claude Code | `.claude/agents/devflow-*.md` |
 | Cursor | `.cursor/agents/devflow-*.md` |
@@ -24,31 +24,33 @@
 | CodeBuddy | `.codebuddy/agents/devflow-*.md` |
 | Factory Droid | `.factory/droids/devflow-*.md` |
 | Pi Agent | `.pi/agents/devflow-*.md` |
+| Reasonix | `.reasonix/skills/devflow-*/SKILL.md` (subagent frontmatter) |
+| ZCode | `.zcode/cli/agents/devflow-*.md` |
 
-以用户项目中的实际路径为准。
+Use the actual paths in the user project as authoritative.
 
-## 常见需求
+## Common Needs
 
-| 需求 | 要编辑的 agent |
+| Need | Which agent to edit |
 | --- | --- |
-| 研究必须写文件，而不只是聊天回复 | `devflow-research` |
-| 实现前必须读取某些本地 specs | `devflow-implement` + `implement.jsonl` 配置规则 |
-| 检查期间必须运行特定命令 | `devflow-check` |
-| Agent 不得修改某些目录 | 对应 agent 的写入边界说明 |
-| Agent 输出格式必须固定 | 对应 agent 的最终/报告说明 |
+| Research must write files, not only reply in chat | `devflow-research` |
+| Certain local specs must be read before implementation | `devflow-implement` + `implement.jsonl` configuration rules |
+| Specific commands must run during checking | `devflow-check` |
+| Agent must not modify certain directories | The corresponding agent's write boundary instructions |
+| Agent output format must be fixed | The corresponding agent's final/reporting instructions |
 
-## 修改原则
+## Modification Principles
 
-1. **保留角色边界**：research 调查并持久化；implement 编写实现；check 评审并修复。
-2. **不要把项目 specs 硬编码进 agents**：长期 specs 属于 `.devflow/spec/`；agents 负责读取它们。
-3. **明确读取顺序**：活动任务 -> PRD -> 信息 -> JSONL -> spec/research。
-4. **明确写入边界**：哪些目录可以写，哪些不可以写。
-5. **跨平台同步**：当用户配置了多个平台时，判断只改当前平台还是所有平台代理。
+1. **Preserve role boundaries**: research investigates and persists; implement writes implementation; check reviews and fixes.
+2. **Do not hard-code project specs into agents**: long-term specs belong in `.devflow/spec/`; agents are responsible for reading them.
+3. **Make read order explicit**: active task -> PRD -> info -> JSONL -> spec/research.
+4. **Make write boundaries explicit**: which directories may be written and which may not.
+5. **Synchronize across platforms**: when the user configured multiple platforms, decide whether to change only the current platform or all platform agents.
 
-## Agent Pull 平台
+## Agent Pull Platforms
 
-如果 agent 文件包含“启动后读取任务/上下文”的 prelude，编辑时不要移除这些步骤。否则 agent 将只依赖聊天上下文工作，并绕过 DevFlow 的核心机制。
+If an agent file contains a prelude for "read task/context after startup," do not remove those steps when editing. Otherwise the agent will work only from chat context and bypass DevFlow's core mechanism.
 
-## Hook Push 平台
+## Hook Push Platforms
 
-如果上下文由 hook 注入，agent 文件仍应保留职责边界。不要仅因为 hook 会注入上下文，就从 agent 中移除 PRD/spec 要求。
+If context is injected by a hook, the agent file should still retain responsibility boundaries. Do not remove PRD/spec requirements from the agent just because a hook injects context.

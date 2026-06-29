@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  collectPlatformTemplates,
+  PLATFORM_IDS,
+} from "../../src/configurators/index.js";
+import type { AITool } from "../../src/types/ai-tools.js";
+import {
   scriptsInit,
   commonInit,
   commonPaths,
@@ -11,16 +16,17 @@ import {
   commonTaskUtils,
   commonActiveTask,
   commonCliAdapter,
-  commonTrace,
   getDeveloperScript,
   initDeveloperScript,
   taskScript,
   getContextScript,
   addSessionScript,
-  knowledgeScript,
   workflowMdTemplate,
   gitignoreTemplate,
   getAllScripts,
+  getAllAgents,
+  implementAgentTemplate,
+  checkAgentTemplate,
 } from "../../src/templates/devflow/index.js";
 
 // =============================================================================
@@ -38,13 +44,11 @@ describe("devflow template constants", () => {
     commonTaskUtils,
     commonActiveTask,
     commonCliAdapter,
-    commonTrace,
     getDeveloperScript,
     initDeveloperScript,
     taskScript,
     getContextScript,
     addSessionScript,
-    knowledgeScript,
     workflowMdTemplate,
     gitignoreTemplate,
   };
@@ -80,6 +84,20 @@ describe("devflow template constants", () => {
     return match[1];
   }
 
+  function platformBlock(section: string, openingMarker: string): string {
+    const escaped = openingMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const closingMarker = openingMarker.replace("[", "[/");
+    const escapedClosing = closingMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(
+      `${escaped}\\r?\\n([\\s\\S]*?)\\r?\\n${escapedClosing}`,
+    );
+    const match = pattern.exec(section);
+    if (!match) {
+      throw new Error(`workflow.md block ${openingMarker} must exist`);
+    }
+    return match[0];
+  }
+
   it("all templates are non-empty strings", () => {
     for (const [name, content] of Object.entries(allTemplates)) {
       expect(content.length, `${name} should be non-empty`).toBeGreaterThan(0);
@@ -94,7 +112,6 @@ describe("devflow template constants", () => {
       commonActiveTask,
       getDeveloperScript,
       taskScript,
-      knowledgeScript,
     ];
     for (const script of pyScripts) {
       expect(
@@ -112,15 +129,6 @@ describe("devflow template constants", () => {
 
   it("workflowMdTemplate is markdown", () => {
     expect(workflowMdTemplate).toContain("#");
-  });
-
-  it("workflow.md documents knowledge entries in task context JSONL", () => {
-    const step = stepSection("1.3");
-    expect(step).toContain('"knowledge": "<entry-id>"');
-    expect(step).toContain("python3 ./.devflow/scripts/knowledge.py search");
-    expect(step).toContain("python3 ./.devflow/scripts/knowledge.py load <id>");
-    expect(step).toContain('add-context "$TASK_DIR" implement "knowledge:<id>"');
-    expect(step).toContain('add-context "$TASK_DIR" check "wiki:<id>"');
   });
 
   it("marketplace native workflow mirror matches the bundled workflow", () => {
@@ -165,6 +173,65 @@ describe("devflow template constants", () => {
     expect(block).toContain("Active task:");
     expect(block.toLowerCase()).toContain("class-2");
     expect(block).toMatch(/codex|copilot|gemini|qoder/);
+  });
+
+  it("[issue-zcode-repeat] pull-based platforms use the pull-based implement block, not hook auto-handles", () => {
+    const implement = stepSection("2.1");
+    const hookAutoBlock = platformBlock(
+      implement,
+      "[Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi]",
+    );
+    const pullBasedMarker =
+      "[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]";
+    const pullBasedBlock = platformBlock(implement, pullBasedMarker);
+
+    const workflowLabelByPlatform: Partial<Record<AITool, string>> = {
+      codex: "codex-sub-agent",
+      gemini: "Gemini",
+      qoder: "Qoder",
+      copilot: "Copilot",
+      zcode: "ZCode",
+      trae: "Trae",
+    };
+    // Pi templates keep a pull-based fallback, but workflow 2.1 routes Pi
+    // through the extension-backed context path.
+    const extensionBackedPreludeFallbackPlatforms = new Set<AITool>(["pi"]);
+    const generatedPullBasedLabels = PLATFORM_IDS.flatMap((id) => {
+      if (extensionBackedPreludeFallbackPlatforms.has(id)) {
+        return [];
+      }
+      const templates = collectPlatformTemplates(id);
+      const hasPullBasedPrelude =
+        templates !== undefined &&
+        [...templates.entries()].some(
+          ([filePath, content]) =>
+            /devflow-(implement|check)/.test(filePath) &&
+            content.includes("Required: Load DevFlow Context First"),
+        );
+      if (!hasPullBasedPrelude) {
+        return [];
+      }
+      const label = workflowLabelByPlatform[id];
+      expect(
+        label,
+        `${id} generates pull-based agent definitions but has no workflow marker mapping`,
+      ).toBeDefined();
+      return [label as string];
+    });
+
+    const pullBasedLabels = [...generatedPullBasedLabels, "Reasonix"];
+    for (const label of pullBasedLabels) {
+      expect(pullBasedBlock, `${label} must use pull-based 2.1 guidance`).toContain(
+        label,
+      );
+      expect(
+        hookAutoBlock,
+        `${label} must not use hook/plugin auto-handles 2.1 guidance`,
+      ).not.toContain(label);
+    }
+    expect(pullBasedBlock).toContain(
+      "The pull-based sub-agent definition auto-handles the context load requirement",
+    );
   });
 
   it("[issue-237] workflow.md in_progress breadcrumb self-exempts implement/check sub-agents", () => {
@@ -255,9 +322,7 @@ describe("getAllScripts", () => {
     expect(scripts.has("common/__init__.py")).toBe(true);
     expect(scripts.has("common/paths.py")).toBe(true);
     expect(scripts.has("common/active_task.py")).toBe(true);
-    expect(scripts.has("common/trace.py")).toBe(true);
     expect(scripts.has("task.py")).toBe(true);
-    expect(scripts.has("knowledge.py")).toBe(true);
     expect(scripts.has("get_developer.py")).toBe(true);
   });
 
@@ -277,15 +342,63 @@ describe("getAllScripts", () => {
     const scripts = getAllScripts();
     expect(scripts.get("__init__.py")).toBe(scriptsInit);
     expect(scripts.get("common/__init__.py")).toBe(commonInit);
-    expect(scripts.get("common/trace.py")).toBe(commonTrace);
     expect(scripts.get("task.py")).toBe(taskScript);
-    expect(scripts.get("knowledge.py")).toBe(knowledgeScript);
   });
 
   it("does not contain multi_agent entries", () => {
     const scripts = getAllScripts();
     for (const [key] of scripts) {
       expect(key, `${key} should not be a multi_agent script`).not.toContain("multi_agent");
+    }
+  });
+});
+
+// =============================================================================
+// getAllAgents — channel runtime agent definitions dispatched at init/update.
+// agent-loader.ts loads `.devflow/agents/<name>.md` and requires `---` YAML
+// frontmatter at the top with a flat `name: <name>` field. These tests pin the
+// contract so a future template edit can't silently break channel spawn.
+// =============================================================================
+
+describe("getAllAgents", () => {
+  it("ships implement and check agents", () => {
+    const agents = getAllAgents();
+    expect(agents.has("implement.md")).toBe(true);
+    expect(agents.has("check.md")).toBe(true);
+  });
+
+  it("values match exported constants", () => {
+    const agents = getAllAgents();
+    expect(agents.get("implement.md")).toBe(implementAgentTemplate);
+    expect(agents.get("check.md")).toBe(checkAgentTemplate);
+  });
+
+  it("each agent body starts with `---` frontmatter and a matching name field", () => {
+    const agents = getAllAgents();
+    for (const [file, content] of agents) {
+      expect(
+        /^---\r?\n/.test(content),
+        `${file} must start with --- frontmatter`,
+      ).toBe(true);
+      // Frontmatter must close on a standalone `---` line.
+      const frontmatterClose = /\r?\n---\r?\n/.exec(content.slice(4));
+      expect(
+        frontmatterClose?.index,
+        `${file} must have a closing --- frontmatter line`,
+      ).toBeGreaterThanOrEqual(0);
+      const frontmatterEnd = 4 + (frontmatterClose?.index ?? 0);
+      const frontmatter = content.slice(4, frontmatterEnd);
+      // The agent's `name:` field must match the file basename so
+      // `devflow channel spawn --agent <name>` resolves correctly.
+      const expectedName = file.replace(/\.md$/, "");
+      const nameLine = frontmatter
+        .split("\n")
+        .find((line) => /^name\s*:/.test(line));
+      expect(nameLine, `${file} must declare a name field`).toBeTruthy();
+      expect(
+        nameLine?.split(":")[1]?.trim(),
+        `${file} name field should equal "${expectedName}"`,
+      ).toBe(expectedName);
     }
   });
 });

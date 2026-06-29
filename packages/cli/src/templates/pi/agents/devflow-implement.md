@@ -2,7 +2,7 @@
 name: devflow-implement
 description: |
   Code implementation expert. Understands DevFlow specs and requirements, then implements features. No git commit allowed.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: read, write, edit, bash, find, grep
 ---
 # Implement Agent
 

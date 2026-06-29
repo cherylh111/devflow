@@ -41,7 +41,11 @@ import {
   type ProjectType,
   type DetectedPackage,
 } from "../utils/project-detector.js";
-import { initializeHashes, removeHash } from "../utils/template-hash.js";
+import {
+  initializeHashes,
+  removeHash,
+  updateHashes,
+} from "../utils/template-hash.js";
 import {
   NATIVE_WORKFLOW_ID,
   resolveWorkflowTemplate,
@@ -61,6 +65,7 @@ import {
   probeRegistryIndex,
   downloadTemplateById,
   downloadRegistryDirect,
+  collectDirectoryFiles,
   parseMarketplaceSource,
   selectMarketplaceTemplates,
   splitSelectorList,
@@ -865,7 +870,7 @@ async function handleReinit(
             ),
           ),
         );
-      } else {
+    } else {
         const answers = await inquirer.prompt<{ tools: string[] }>([
           {
             type: "checkbox",
@@ -883,6 +888,12 @@ async function handleReinit(
         platformsToAdd = answers.tools;
       }
     }
+
+    const unconfiguredPlatformsToAdd = platformsToAdd.filter((tool) => {
+      const platformId = resolveCliFlag(tool as CliFlag);
+      return platformId !== undefined && !configuredPlatforms.has(platformId);
+    });
+    await maybePromptStatuslineOptIn(options, unconfiguredPlatformsToAdd);
 
     const reinitWritten = startRecordingWrites(cwd);
     try {
@@ -907,7 +918,16 @@ async function handleReinit(
                 ),
               ),
             );
-            await configurePlatform(platformId, cwd);
+            await configurePlatform(platformId, cwd, {
+              withStatusline: options.withStatusline,
+            });
+            if (platformId === "claude-code" && options.withStatusline) {
+              console.log(
+                chalk.gray(
+                  "   → DevFlow statusLine installed (--with-statusline)",
+                ),
+              );
+            }
           }
         }
       }
@@ -1005,12 +1025,43 @@ async function handleReinit(
   return true;
 }
 
+/**
+ * Interactive opt-in for the Claude Code statusLine when `--with-statusline`
+ * was not passed. Fires only when Claude Code is among the platforms about to
+ * be configured and never in -y mode. Mutates `options.withStatusline` so the
+ * configurePlatform call sites and the install hint read the same answer; the
+ * `!== undefined` gate doubles as the asked-once-per-run guard.
+ */
+async function maybePromptStatuslineOptIn(
+  options: InitOptions,
+  toolKeys: string[],
+): Promise<void> {
+  if (options.yes || options.withStatusline !== undefined) return;
+  if (!toolKeys.includes(AI_TOOLS["claude-code"].cliFlag)) return;
+
+  const answer = await inquirer.prompt<{ withStatusline: boolean }>([
+    {
+      type: "confirm",
+      name: "withStatusline",
+      message:
+        "Install DevFlow statusLine for Claude Code? (status bar: model, context, branch, rate limits)",
+      default: false,
+    },
+  ]);
+  options.withStatusline = answer.withStatusline;
+}
+
 interface InitOptions {
   claude?: boolean;
   codex?: boolean;
   qoder?: boolean;
   codebuddy?: boolean;
   reasonix?: boolean;
+  devin?: boolean;
+  /** Deprecated alias for `devin` — Windsurf was renamed to Devin. */
+  windsurf?: boolean;
+  zcode?: boolean;
+  trae?: boolean;
   yes?: boolean;
   user?: string;
   force?: boolean;
@@ -1022,6 +1073,8 @@ interface InitOptions {
   append?: boolean;
   registry?: string;
   monorepo?: boolean;
+  /** Claude Code only: install the opt-in DevFlow statusLine (--with-statusline) */
+  withStatusline?: boolean;
   workflow?: string;
   workflowSource?: string;
   lang?: string;
@@ -1126,6 +1179,14 @@ export async function init(options: InitOptions): Promise<void> {
   if (isCwdHomedir() && !homedirBypassEnabled()) {
     console.error(chalk.red(homedirGuardMessage("init")));
     process.exit(1);
+  }
+
+  // Deprecated alias: --windsurf → --devin (Windsurf was renamed to Devin).
+  // Normalize here too so programmatic callers (not just the CLI action) map
+  // correctly. The CLI action prints the deprecation notice.
+  if (options.windsurf) {
+    options.devin = true;
+    delete options.windsurf;
   }
 
   const cwd = process.cwd();
@@ -1237,12 +1298,20 @@ export async function init(options: InitOptions): Promise<void> {
   const tasksDirEarly = path.join(cwd, PATHS.TASKS);
   const tasksEmptyEarly =
     !fs.existsSync(tasksDirEarly) || fs.readdirSync(tasksDirEarly).length === 0;
+  const hasTemplateRefreshRequest =
+    options.registry !== undefined ||
+    options.template !== undefined ||
+    options.templates !== undefined ||
+    options.categories !== undefined ||
+    options.workflow !== undefined ||
+    options.workflowSource !== undefined;
 
   if (
     !isFirstInit &&
     !options.force &&
     !options.skipExisting &&
-    !tasksEmptyEarly
+    !tasksEmptyEarly &&
+    !hasTemplateRefreshRequest
   ) {
     const reinitDone = await handleReinit(
       cwd,
@@ -1587,6 +1656,8 @@ export async function init(options: InitOptions): Promise<void> {
     );
     return;
   }
+
+  await maybePromptStatuslineOptIn(options, tools);
 
   // ==========================================================================
   // Template Selection (single-repo only; monorepo handles templates above)
@@ -2347,7 +2418,16 @@ export async function init(options: InitOptions): Promise<void> {
             ),
           ),
         );
-        await configurePlatform(platformId, cwd);
+        await configurePlatform(platformId, cwd, {
+          withStatusline: options.withStatusline,
+        });
+        if (platformId === "claude-code" && options.withStatusline) {
+          console.log(
+            chalk.gray(
+              "   → DevFlow statusLine installed (--with-statusline)",
+            ),
+          );
+        }
       }
     }
 
@@ -2371,6 +2451,12 @@ export async function init(options: InitOptions): Promise<void> {
 
   // Initialize template hashes for modification tracking
   const hashedCount = initializeHashes(cwd, { trackedPaths: writtenPaths });
+  if (registrySpecConfigToPersist) {
+    updateHashes(
+      cwd,
+      collectDirectoryFiles(path.join(cwd, PATHS.SPEC), PATHS.SPEC),
+    );
+  }
   if (hashedCount > 0) {
     console.log(
       chalk.gray(

@@ -12,7 +12,7 @@
  * 5. Platform Registry (beta.9, beta.13, beta.16)
  */
 
-import { execSync, spawnSync } from "node:child_process";
+import { execSync, spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -31,11 +31,9 @@ import { PATHS } from "../src/constants/paths.js";
 import {
   settingsTemplate as claudeSettingsTemplate,
   getAllAgents as getClaudeAgents,
+  getStatuslineHook,
 } from "../src/templates/claude/index.js";
-import {
-  getAllAgents as getCodexAgents,
-  getAllHooks as getCodexHooks,
-} from "../src/templates/codex/index.js";
+import { getAllHooks as getCodexHooks } from "../src/templates/codex/index.js";
 import { getAllHooks as getCopilotHooks } from "../src/templates/copilot/index.js";
 import { getSharedHookScripts } from "../src/templates/shared-hooks/index.js";
 import {
@@ -217,7 +215,6 @@ describe("regression: branch context in session records (issue-106)", () => {
 
 describe("regression: add_session.py runtime branch context (issue-106)", () => {
   let tmpDir: string;
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-session-"));
@@ -355,26 +352,25 @@ ${separator}
 
   function runAddSession(title: string, options?: { branch?: string }): void {
     const command = [
-      path.join(tmpDir, ".devflow", "scripts", "add_session.py"),
+      "python3",
+      JSON.stringify(
+        path.join(tmpDir, ".devflow", "scripts", "add_session.py"),
+      ),
       "--title",
-      title,
+      JSON.stringify(title),
       "--summary",
-      "Regression test session",
+      JSON.stringify("Regression test session"),
       "--no-commit",
     ];
     if (options?.branch) {
-      command.push("--branch", options.branch);
+      command.push("--branch", JSON.stringify(options.branch));
     }
 
-    const result = spawnSync(pythonCmd, command, {
+    execSync(command.join(" "), {
       cwd: tmpDir,
       encoding: "utf-8",
       env: { ...process.env, DEVFLOW_CONTEXT_ID: "session-a" },
     });
-    expect(
-      result.status,
-      `add_session.py failed:\n${result.stderr ?? ""}`,
-    ).toBe(0);
   }
 
   it("[issue-106] prefers explicit CLI branch over task.json and git", () => {
@@ -667,6 +663,18 @@ describe("regression: migration data integrity (beta.14)", () => {
     expect(claudeStatusLineDeletes).toEqual([]);
   });
 
+  it("[statusline-opt-in] statusline.py is not in claude's collected templates (update must not force-install it)", () => {
+    // The opt-in statusline (`devflow init --with-statusline`) must stay out
+    // of the unconditional template walk: analyzeChanges() classifies any
+    // collected-but-absent file as `newFiles` and installs it on update,
+    // which would force statusline onto opted-out projects.
+    const templates = collectPlatformTemplates("claude-code");
+    expect(templates).toBeDefined();
+    expect([...(templates?.keys() ?? [])]).not.toContain(
+      ".claude/hooks/statusline.py",
+    );
+  });
+
   it("[beta.14] rename/rename-dir migrations have 'to' field", () => {
     const allMigrations = getAllMigrations();
     const renames = allMigrations.filter(
@@ -724,7 +732,7 @@ describe("regression: update only configured platforms (beta.16)", () => {
       "kiro",
       "gemini",
       "antigravity",
-      "windsurf",
+      "devin",
       "qoder",
       "codebuddy",
       "copilot",
@@ -1417,494 +1425,6 @@ describe("regression: current-task path normalization", () => {
     expect(after.status).toBe("in_progress");
   });
 
-  it("[start-gate] task.py start blocks default placeholder PRD before status changes", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-    writeProjectFile(
-      path.join(".devflow", "tasks", "issue-106", "prd.md"),
-      [
-        "# Issue 106 task",
-        "",
-        "## Goal",
-        "",
-        "TBD.",
-        "",
-        "## Requirements",
-        "",
-        "- TBD",
-        "",
-        "## Acceptance Criteria",
-        "",
-        "- [ ] TBD",
-        "",
-      ].join("\n"),
-    );
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-placeholder" }),
-      },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("Start gate validation failed");
-    expect(result.stderr).toContain("default TBD placeholder");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("planning");
-    expect(
-      fs.existsSync(
-        path.join(
-          tmpDir,
-          ".devflow",
-          ".runtime",
-          "sessions",
-          "start-gate-placeholder.json",
-        ),
-      ),
-    ).toBe(false);
-  });
-
-  it("[start-gate] task.py start blocks missing PRD before status changes", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-    fs.rmSync(path.join(tmpDir, ".devflow", "tasks", "issue-106", "prd.md"), {
-      force: true,
-    });
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-missing-prd" }),
-      },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("Missing prd.md");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("planning");
-  });
-
-  it("[start-gate] task.py start blocks unresolved brainstorm headings", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-    writeProjectFile(
-      path.join(".devflow", "tasks", "issue-106", "prd.md"),
-      [
-        "# Issue 106 task",
-        "",
-        "## Goal",
-        "",
-        "Ship the feature.",
-        "",
-        "## Open Questions",
-        "",
-        "- Already resolved but not folded into requirements.",
-        "",
-        "## Acceptance Criteria",
-        "",
-        "- [ ] Feature works.",
-        "",
-      ].join("\n"),
-    );
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-brainstorm" }),
-      },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("unresolved brainstorm heading");
-    expect(result.stderr).toContain("Open Questions");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("planning");
-  });
-
-  it("[start-gate] task.py start blocks unresolved placeholder bullets", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-    writeProjectFile(
-      path.join(".devflow", "tasks", "issue-106", "prd.md"),
-      [
-        "# Issue 106 task",
-        "",
-        "## Goal",
-        "",
-        "Ship the feature.",
-        "",
-        "## Requirements",
-        "",
-        "- [ ] TODO",
-        "",
-        "## Acceptance Criteria",
-        "",
-        "- [ ] Feature works.",
-        "",
-      ].join("\n"),
-    );
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-placeholder-bullet" }),
-      },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("unresolved placeholder bullet");
-    expect(result.stderr).toContain("- [ ] TODO");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("planning");
-  });
-
-  it("[start-gate] task.py start blocks complex tasks missing design and implement plans", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    taskJson.meta = { complex: true };
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-complex" }),
-      },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("Complex task is missing design.md");
-    expect(result.stderr).toContain("Complex task is missing implement.md");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("planning");
-  });
-
-  it("[start-gate] task.py start force bypass records explicit validation warnings", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    taskJson.meta = { complex: true };
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106", "--force"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-force" }),
-      },
-    );
-
-    expect(result.status).toBe(0);
-    expect(result.stderr).toContain("bypassing start gate validation");
-    expect(result.stderr).toContain("Complex task is missing design.md");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("in_progress");
-    expect(
-      fs.existsSync(
-        path.join(
-          tmpDir,
-          ".devflow",
-          ".runtime",
-          "sessions",
-          "start-gate-force.json",
-        ),
-      ),
-    ).toBe(true);
-  });
-
-  it("[start-gate] task.py start allows missing JSONL unless sub-agent context is required", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    taskJson.meta = {};
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-    fs.rmSync(
-      path.join(tmpDir, ".devflow", "tasks", "issue-106", "implement.jsonl"),
-      { force: true },
-    );
-    fs.rmSync(
-      path.join(tmpDir, ".devflow", "tasks", "issue-106", "check.jsonl"),
-      { force: true },
-    );
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-inline-jsonl" }),
-      },
-    );
-
-    expect(result.status).toBe(0);
-    expect(result.stderr).not.toContain("implement.jsonl");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("in_progress");
-  });
-
-  it("[start-gate] task.py start blocks seed-only JSONL when sub-agent context is required", () => {
-    setupTaskRepo();
-    const taskJsonPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "task.json",
-    );
-    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    taskJson.status = "planning";
-    taskJson.meta = { requires_subagent_context: true };
-    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
-    for (const jsonlName of ["implement.jsonl", "check.jsonl"]) {
-      writeProjectFile(
-        path.join(".devflow", "tasks", "issue-106", jsonlName),
-        JSON.stringify({ _example: "seed row" }) + "\n",
-      );
-    }
-
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "start", ".devflow/tasks/issue-106"],
-      {
-        cwd: tmpDir,
-        encoding: "utf-8",
-        env: sessionEnv({ DEVFLOW_CONTEXT_ID: "start-gate-subagent" }),
-      },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("implement.jsonl has no curated context entries");
-    expect(result.stderr).toContain("check.jsonl has no curated context entries");
-    const after = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
-    expect(after.status).toBe("planning");
-  });
-
-  it("[task-progress] task.py progress init creates valid progress.json", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const output = execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress init .devflow/tasks/issue-106`,
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    expect(output.trim()).toBe(".devflow/tasks/issue-106/progress.json");
-    const progressPath = path.join(
-      tmpDir,
-      ".devflow",
-      "tasks",
-      "issue-106",
-      "progress.json",
-    );
-    const progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
-    expect(progress).toMatchObject({
-      schema_version: 1,
-      phase: "implement",
-      step: "2.1",
-      summary: "",
-      resume_hint: "",
-      current_item: null,
-      completed_items: [],
-      pending_items: [],
-      last_validation: null,
-      updated_by: "agent",
-    });
-    expect(typeof progress.updated_at).toBe("string");
-  });
-
-  it("[task-progress] task.py progress set rejects unknown fields", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [
-        taskScriptPath,
-        "progress",
-        "set",
-        ".devflow/tasks/issue-106",
-        "unknown_field",
-        "value",
-      ],
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("unknown progress field");
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".devflow", "tasks", "issue-106", "progress.json"),
-      ),
-    ).toBe(false);
-  });
-
-  it("[task-progress] task.py progress set rejects invalid enum values", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [
-        taskScriptPath,
-        "progress",
-        "set",
-        ".devflow/tasks/issue-106",
-        "phase",
-        "done",
-      ],
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("invalid phase");
-  });
-
-  it("[task-progress] task.py progress recover works without progress.json", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "progress", "recover", ".devflow/tasks/issue-106"],
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain("Task Progress Recovery");
-    expect(result.stdout).toContain("Progress file: missing");
-    expect(result.stdout).toContain("Artifacts: prd=True");
-    expect(result.stdout).toContain("Next workflow step: 2.1 implementation");
-  });
-
-  it("[task-progress] task.py progress recover reports progress and artifacts", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress init .devflow/tasks/issue-106`,
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-    execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress set .devflow/tasks/issue-106 resume_hint ${JSON.stringify("Run focused progress tests")}`,
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    const result = spawnSync(
-      pythonCmd,
-      [taskScriptPath, "progress", "recover", ".devflow/tasks/issue-106"],
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain("Progress: phase=implement step=2.1");
-    expect(result.stdout).toContain("Artifacts: prd=True design=False");
-    expect(result.stdout).toContain("JSONL: implement=1 curated");
-    expect(result.stdout).toContain("Next: Resume hint: Run focused progress tests");
-  });
-
-  it("[task-progress] task.py archive preserves progress.json", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} progress init .devflow/tasks/issue-106`,
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    );
-
-    const archivePath = execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} archive issue-106 --no-commit`,
-      { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
-    )
-      .trim()
-      .split(/\r?\n/)
-      .at(-1);
-
-    expect(archivePath).toMatch(
-      /^\.devflow\/tasks\/archive\/\d{4}-\d{2}\/issue-106$/,
-    );
-    expect(
-      fs.existsSync(path.join(tmpDir, archivePath ?? "", "progress.json")),
-    ).toBe(true);
-  });
-
   it("[session-current-task] task.py start writes session runtime state when DEVFLOW_CONTEXT_ID is set", () => {
     setupTaskRepo();
     const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
@@ -2081,21 +1601,6 @@ describe("regression: current-task path normalization", () => {
       status: string;
     };
     expect(beforeStart.status).toBe("planning");
-    writeProjectFile(
-      path.join(".devflow", "tasks", taskDir as string, "prd.md"),
-      [
-        "# R7 idempotent task",
-        "",
-        "## Goal",
-        "",
-        "Verify create followed by start keeps the same session pointer.",
-        "",
-        "## Acceptance Criteria",
-        "",
-        "- [ ] Start flips the task to in_progress.",
-        "",
-      ].join("\n"),
-    );
 
     // Now run start with the same session — must not error.
     let startStatus = 0;
@@ -2515,6 +2020,184 @@ describe("regression: current-task path normalization", () => {
     expect(output).toContain("Source: session:session-b");
     expect(output).toContain("State: stale");
     expect(output).not.toContain("issue-106");
+  });
+
+  it("[session-current-task] Claude statusline uses session-scoped task when session_id is present", () => {
+    setupTaskRepo();
+    writeLegacyCurrentTask(".devflow/tasks/issue-106");
+    writeProjectFile(
+      path.join(".devflow", "tasks", "session-task", "task.json"),
+      JSON.stringify(
+        {
+          title: "Session scoped task",
+          status: "in_progress",
+          priority: "P1",
+        },
+        null,
+        2,
+      ),
+    );
+    writeProjectFile(
+      path.join(".devflow", ".runtime", "sessions", "claude_status-a.json"),
+      JSON.stringify(
+        {
+          current_task: ".devflow/tasks/session-task",
+          platform: "claude",
+        },
+        null,
+        2,
+      ),
+    );
+    writeProjectFile(
+      path.join(".claude", "hooks", "statusline.py"),
+      getStatuslineHook(),
+    );
+
+    const nowSecs = Math.floor(Date.now() / 1000);
+    const output = runPython(
+      path.join(".claude", "hooks", "statusline.py"),
+      JSON.stringify({
+        session_id: "status-a",
+        model: { display_name: "Test" },
+        context_window: { used_percentage: 1, context_window_size: 1000 },
+        cost: { total_duration_ms: 0 },
+        rate_limits: {
+          five_hour: {
+            used_percentage: 17,
+            resets_at: nowSecs + 4 * 3600 + 31 * 60 + 60,
+          },
+          seven_day: {
+            used_percentage: 19,
+            resets_at: nowSecs + 2 * 86400 + 11 * 3600 + 60,
+          },
+        },
+      }),
+    );
+
+    expect(output).toContain("Session scoped task");
+    expect(output).toContain("[session]");
+    expect(output).not.toContain("Issue 106 task");
+    // Rate-limit display with reset countdown (opt-in statusline enhancement)
+    expect(output).toContain("5h 17%");
+    expect(output).toMatch(/\(reset 4h3[12]m\)/);
+    expect(output).toContain("7d 19%");
+    expect(output).toContain("(reset 2d11h)");
+  });
+
+  it("[session-current-task] Claude statusline ignores legacy .current-task without session context", () => {
+    setupTaskRepo();
+    writeLegacyCurrentTask(".devflow/tasks/issue-106");
+    writeProjectFile(
+      path.join(".claude", "hooks", "statusline.py"),
+      getStatuslineHook(),
+    );
+
+    const output = runPython(
+      path.join(".claude", "hooks", "statusline.py"),
+      JSON.stringify({
+        model: { display_name: "Test" },
+        context_window: { used_percentage: 1, context_window_size: 1000 },
+        cost: { total_duration_ms: 0 },
+      }),
+    );
+
+    expect(output).not.toContain("Issue 106 task");
+    expect(output).not.toContain("[global]");
+  });
+
+  it("[statusline-opt-in] Claude statusline tolerates ISO-8601 resets_at and missing seven_day (no crash)", () => {
+    setupTaskRepo();
+    writeProjectFile(
+      path.join(".claude", "hooks", "statusline.py"),
+      getStatuslineHook(),
+    );
+
+    // resets_at wire format is not pinned across Claude Code versions:
+    // epoch seconds and ISO-8601 strings have both been observed. The
+    // statusline must render the countdown for ISO too — and never crash.
+    const isoReset = new Date(
+      Date.now() + (4 * 3600 + 31 * 60 + 90) * 1000,
+    ).toISOString();
+    const output = runPython(
+      path.join(".claude", "hooks", "statusline.py"),
+      JSON.stringify({
+        model: { display_name: "Test" },
+        context_window: { used_percentage: 1, context_window_size: 1000 },
+        cost: { total_duration_ms: 0 },
+        rate_limits: {
+          five_hour: { used_percentage: 17, resets_at: isoReset },
+          // seven_day intentionally absent
+        },
+      }),
+    );
+
+    expect(output).toContain("5h 17%");
+    expect(output).toMatch(/\(reset 4h3[12]m\)/);
+    expect(output).not.toContain("7d");
+  });
+
+  function statuslineRateLimitPayload(): string {
+    const nowSecs = Math.floor(Date.now() / 1000);
+    return JSON.stringify({
+      model: { display_name: "Test" },
+      context_window: { used_percentage: 1, context_window_size: 1000 },
+      cost: { total_duration_ms: 0 },
+      rate_limits: {
+        five_hour: {
+          used_percentage: 17,
+          resets_at: nowSecs + 4 * 3600 + 31 * 60 + 60,
+        },
+        seven_day: {
+          used_percentage: 19,
+          resets_at: nowSecs + 2 * 86400 + 11 * 3600 + 60,
+        },
+      },
+    });
+  }
+
+  it("[statusline-opt-in] Claude statusline moves rate limits to their own line when COLUMNS is narrow", () => {
+    setupTaskRepo();
+    writeProjectFile(
+      path.join(".claude", "hooks", "statusline.py"),
+      getStatuslineHook(),
+    );
+
+    // COLUMNS is injected by Claude Code v2.1.153+. The split must be an
+    // explicit "\n": the status bar counts only newlines for its height,
+    // so relying on terminal auto-wrap misaligns rows.
+    const output = runPython(
+      path.join(".claude", "hooks", "statusline.py"),
+      statuslineRateLimitPayload(),
+      { COLUMNS: "60" },
+    );
+
+    const lines = output.trimEnd().split("\n");
+    expect(lines.length).toBe(2);
+    const [infoLine, rateLine] = lines;
+    expect(infoLine).not.toContain("5h");
+    expect(infoLine).not.toContain("7d");
+    expect(rateLine).toContain("5h 17%");
+    expect(rateLine).toContain("7d 19%");
+  });
+
+  it("[statusline-opt-in] Claude statusline stays single-line when COLUMNS is wide or unset", () => {
+    setupTaskRepo();
+    writeProjectFile(
+      path.join(".claude", "hooks", "statusline.py"),
+      getStatuslineHook(),
+    );
+
+    for (const env of [{ COLUMNS: "500" }, { COLUMNS: undefined }]) {
+      const output = runPython(
+        path.join(".claude", "hooks", "statusline.py"),
+        statuslineRateLimitPayload(),
+        env,
+      );
+      const lines = output.trimEnd().split("\n");
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain("5h 17%");
+      expect(lines[0]).toContain("7d 19%");
+    }
   });
 
   it("[session-current-task] Python session-start hooks resolve session backslash refs without stale pointer", () => {
@@ -3485,6 +3168,57 @@ describe("regression: current-task path normalization", () => {
     }
   });
 
+  it("[#356] inject-workflow-state.py exits when host leaves stdin open with no payload", async () => {
+    setupTaskRepo();
+    writeWorkflowStateHook();
+
+    const hookPath = path.join(
+      tmpDir,
+      ".devflow",
+      "hooks",
+      "inject-workflow-state.py",
+    );
+    const child = spawn(pythonCmd, [hookPath], {
+      cwd: tmpDir,
+      env: sessionEnv({ KIRO_PROJECT_DIR: tmpDir }),
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf-8");
+    child.stderr.setEncoding("utf-8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+
+    const result = await new Promise<{
+      code: number | null;
+      signal: NodeJS.Signals | null;
+      timedOut: boolean;
+    }>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        child.kill("SIGKILL");
+        resolve({ code: null, signal: "SIGKILL", timedOut: true });
+      }, 1500);
+      child.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.once("exit", (code, signal) => {
+        clearTimeout(timer);
+        resolve({ code, signal, timedOut: false });
+      });
+    });
+
+    expect(result.timedOut, stderr).toBe(false);
+    expect(result.code).toBe(0);
+    expect(stdout).toContain("<workflow-state>");
+  });
+
   // ------------------------------------------------------------
   // Legacy current_phase / next_action field removal (FP round 3 cleanup)
   // ------------------------------------------------------------
@@ -3621,127 +3355,6 @@ print(len(entries))
       stdio: ["pipe", "pipe", "pipe"],
     });
     expect(result.trim()).toBe("0");
-  });
-
-  it("[knowledge-context] inject-subagent-context.py loads knowledge entries from JSONL", () => {
-    const hookContent = getSharedHookScripts().find(
-      (h) => h.name === "inject-subagent-context.py",
-    )?.content;
-    expect(hookContent).toBeDefined();
-    const hookPath = path.join(tmpDir, "hook.py");
-    fs.writeFileSync(hookPath, hookContent as string, "utf-8");
-
-    const repoDir = path.join(tmpDir, "repo");
-    fs.mkdirSync(path.join(repoDir, ".devflow", "spec", "guides"), {
-      recursive: true,
-    });
-    fs.writeFileSync(
-      path.join(repoDir, ".devflow", "spec", "guides", "learnings.md"),
-      [
-        "# Learnings",
-        "",
-        '<spec-entry id="KNOW-HOOK-1" type="learning" keywords="hook">',
-        "Hook knowledge body marker.",
-        "</spec-entry>",
-        "",
-      ].join("\n"),
-      "utf-8",
-    );
-    fs.writeFileSync(
-      path.join(repoDir, "implement.jsonl"),
-      JSON.stringify({
-        knowledge: "KNOW-HOOK-1",
-        type: "knowledge",
-        reason: "test",
-      }) + "\n",
-      "utf-8",
-    );
-
-    const probeScript = `
-import importlib.util
-spec = importlib.util.spec_from_file_location("h", ${JSON.stringify(hookPath)})
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-entries = mod.read_jsonl_entries(${JSON.stringify(repoDir)}, "implement.jsonl")
-print(entries[0][0])
-print(entries[0][1])
-`;
-    const probePath = path.join(tmpDir, "probe-knowledge.py");
-    fs.writeFileSync(probePath, probeScript, "utf-8");
-    const result = execSync(`${pythonCmd} ${JSON.stringify(probePath)}`, {
-      cwd: tmpDir,
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    expect(result).toContain("knowledge:KNOW-HOOK-1");
-    expect(result).toContain("Source: .devflow/spec/guides/learnings.md");
-    expect(result).toContain("Hook knowledge body marker.");
-  });
-
-  it("[knowledge-context] task.py add-context writes and validates knowledge entries", () => {
-    setupTaskRepo();
-    const taskScriptPath = path.join(tmpDir, ".devflow", "scripts", "task.py");
-    const relTaskDir = ".devflow/tasks/issue-106";
-    writeProjectFile(path.join("src", "example.ts"), "export const ok = true;\n");
-    writeProjectFile(
-      path.join(".devflow", "spec", "guides", "learnings.md"),
-      [
-        "# Learnings",
-        "",
-        '<spec-entry id="KNOW-TASK-1" type="learning" keywords="task">',
-        "Task context knowledge marker.",
-        "</spec-entry>",
-        "",
-      ].join("\n"),
-    );
-    writeProjectFile(
-      path.join(".devflow", "tasks", "issue-106", "check.jsonl"),
-      "",
-    );
-
-    execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} add-context ${relTaskDir} implement knowledge:KNOW-TASK-1 "required learning"`,
-      { cwd: tmpDir, encoding: "utf-8" },
-    );
-
-    const implementJsonl = fs.readFileSync(
-      path.join(tmpDir, ".devflow", "tasks", "issue-106", "implement.jsonl"),
-      "utf-8",
-    );
-    expect(implementJsonl).toContain('"knowledge": "KNOW-TASK-1"');
-    expect(implementJsonl).toContain('"type": "knowledge"');
-
-    const listOutput = execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} list-context ${relTaskDir}`,
-      { cwd: tmpDir, encoding: "utf-8" },
-    );
-    expect(listOutput).toContain("[KNOWLEDGE] KNOW-TASK-1");
-
-    const validateOutput = execSync(
-      `${pythonCmd} ${JSON.stringify(taskScriptPath)} validate ${relTaskDir}`,
-      { cwd: tmpDir, encoding: "utf-8" },
-    );
-    expect(validateOutput).toContain("All validations passed");
-
-    fs.writeFileSync(
-      path.join(tmpDir, ".devflow", "tasks", "issue-106", "check.jsonl"),
-      JSON.stringify({ wiki: "MISSING-KNOWLEDGE", reason: "missing" }) + "\n",
-      "utf-8",
-    );
-    let failed = false;
-    try {
-      execSync(
-        `${pythonCmd} ${JSON.stringify(taskScriptPath)} validate ${relTaskDir}`,
-        { cwd: tmpDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      );
-    } catch (err) {
-      failed = true;
-      const e = err as { stdout?: string };
-      expect(e.stdout ?? "").toContain(
-        "Knowledge entry not found: MISSING-KNOWLEDGE",
-      );
-    }
-    expect(failed).toBe(true);
   });
 
   it("[init-context-removal] task.py validate treats seed-only jsonl as 0 errors", () => {
@@ -3914,7 +3527,7 @@ print(entries[0][1])
     }
   });
 
-  it("[workflow-state-r2] template workflow.md [workflow-state:planning] mentions artifact gates + optional jsonl manifests", () => {
+  it("[workflow-state-r2] template workflow.md [workflow-state:planning] mentions artifact gates + required jsonl curation", () => {
     const wf = templateWorkflowMd();
     const match = wf.match(
       /\[workflow-state:planning\]([\s\S]*?)\[\/workflow-state:planning\]/,
@@ -3923,9 +3536,82 @@ print(entries[0][1])
     const body = match?.[1] ?? "";
     expect(body).toMatch(/Lightweight: `prd\.md` can be enough/);
     expect(body).toMatch(/Complex: finish `prd\.md`, `design\.md`, and `implement\.md`/);
-    expect(body).toContain("task.json.meta.complex");
-    expect(body).toContain("task.json.meta.requires_subagent_context");
-    expect(body).toMatch(/implement\.jsonl|check\.jsonl/);
+    expect(body).toContain(
+      "curate `implement.jsonl` and `check.jsonl` as spec/research manifests before start",
+    );
+  });
+
+  it("[#292] workflow and brainstorm templates treat seed-only jsonl as not planning-ready", () => {
+    const wf = templateWorkflowMd();
+    expect(wf).not.toContain("seed-only manifests are tolerated by consumers");
+    expect(wf).not.toContain(
+      "curated when extra spec or research context is needed",
+    );
+    expect(wf).toContain(
+      'Ready gate: both `implement.jsonl` and `check.jsonl` must contain at least one real `{"file": "...", "reason": "..."}` entry before `task.py start`.',
+    );
+    expect(wf).toContain(
+      "Runtime consumers tolerate missing or seed-only manifests for compatibility, but that tolerance is not a planning-ready state.",
+    );
+    expect(wf).toContain(
+      "`implement.jsonl` and `check.jsonl` each contain at least one real curated entry (seed row does not count)",
+    );
+
+    const templateRoot = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "..",
+      "src",
+      "templates",
+    );
+    const brainstormFiles = [
+      "common/skills/brainstorm.md",
+      "codex/skills/brainstorm/SKILL.md",
+      "copilot/prompts/brainstorm.prompt.md",
+    ];
+
+    for (const relativePath of brainstormFiles) {
+      const content = fs.readFileSync(
+        path.join(templateRoot, relativePath),
+        "utf-8",
+      );
+      expect(content, relativePath).toContain(
+        "Sub-agent-dispatch tasks have real curated entries in both `implement.jsonl` and `check.jsonl`; seed-only manifests are not ready.",
+      );
+    }
+  });
+
+  it("[#320] brainstorm templates require lossless PRD convergence before start", () => {
+    const templateRoot = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "..",
+      "src",
+      "templates",
+    );
+    const brainstormFiles = [
+      "common/skills/brainstorm.md",
+      "codex/skills/brainstorm/SKILL.md",
+      "copilot/prompts/brainstorm.prompt.md",
+    ];
+
+    for (const relativePath of brainstormFiles) {
+      const content = fs.readFileSync(
+        path.join(templateRoot, relativePath),
+        "utf-8",
+      );
+      expect(content, relativePath).toContain(
+        "Before final review or `task.py start`, run the PRD convergence pass below.",
+      );
+      expect(content, relativePath).toContain("## PRD Convergence Pass");
+      expect(content, relativePath).toContain(
+        "Fold temporary brainstorm sections such as `What I already know`, `Assumptions`, and resolved `Open Questions`",
+      );
+      expect(content, relativePath).toContain(
+        "Preserve every file:line anchor, decision, constraint, requirement ID, and acceptance-criteria mapping.",
+      );
+      expect(content, relativePath).toContain(
+        "no unresolved temporary brainstorm sections, no duplicate facts across sections",
+      );
+    }
   });
 
   it("[workflow-state-r3-no_task] template workflow.md [workflow-state:no_task] block is present and well-formed", () => {
@@ -3962,21 +3648,17 @@ print(entries[0][1])
       "spec = importlib.util.spec_from_file_location('ss', pathlib.Path('.claude/hooks/session-start.py'))",
       "mod = importlib.util.module_from_spec(spec)",
       "spec.loader.exec_module(mod)",
-      "matched = '[workflow-state:planning]\\nbody\\n[/workflow-state:planning]'",
-      "mismatched = '[workflow-state:planning]\\nbody\\n[/workflow-state:in_progress]'",
-      "nested_orphan = '[workflow-state:planning]\\nbody1\\n[/workflow-state:other]\\ntail\\n[/workflow-state:planning]'",
+      "matched = '[workflow-state:planning]' + chr(10) + 'body' + chr(10) + '[/workflow-state:planning]'",
+      "mismatched = '[workflow-state:planning]' + chr(10) + 'body' + chr(10) + '[/workflow-state:in_progress]'",
+      "nested_orphan = '[workflow-state:planning]' + chr(10) + 'body1' + chr(10) + '[/workflow-state:other]' + chr(10) + 'tail' + chr(10) + '[/workflow-state:planning]'",
       "result = {'M': mod._strip_breadcrumb_tag_blocks(matched), 'X': mod._strip_breadcrumb_tag_blocks(mismatched), 'N': mod._strip_breadcrumb_tag_blocks(nested_orphan)}",
       "print(json.dumps(result))",
     ].join("; ");
-    const probeResult = spawnSync(pythonCmd, ["-c", probe], {
+    const output = execSync(`${pythonCmd} -c ${JSON.stringify(probe)}`, {
       cwd: tmpDir,
       encoding: "utf-8",
     });
-    expect(
-      probeResult.status,
-      `strip breadcrumb probe failed:\n${probeResult.stderr ?? ""}`,
-    ).toBe(0);
-    const lastLine = (probeResult.stdout ?? "")
+    const lastLine = output
       .split("\n")
       .filter((l) => l.startsWith("{"))
       .pop();
@@ -4102,7 +3784,7 @@ print(entries[0][1])
       { cwd: tmpDir, encoding: "utf-8" },
     );
 
-    expect(output).toContain("The Codex sub-agent definition auto-handles");
+    expect(output).toContain("The pull-based sub-agent definition auto-handles");
     expect(output).toContain(
       "Resolves the active task with `task.py current --source`",
     );
@@ -4475,7 +4157,7 @@ print(entries[0][1])
       { cwd: tmpDir, encoding: "utf-8" },
     );
 
-    // The [Kilo, Antigravity, Windsurf] inline block content surfaces:
+    // The [Kilo, Antigravity, Devin] inline block content surfaces:
     // it tells the main session to load devflow-before-dev directly.
     expect(output).toContain("devflow-before-dev");
     expect(output).toContain("Read `{TASK_DIR}/prd.md`");
@@ -4734,9 +4416,12 @@ describe("regression: platform additions (beta.9, beta.13, beta.16)", () => {
     expect(AI_TOOLS.antigravity.configDir).toBe(".agent/workflows");
   });
 
-  it("[windsurf] Windsurf platform is registered", () => {
-    expect(AI_TOOLS).toHaveProperty("windsurf");
-    expect(AI_TOOLS.windsurf.configDir).toBe(".windsurf/workflows");
+  it("[devin] Devin platform is registered (formerly Windsurf)", () => {
+    expect(AI_TOOLS).toHaveProperty("devin");
+    expect(AI_TOOLS.devin.configDir).toBe(".devin/workflows");
+    expect(AI_TOOLS.devin.name).toBe("Devin");
+    // Windsurf was renamed to Devin — the old key must be gone.
+    expect(AI_TOOLS).not.toHaveProperty("windsurf");
   });
 
   it("[qoder] Qoder platform is registered", () => {
@@ -4815,8 +4500,10 @@ describe("regression: cli_adapter platform support (beta.9, beta.13, beta.16)", 
     expect(commonCliAdapter).toContain(".agent");
   });
 
-  it("[windsurf] cli_adapter.py supports windsurf platform", () => {
-    expect(commonCliAdapter).toContain('"windsurf"');
+  it("[devin] cli_adapter.py supports devin platform (formerly windsurf)", () => {
+    expect(commonCliAdapter).toContain('"devin"');
+    expect(commonCliAdapter).toContain(".devin");
+    // Legacy .windsurf/ is still recognized for back-compat detection.
     expect(commonCliAdapter).toContain(".windsurf");
   });
 
@@ -5089,7 +4776,7 @@ describe("regression: cli_adapter platform support (beta.9, beta.13, beta.16)", 
     expect(commonCliAdapter).toContain(".kiro");
     expect(commonCliAdapter).toContain(".gemini");
     expect(commonCliAdapter).toContain(".agent");
-    expect(commonCliAdapter).toContain(".windsurf");
+    expect(commonCliAdapter).toContain(".devin");
     expect(commonCliAdapter).toContain(".qoder");
     expect(commonCliAdapter).toContain(".codebuddy");
     expect(commonCliAdapter).toContain(".github/copilot");
@@ -5315,7 +5002,10 @@ describe("regression: migration manifest consistency", () => {
         to: (n) => `.agent/skills/devflow-${n}/SKILL.md`,
       },
       {
-        id: "windsurf",
+        // Devin shipped as "windsurf" (.windsurf/) at 0.5.0-beta.0 — this
+        // historical manifest predates the Windsurf → Devin rename, so the
+        // rename entries here are still keyed on the old .windsurf/ paths.
+        id: "devin (legacy .windsurf/)",
         from: (n) => `.windsurf/workflows/devflow-${n}.md`,
         to: (n) => `.windsurf/skills/devflow-${n}/SKILL.md`,
       },
@@ -5418,16 +5108,16 @@ describe("regression: collectTemplates paths match init directory structure (0.3
     }
   });
 
-  it("[windsurf] windsurf uses workflows/ instead of commands/devflow/", () => {
-    const templates = collectPlatformTemplates("windsurf");
+  it("[devin] devin uses workflows/ instead of commands/devflow/", () => {
+    const templates = collectPlatformTemplates("devin");
     expect(templates).toBeInstanceOf(Map);
     if (!templates) return;
     const keys = [...templates.keys()];
     for (const key of keys) {
       expect(
-        key.startsWith(".windsurf/workflows/") ||
-          key.startsWith(".windsurf/skills/"),
-        `windsurf path should use workflows/ or skills/: ${key}`,
+        key.startsWith(".devin/workflows/") ||
+          key.startsWith(".devin/skills/"),
+        `devin path should use workflows/ or skills/: ${key}`,
       ).toBe(true);
     }
   });
@@ -5498,7 +5188,6 @@ describe("regression: parse_simple_yaml Python execution (0.3.8)", () => {
   // We can't import config.py directly because it has `from .paths import ...`
   let tmpDir: string;
   let extractedPy: string;
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "devflow-yaml-py-"));
@@ -5525,14 +5214,10 @@ describe("regression: parse_simple_yaml Python execution (0.3.8)", () => {
       "print(json.dumps(result))",
     ].join("\n");
     fs.writeFileSync(scriptFile, script);
-    const result = spawnSync(pythonCmd, [scriptFile], {
+    const out = execSync(`python3 ${JSON.stringify(scriptFile)}`, {
       encoding: "utf-8",
     });
-    expect(
-      result.status,
-      `yaml parser probe failed:\n${result.stderr ?? ""}`,
-    ).toBe(0);
-    return JSON.parse((result.stdout ?? "").trim());
+    return JSON.parse(out.trim());
   }
 
   it("nested single quotes inside double quotes are preserved", () => {
@@ -5665,20 +5350,20 @@ describe("regression: class-2 platforms use pull-based sub-agent context", () =>
           const content = fs.readFileSync(path.join(tmpDir, file), "utf-8");
           expect(content).toContain("Required: Load DevFlow Context First");
           expect(content).toContain("task.py current --source");
-          expect(content).toContain(".devflow/scripts/knowledge.py load <id>");
-          expect(content).toContain('"knowledge"');
-          expect(content).toContain('"wiki"');
         }
       });
 
-      it("[beta.22] prelude is injected exactly once, not duplicated", () => {
+      it("[beta.21] prelude is injected exactly once, not duplicated", () => {
+        // The codex toml source templates once carried an inline prelude that
+        // predated the code-injected prelude (injectPullBasedPreludeToml). The
+        // generated agent then contained the block twice. Source templates must
+        // stay prelude-free so the injector is the single source.
         for (const file of preludeAgents) {
           const content = fs.readFileSync(path.join(tmpDir, file), "utf-8");
-          const occurrences =
-            content.split("Required: Load DevFlow Context First").length - 1;
-          expect(occurrences, `${file} should have exactly one prelude`).toBe(
-            1,
-          );
+          const occurrences = content.split(
+            "Required: Load DevFlow Context First",
+          ).length - 1;
+          expect(occurrences, `${file} should have exactly one prelude`).toBe(1);
         }
       });
 
@@ -5718,22 +5403,6 @@ describe("regression: class-2 platforms use pull-based sub-agent context", () =>
       });
     });
   }
-
-  it("[beta.22] Codex source toml templates do not inline the pull-based prelude", () => {
-    const codexPreludeAgents = getCodexAgents().filter((agent) =>
-      ["devflow-implement", "devflow-check"].includes(agent.name),
-    );
-    expect(codexPreludeAgents.map((agent) => agent.name).sort()).toEqual([
-      "devflow-check",
-      "devflow-implement",
-    ]);
-
-    for (const agent of codexPreludeAgents) {
-      expect(agent.content).not.toContain(
-        "Required: Load DevFlow Context First",
-      );
-    }
-  });
 });
 
 describe("regression: copilot agents use YAML tools frontmatter", () => {
@@ -5750,6 +5419,11 @@ describe("regression: copilot agents use YAML tools frontmatter", () => {
   });
 
   it("writes Copilot agent tools as YAML lists", () => {
+    // implement / check agents intentionally do NOT declare any MCP tools in
+    // their source `tools:` list — explicit `mcp__exa__*` names silent-skip
+    // the agent on Claude Code when the Exa MCP server is not configured
+    // (#302). Copilot's transformer therefore emits only the local-tool
+    // equivalents.
     const content = fs.readFileSync(
       path.join(tmpDir, ".github/agents/devflow-implement.agent.md"),
       "utf-8",
@@ -5759,12 +5433,19 @@ describe("regression: copilot agents use YAML tools frontmatter", () => {
     expect(frontmatter).toContain(
       "tools:\n  - read\n  - edit\n  - execute\n  - search",
     );
+    expect(frontmatter).not.toContain("  - web");
+    expect(frontmatter).not.toContain("  - exa/*");
     expect(frontmatter).not.toContain(
       "tools: Read, Write, Edit, Bash, Glob, Grep",
     );
   });
 
   it("maps research agent MCP tools to Copilot tool names", () => {
+    // research is the one agent that legitimately needs external search.
+    // Its source uses the wildcard `mcp__*` (avoids the explicit-name
+    // silent-skip, opts into any MCP the user has configured) and the
+    // Copilot transformer maps that wildcard to the full set of supported
+    // Copilot MCP tool equivalents.
     const content = fs.readFileSync(
       path.join(tmpDir, ".github/agents/devflow-research.agent.md"),
       "utf-8",
@@ -5775,11 +5456,12 @@ describe("regression: copilot agents use YAML tools frontmatter", () => {
     expect(frontmatter).toContain("  - edit");
     expect(frontmatter).toContain("  - search");
     expect(frontmatter).toContain("  - execute");
-    expect(frontmatter).not.toContain("  - web");
-    expect(frontmatter).not.toContain("  - exa/*");
-    expect(frontmatter).not.toContain("  - chrome-devtools/*");
+    expect(frontmatter).toContain("  - web");
+    expect(frontmatter).toContain("  - exa/*");
+    expect(frontmatter).toContain("  - chrome-devtools/*");
     expect(frontmatter).not.toContain("mcp__exa__");
     expect(frontmatter).not.toContain("mcp__chrome-devtools__*");
+    expect(frontmatter).not.toContain("mcp__*");
     expect(frontmatter).not.toContain("Skill");
   });
 
@@ -6099,7 +5781,7 @@ describe("regression: Gemini CLI 0.40.x template compatibility (#224)", () => {
         `Codex and Gemini disagree on ${filePath} — last-writer-wins would corrupt the shared skill`,
       ).toBe(codexContent);
     }
-    // At least the 5 shared workflow skills + bundled devflow-meta files must
+    // At least the shared common skills + bundled devflow-meta files must
     // overlap. If this drops to 0 the assertion above is silently passing.
     expect(overlapCount).toBeGreaterThan(0);
   });
@@ -6150,19 +5832,19 @@ describe("regression: Gemini CLI 0.40.x template compatibility (#224)", () => {
     }
   });
 
-  it("[#224] needsCodexUpgrade looks for Codex-only command-as-skill markers, not bare `.agents/skills/` prefix", () => {
-    // Regression: with Gemini also writing to `.agents/skills/` (5 shared
-    // workflow skills only), the legacy-Codex detector previously triggered
+  it("[#224] needsCodexUpgrade looks for command-as-skill markers, not bare `.agents/skills/` prefix", () => {
+    // Regression: with Gemini also writing to `.agents/skills/` (shared common
+    // skills only), the legacy-Codex detector previously triggered
     // a false-positive `.codex/` install on every fresh `init --gemini` +
-    // `update` cycle. The fix narrows detection to Codex-only files
-    // (`devflow-continue/SKILL.md`, `devflow-finish-work/SKILL.md`) which
-    // Gemini does NOT write (it puts continue/finish-work under
-    // `.gemini/commands/devflow/*.toml`).
+    // `update` cycle. The fix narrows detection to command-as-skill files
+    // (`devflow-continue/SKILL.md`, `devflow-finish-work/SKILL.md`) and the
+    // update integration suite covers platforms such as ZCode that share
+    // `.agents/skills/` but must not trigger the legacy Codex backfill.
     const updateSrc = fs.readFileSync(
       path.resolve(repoRoot, "packages/cli/src/commands/update.ts"),
       "utf-8",
     );
-    // Must check for Codex-only command-as-skill markers, not the bare
+    // Must check for command-as-skill markers, not the bare
     // `.agents/skills/` prefix.
     expect(updateSrc).toMatch(
       /\.agents\/skills\/devflow-continue\/SKILL\.md/,
@@ -6201,7 +5883,6 @@ describe("regression: session-start.py f-string Python <=3.11 compat (0.5.2)", (
     "packages/cli/src/templates/copilot/hooks/session-start.py",
     "packages/cli/src/templates/shared-hooks/session-start.py",
   ];
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
   // Match an f-string (f"..." or f'...') whose `{...}` body contains a `\`.
   // Backslash inside expression part is illegal under PEP 498.
   const F_STRING_BACKSLASH = /f(?:"[^"\n]*\{[^}\n]*\\[^}\n]*\}[^"\n]*"|'[^'\n]*\{[^}\n]*\\[^}\n]*\}[^'\n]*')/;
@@ -6222,7 +5903,7 @@ describe("regression: session-start.py f-string Python <=3.11 compat (0.5.2)", (
       // regex test above is the primary gate. On macOS system Python 3.9 or
       // any CI runner with python3 < 3.12 this is a hard catch.
       const r = spawnSync(
-        pythonCmd,
+        "python3",
         [
           "-c",
           `import ast,sys; ast.parse(open(sys.argv[1], encoding='utf-8').read()); print('OK')`,
@@ -6233,9 +5914,10 @@ describe("regression: session-start.py f-string Python <=3.11 compat (0.5.2)", (
       // If python3 is unavailable on the runner, skip silently — the regex
       // assertion above already covers the regression deterministically.
       if (r.error && (r.error as NodeJS.ErrnoException).code === "ENOENT") return;
+      if (process.platform === "win32" && r.status === 9009 && !(r.stderr ?? "").trim()) return;
       expect(
         r.status,
-        `${pythonCmd} ast.parse failed for ${rel}:\n${r.stderr ?? ""}`,
+        `python3 ast.parse failed for ${rel}:\n${r.stderr ?? ""}`,
       ).toBe(0);
       expect(r.stdout ?? "").toContain("OK");
     });

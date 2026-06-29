@@ -1,64 +1,56 @@
-# 继续当前任务
+# Continue Current Task
 
-恢复当前任务，并根据 `.devflow/workflow.md` 找到正确的阶段和步骤。
+Resume work on the current task — pick up at the right phase/step in `.devflow/workflow.md`.
 
 ---
 
-## 第 1 步：加载当前上下文
+## Step 1: Load Current Context
 
 ```bash
 {{PYTHON_CMD}} ./.devflow/scripts/get_context.py
 ```
 
-确认当前任务、git 状态和最近提交。
+Confirms: current task, git state, recent commits.
 
-## 第 2 步：加载 Phase Index
-
-如果可用，先加载紧凑恢复上下文：
-
-```bash
-{{PYTHON_CMD}} ./.devflow/scripts/task.py progress recover
-```
-
-把它作为恢复提示。如果它提示缺少 `progress.json`，或者旧项目中没有该命令，则继续使用下面的产物/status 路由。
+## Step 2: Load the Phase Index
 
 ```bash
 {{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase
 ```
 
-显示 Plan / Execute / Finish 的阶段索引、路由规则和 skill 映射。
+Shows the Phase Index (Plan / Execute / Finish) with routing + skill mapping.
 
-## 第 3 步：判断当前位置
+## Step 3: Decide Where You Are
 
-根据 `get_context.py` 输出的活跃任务 `status` 和已有产物路由：
+`get_context.py` shows the active task's `status` field. Route by `status` + artifact presence. This command replaces the user needing to remember the DevFlow flow; it does not itself approve implementation.
 
-- `status=planning` 且没有 `prd.md`：进入 **1.1**，加载 `devflow-brainstorm`
-- `status=planning` 且只有 `prd.md`：判断轻量或复杂。轻量任务可进入 **1.4** 审核；复杂任务回到 **1.1** 补 `design.md` 和 `implement.md`
-- `status=planning` 且复杂产物齐全但 jsonl 未整理：进入 **1.3**
-- `status=planning` 且必需产物齐全、jsonl 已整理或 inline mode：进入 **1.4**，请求 start review，用户确认后才运行 `task.py start`
-- `status=in_progress` 且尚未开始实现：进入 **2.1**
-- `status=in_progress` 且实现完成但未检查：进入 **2.2**
-- `status=in_progress` 且检查通过：进入 **3.1**
-- `status=completed`：通常立即归档，进入 archive flow
+- `status=planning` + no `prd.md` → **1.1** (load `devflow-brainstorm`)
+- `status=planning` + `prd.md` only → decide whether the task is lightweight or complex. Lightweight can move to **1.4** review; complex returns to **1.1** to add `design.md` + `implement.md`.
+- `status=planning` + complex artifacts complete + sub-agent jsonl not curated (only the seed `_example` row) → **1.3**
+- `status=planning` + required artifacts complete + required jsonl curated or inline mode → **1.4** (ask for start review; only run `task.py start` after user confirms)
+- `status=in_progress` + implementation not started → **2.1**
+- `status=in_progress` + implementation done, not yet checked → **2.2**
+- `status=in_progress` + check passed → **3.3** (spec update) → **3.4** (commit)
+- `status=completed` (rare; usually archived immediately) → archive flow
 
-阶段规则：
+Phase rules (full detail in `.devflow/workflow.md`):
 
-1. 每个阶段内按顺序执行，`[required]` 步骤不能跳过。
-2. `[once]` 步骤在对应产物已存在时视为完成。只有轻量任务可以只需要 `prd.md`；复杂任务还需要 `design.md` 和 `implement.md`。
-3. 如果发现需求或设计有缺口，可以回到更早阶段。
+1. Run steps **in order** within a phase — `[required]` steps must not be skipped
+2. `[once]` steps are already done if the required output exists. `prd.md` alone can be enough only for lightweight tasks; complex tasks also need `design.md` and `implement.md`.
+3. You may go back to an earlier phase if discoveries require it
 
-## 第 4 步：加载具体步骤
+## Step 4: Load the Specific Step
 
-确认要恢复的步骤后运行：
+Once you know which step to resume at:
 
 ```bash
 {{PYTHON_CMD}} ./.devflow/scripts/get_context.py --mode phase --step <X.X> --platform {{CLI_FLAG}}
 ```
 
-按加载出的指令执行。每个 `[required]` 步骤完成后进入下一步。
+Follow the loaded instructions. After each `[required]` step completes, move to the next.
 
 ---
 
-## 参考
+## Reference
 
-完整工作流和阶段详情位于 `.devflow/workflow.md`。本命令只是入口，权威指引在那里。
+Full workflow and detailed phase steps live in `.devflow/workflow.md`. This command is only an entry point — the canonical guidance is there.

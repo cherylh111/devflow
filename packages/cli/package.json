@@ -1,6 +1,6 @@
 {
   "name": "@enpd/devflow",
-  "version": "0.6.0-rc.0",
+  "version": "0.6.5",
   "description": "AI capabilities grow like ivy — DevFlow provides the structure to guide them along a disciplined path",
   "type": "module",
   "main": "./dist/index.js",

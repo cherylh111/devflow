@@ -39,20 +39,17 @@ const SCRIPT_PATHS = [
   "common/types.py",
   "common/tasks.py",
   "common/task_context.py",
-  "common/task_progress.py",
   "common/task_store.py",
   "common/session_context.py",
   "common/packages_context.py",
   "common/workflow_phase.py",
   "common/devflow_config.py",
   "common/safe_commit.py",
-  "common/trace.py",
   "get_developer.py",
   "init_developer.py",
   "task.py",
   "get_context.py",
   "add_session.py",
-  "knowledge.py",
 ] as const;
 
 function readScriptTemplate(
@@ -80,7 +77,6 @@ export const commonGit = readScriptTemplate("common/git.py");
 export const commonTypes = readScriptTemplate("common/types.py");
 export const commonTasks = readScriptTemplate("common/tasks.py");
 export const commonTaskContext = readScriptTemplate("common/task_context.py");
-export const commonTaskProgress = readScriptTemplate("common/task_progress.py");
 export const commonTaskStore = readScriptTemplate("common/task_store.py");
 export const commonSessionContext = readScriptTemplate(
   "common/session_context.py",
@@ -95,7 +91,6 @@ export const commonDevFlowConfig = readScriptTemplate(
   "common/devflow_config.py",
 );
 export const commonSafeCommit = readScriptTemplate("common/safe_commit.py");
-export const commonTrace = readScriptTemplate("common/trace.py");
 
 // Python scripts - main
 export const getDeveloperScript = readScriptTemplate("get_developer.py");
@@ -103,7 +98,6 @@ export const initDeveloperScript = readScriptTemplate("init_developer.py");
 export const taskScript = readScriptTemplate("task.py");
 export const getContextScript = readScriptTemplate("get_context.py");
 export const addSessionScript = readScriptTemplate("add_session.py");
-export const knowledgeScript = readScriptTemplate("knowledge.py");
 
 // Configuration files
 export const workflowMdTemplate = readEnglishTemplate("workflow.md");

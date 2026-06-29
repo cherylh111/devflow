@@ -1,125 +1,184 @@
-# 打破循环 - 深度 Bug 分析
+# Break the Loop - Deep Bug Analysis
 
-调试完成后，使用此 skill 做深度分析，打破“修 bug -> 忘记 -> 重复”的循环。
+When debug is complete, use this for deep analysis to break the "fix bug -> forget -> repeat" cycle.
 
 ---
 
-## 分析框架
+## Analysis Framework
 
-从以下 5 个维度分析刚刚修复的 bug：
+Analyze the bug you just fixed from these 5 dimensions:
 
-### 1. 根因类别
+### 1. Root Cause Category
 
-这个 bug 属于哪个类别？
+Which category does this bug belong to?
 
-| 类别 | 特征 | 示例 |
+| Category | Characteristics | Example |
 |----------|-----------------|---------|
-| **A. 缺失 Spec** | 没有记录该如何做 | 新功能没有 checklist |
-| **B. 跨层契约** | 层与层之间接口不清楚 | API 返回格式与预期不同 |
-| **C. 变更传播失败** | 改了一处，漏了其他处 | 改了函数签名，漏改调用点 |
-| **D. 测试覆盖缺口** | 单元测试通过，集成失败 | 单独可用，组合后破坏 |
-| **E. 隐式假设** | 代码依赖未文档化的假设 | 时间戳秒 vs 毫秒 |
+| **A. Missing Spec** | No documentation on how to do it | New feature without checklist |
+| **B. Cross-Layer Contract** | Interface between layers unclear | API returns different format than expected |
+| **C. Change Propagation Failure** | Changed one place, missed others | Changed function signature, missed call sites |
+| **D. Test Coverage Gap** | Unit test passes, integration fails | Works alone, breaks when combined |
+| **E. Implicit Assumption** | Code relies on undocumented assumption | Timestamp seconds vs milliseconds |
 
-### 2. 修复为何失败（如适用）
+### 2. Why Fixes Failed (if applicable)
 
-如果成功前尝试过多次修复，分析每次失败：
+If you tried multiple fixes before succeeding, analyze each failure:
 
-- **表面修复**：修了症状，没有修根因
-- **范围不完整**：找到了根因，但没有覆盖所有情况
-- **工具限制**：grep 漏掉了，type check 不够严格
-- **心智模型**：一直盯着同一层，没有跨层思考
+- **Surface Fix**: Fixed symptom, not root cause
+- **Incomplete Scope**: Found root cause, didn't cover all cases
+- **Tool Limitation**: grep missed it, type check wasn't strict
+- **Mental Model**: Kept looking in same layer, didn't think cross-layer
 
-### 3. 预防机制
+### 3. Prevention Mechanisms
 
-哪些机制可以防止它再次发生？
+What mechanisms would prevent this from happening again?
 
-| 类型 | 描述 | 示例 |
+| Type | Description | Example |
 |------|-------------|---------|
-| **文档** | 写下来，让大家知道 | 更新 thinking guide |
-| **架构** | 从结构上让错误无法发生 | 类型安全 wrappers |
-| **编译时** | 严格类型检查，无逃逸口 | 签名变更导致编译错误 |
-| **运行时** | 监控、告警、扫描 | 检测孤立实体 |
-| **测试覆盖** | E2E 测试、集成测试 | 验证完整流程 |
-| **代码评审** | Checklist、PR template | “Did you check X?” |
+| **Documentation** | Write it down so people know | Update thinking guide |
+| **Architecture** | Make the error impossible structurally | Type-safe wrappers |
+| **Compile-time** | Strict type checking, no escape hatches | Signature change causes compile error |
+| **Runtime** | Monitoring, alerts, scans | Detect orphan entities |
+| **Test Coverage** | E2E tests, integration tests | Verify full flow |
+| **Code Review** | Checklist, PR template | "Did you check X?" |
 
-### 4. 系统性扩展
+### 4. Systematic Expansion
 
-这个 bug 揭示了哪些更广泛的问题？
+What broader problems does this bug reveal?
 
-- **类似问题**：哪里还可能存在这个问题？
-- **设计缺陷**：是否存在根本性的架构问题？
-- **流程缺陷**：开发流程是否需要改进？
-- **知识缺口**：团队是否缺少某些理解？
+- **Similar Issues**: Where else might this problem exist?
+- **Design Flaw**: Is there a fundamental architecture issue?
+- **Process Flaw**: Is there a development process improvement?
+- **Knowledge Gap**: Is the team missing some understanding?
 
-### 5. 知识沉淀
+### 5. Knowledge Capture
 
-把洞察固化进系统：
+Solidify insights into the system:
 
-- [ ] 更新 `.devflow/spec/guides/` thinking guides
-- [ ] 更新相关 `.devflow/spec/` docs
-- [ ] 创建 issue 记录（如适用）
-- [ ] 为根因修复创建 feature ticket
-- [ ] 如需要，更新 check guidelines
+- [ ] Update `.devflow/spec/guides/` thinking guides
+- [ ] Update relevant `.devflow/spec/` docs
+- [ ] Create issue record (if applicable)
+- [ ] Create feature ticket for root fix
+- [ ] Update check guidelines if needed
 
 ---
 
-## 输出格式
+## Output Format
 
-请按此格式输出分析：
+Please output analysis in this format:
 
 ```markdown
-## Bug Analysis: [简短描述]
+## Bug Analysis: [Short Description]
 
-### 1. 根因类别
-- **Category**: [A/B/C/D/E] - [类别名称]
-- **Specific Cause**: [详细描述]
+### 1. Root Cause Category
+- **Category**: [A/B/C/D/E] - [Category Name]
+- **Specific Cause**: [Detailed description]
 
-### 2. 修复为何失败（如适用）
-1. [第一次尝试]: [为何失败]
-2. [第二次尝试]: [为何失败]
+### 2. Why Fixes Failed (if applicable)
+1. [First attempt]: [Why it failed]
+2. [Second attempt]: [Why it failed]
 ...
 
-### 3. 预防机制
-| 优先级 | 机制 | 具体动作 | 状态 |
+### 3. Prevention Mechanisms
+| Priority | Mechanism | Specific Action | Status |
 |----------|-----------|-----------------|--------|
 | P0 | ... | ... | TODO/DONE |
 
-### 4. 系统性扩展
-- **Similar Issues**: [列出有类似问题的位置]
-- **Design Improvement**: [架构层面的建议]
-- **Process Improvement**: [开发流程建议]
+### 4. Systematic Expansion
+- **Similar Issues**: [List places with similar problems]
+- **Design Improvement**: [Architecture-level suggestions]
+- **Process Improvement**: [Development process suggestions]
 
-### 5. 知识沉淀
-- [ ] [要更新的文档 / 要创建的 ticket]
+### 5. Knowledge Capture
+- [ ] [Documents to update / tickets to create]
 ```
 
 ---
 
-## 核心理念
+## Core Philosophy
 
-> **调试的价值不在于修好这个 bug，而在于让这一类 bug 不再发生。**
+> **The value of debugging is not in fixing the bug, but in making this class of bugs never happen again.**
 
-三层洞察：
-1. **战术**：如何修复这个 bug
-2. **战略**：如何预防这一类 bug
-3. **哲学**：如何扩展思考模式
+Three levels of insight:
+1. **Tactical**: How to fix THIS bug
+2. **Strategic**: How to prevent THIS CLASS of bugs
+3. **Philosophical**: How to expand thinking patterns
 
-30 分钟分析可以节省未来 30 小时调试。
+30 minutes of analysis saves 30 hours of future debugging.
+
+
+## Thinking Framework: Bayesian Reasoning
+
+When multiple root causes are plausible and evidence is incomplete, update your beliefs proportionally to new evidence rather than clinging to initial assumptions.
+
+### Step 1: Establish Priors
+
+Before investigating, state what you believe and why:
+
+| Hypothesis | Prior | Reasoning |
+|------------|-------|-----------|
+| H1: [cause A] | 40% | Most common for this pattern |
+| H2: [cause B] | 30% | Plausible given environment |
+| H3: [other] | 30% | Catch-all |
+
+Priors must sum to 100%. If you can't assign probabilities, investigate first.
+
+### Step 2: Observe Evidence
+
+Document what you found — be specific about reliability:
+
+- What exactly did you observe?
+- How reliable? (test output > log message > user report > hunch)
+- Could multiple hypotheses explain this?
+
+### Step 3: Update Beliefs
+
+For each hypothesis, ask: **How likely is this evidence if this hypothesis were true?**
+
+Direction of update matters more than calculation:
+- Evidence strongly predicted by H1 → H1 probability increases
+- Evidence contradicts H2 → H2 probability decreases
+- Evidence equally likely under all → no update
+
+### Step 4: Seek Discriminating Evidence
+
+Don't gather more of the same. Find evidence that **differs strongly** between top hypotheses.
+
+> If H1 and H3 are close: "What would I see if H1 is true but not if H3 is true?" Then check for that.
+
+### Step 5: State Confidence
+
+| Confidence | Action |
+|------------|--------|
+| 90%+ | Proceed with fix, monitor |
+| 70-90% | Proceed, add fallback check |
+| 50-70% | Test hypothesis before committing |
+| <50% | Need more evidence, don't guess |
+
+Never express binary certainty when evidence is incomplete. Use "most likely", "plausible but unlikely", "worth investigating".
+
+### Common Fallacies
+
+| Fallacy | Example | Correction |
+|---------|---------|------------|
+| **Base rate neglect** | "Test failed → code is broken" | How often do tests fail for other reasons? |
+| **Confirmation bias** | "Must be a race condition, let me find race evidence" | Actively seek evidence AGAINST your top hypothesis |
+| **Anchoring** | "Last time it was caching, probably caching again" | Establish priors from current context, not yesterday's bug |
 
 ---
 
-## 分析后：立即行动
+## After Analysis: Immediate Actions
 
-**重要**：完成上述分析后，必须立即：
+**IMPORTANT**: After completing the analysis above, you MUST immediately:
 
-1. **更新 spec/guides** - 不要只列 TODO，要实际更新相关文件：
-   - 如果是跨平台问题 → 更新 `cross-platform-thinking-guide.md`
-   - 如果是跨层问题 → 更新 `cross-layer-thinking-guide.md`
-   - 如果是代码复用问题 → 更新 `code-reuse-thinking-guide.md`
-   - 如果是领域特定问题 → 更新 `backend/*.md` 或 `frontend/*.md`
+1. **Update spec/guides** - Don't just list TODOs, actually update the relevant files:
+   - If it's a cross-platform issue → update `cross-platform-thinking-guide.md`
+   - If it's a cross-layer issue → update `cross-layer-thinking-guide.md`
+   - If it's a code reuse issue → update `code-reuse-thinking-guide.md`
+   - If it's domain-specific → update `backend/*.md` or `frontend/*.md`
 
-2. **同步模板** - 更新 `.devflow/spec/` 后，同步到 `src/templates/markdown/spec/`
+2. **Sync templates** - After updating `.devflow/spec/`, sync to `src/templates/markdown/spec/`
 
-3. **提交 spec 更新** - 这是主要输出，而不只是分析文本
+3. **Commit the spec updates** - This is the primary output, not just the analysis text
 
-> **如果分析只停留在聊天里，就没有价值。价值在于更新后的 specs。**
+> **The analysis is worthless if it stays in chat. The value is in the updated specs.**

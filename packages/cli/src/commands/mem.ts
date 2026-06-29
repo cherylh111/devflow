@@ -142,6 +142,7 @@ const VALID_PLATFORMS: readonly string[] = [
   "claude",
   "codex",
   "opencode",
+  "pi",
   "all",
 ];
 
@@ -573,7 +574,7 @@ function cmdExtract(argv: Argv): void {
 
 function cmdHelp(): void {
   if (localized("en", "zh") === "zh") {
-    console.log(`devflow mem - 列出/搜索 Claude/Codex/OpenCode 会话
+    console.log(`devflow mem - 列出/搜索 Claude/Codex/OpenCode/Pi 会话
 
 命令：
   list                          列出会话（未指定命令时的默认命令）
@@ -584,7 +585,7 @@ function cmdHelp(): void {
   projects                      列出活跃项目 cwd 和会话数量，用于发现 search 的 --cwd
 
 参数：
-  --platform claude|codex|opencode|all   默认 all
+  --platform claude|codex|opencode|pi|all   默认 all
   --since YYYY-MM-DD                     起始日期（包含）
   --until YYYY-MM-DD                     截止日期（包含）
   --global                               包含所有项目（默认限制在当前 cwd）
@@ -593,7 +594,7 @@ function cmdHelp(): void {
   --grep KW                              extract/context：按关键词过滤回合（多词为 AND）
   --phase brainstorm|implement|all       extract：按 DevFlow brainstorm 窗口切片
                                          （默认 all；brainstorm = [task.py create, task.py start)；
-                                         支持 Claude/Codex；OpenCode 会警告并返回全部）
+                                         支持 Claude/Codex/Pi；OpenCode 会警告并返回全部）
   --turns N                              context：返回命中回合数（默认 3）
   --around N                             context：每个命中周围的上下文回合数（默认 1）
   --max-chars N                          context：总字符预算（默认 6000，约 1500 token）
@@ -610,7 +611,7 @@ function cmdHelp(): void {
 `);
     return;
   }
-  console.log(`devflow mem — list/search Claude/Codex/OpenCode sessions
+  console.log(`devflow mem — list/search Claude/Codex/OpenCode/Pi sessions
 
 commands:
   list                          list sessions (default if no command)
@@ -622,7 +623,7 @@ commands:
                                 use this to discover which --cwd to pass to search
 
 flags:
-  --platform claude|codex|opencode|all   default all
+  --platform claude|codex|opencode|pi|all   default all
   --since YYYY-MM-DD                     inclusive lower bound
   --until YYYY-MM-DD                     inclusive upper bound
   --global                               include all projects (default: cwd-scoped)
@@ -631,7 +632,7 @@ flags:
   --grep KW                              extract / context: filter turns by keyword (multi-token AND)
   --phase brainstorm|implement|all       extract: slice by DevFlow brainstorm windows
                                          (default all; brainstorm = [task.py create, task.py start);
-                                         Claude/Codex supported; OpenCode warns + returns all)
+                                         Claude/Codex/Pi supported; OpenCode warns + returns all)
   --turns N                              context: number of hit turns to return (default 3)
   --around N                             context: turns of surrounding context per hit (default 1)
   --max-chars N                          context: total char budget (default 6000, ~1500 tokens)

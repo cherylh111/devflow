@@ -24,9 +24,25 @@ vi.mock("node:child_process", () => ({
   execSync: vi.fn().mockReturnValue(""),
 }));
 
-vi.mock("giget", () => ({
-  downloadTemplate: vi.fn(),
+const registryDownload = vi.hoisted(() => ({
+  files: new Map<string, string>(),
 }));
+
+vi.mock("giget", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  return {
+    downloadTemplate: vi.fn(
+      async (_source: string, options: { dir: string }) => {
+        for (const [relativePath, content] of registryDownload.files) {
+          const targetPath = path.join(options.dir, relativePath);
+          fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+          fs.writeFileSync(targetPath, content, "utf-8");
+        }
+      },
+    ),
+  };
+});
 
 // === Imports ===
 
@@ -35,8 +51,6 @@ import { VERSION } from "../../src/constants/version.js";
 import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
 import { computeHash } from "../../src/utils/template-hash.js";
 import { execSync } from "node:child_process";
-import { setTemplateLanguage } from "../../src/templates/language.js";
-import { downloadTemplate } from "giget";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
@@ -49,6 +63,7 @@ describe("init() integration", () => {
     vi.spyOn(process, "cwd").mockReturnValue(tmpDir);
     vi.spyOn(console, "log").mockImplementation(noop);
     vi.spyOn(console, "error").mockImplementation(noop);
+    registryDownload.files.clear();
     vi.mocked(execSync).mockClear();
     vi.mocked(execSync).mockImplementation(((cmd: string) => {
       const expectedPythonCmd =
@@ -63,7 +78,6 @@ describe("init() integration", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    setTemplateLanguage("en");
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -76,15 +90,8 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, PATHS.WORKSPACE))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, PATHS.TASKS))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, PATHS.SPEC))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, PATHS.AGENTS))).toBe(true);
-    expect(
-      fs.existsSync(path.join(tmpDir, PATHS.AGENTS, "implement.md")),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, PATHS.AGENTS, "check.md"))).toBe(
-      true,
-    );
 
-    // Default platform: claude
+    // Default init-exposed platform: Claude Code
     expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".codex"))).toBe(false);
@@ -94,9 +101,7 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
-      false,
-    );
+    expect(fs.existsSync(path.join(tmpDir, ".devin", "workflows"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".github", "copilot"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".factory"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".pi"))).toBe(false);
@@ -121,78 +126,6 @@ describe("init() integration", () => {
         ),
       ),
     ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(
-          tmpDir,
-          ".claude",
-          "skills",
-          "devflow-session-insight",
-          "SKILL.md",
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".claude", "skills", "devflow-use", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".claude", "skills", "devflow-diagnose", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".claude", "skills", "devflow-prototype", "SKILL.md"),
-      ),
-    ).toBe(true);
-  });
-
-  it("creates Chinese templates when --lang zh is selected", async () => {
-    await init({ yes: true, codex: true, lang: "zh" });
-
-    const config = fs.readFileSync(
-      path.join(tmpDir, DIR_NAMES.WORKFLOW, "config.yaml"),
-      "utf-8",
-    );
-    expect(config).toContain("language: zh");
-
-    const agentsMd = fs.readFileSync(path.join(tmpDir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("DevFlow 使用说明");
-
-    const specIndex = fs.readFileSync(
-      path.join(tmpDir, PATHS.SPEC, "backend", "index.md"),
-      "utf-8",
-    );
-    expect(specIndex).toContain("后端开发规范");
-
-    const codexAgent = fs.readFileSync(
-      path.join(tmpDir, ".codex", "agents", "devflow-implement.toml"),
-      "utf-8",
-    );
-    expect(codexAgent).toContain("实现 Agent");
-
-    const sharedSkill = fs.readFileSync(
-      path.join(tmpDir, ".agents", "skills", "devflow-before-dev", "SKILL.md"),
-      "utf-8",
-    );
-    expect(sharedSkill).toContain("写代码前");
-    const devflowUseSkill = fs.readFileSync(
-      path.join(tmpDir, ".agents", "skills", "devflow-use", "SKILL.md"),
-      "utf-8",
-    );
-    expect(devflowUseSkill).toContain("使用 DevFlow");
-    const diagnoseSkill = fs.readFileSync(
-      path.join(tmpDir, ".agents", "skills", "devflow-diagnose", "SKILL.md"),
-      "utf-8",
-    );
-    expect(diagnoseSkill).toContain("DevFlow 诊断");
-    const prototypeSkill = fs.readFileSync(
-      path.join(tmpDir, ".agents", "skills", "devflow-prototype", "SKILL.md"),
-      "utf-8",
-    );
-    expect(prototypeSkill).toContain("DevFlow 原型");
   });
 
   it("#1b does not print the promotional pain-point block", async () => {
@@ -222,9 +155,7 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
-      false,
-    );
+    expect(fs.existsSync(path.join(tmpDir, ".devin", "workflows"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".github", "copilot"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".factory"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".pi"))).toBe(false);
@@ -235,30 +166,29 @@ describe("init() integration", () => {
     ).toBe(true);
   });
 
-  it("#3 multi platform creates all selected init-supported platform directories", async () => {
+  it("#3 multi platform creates all selected init-exposed platform directories", async () => {
     await init({
       yes: true,
-      codebuddy: true,
       claude: true,
-      qoder: true,
       codex: true,
+      qoder: true,
+      codebuddy: true,
+      reasonix: true,
     });
 
-    expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".codex"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".agents", "skills"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".opencode"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, ".codex"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".agents", "skills"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".agent", "workflows"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".kiro", "skills"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
-      false,
-    );
+    expect(fs.existsSync(path.join(tmpDir, ".qoder"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".codebuddy"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".reasonix"))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, ".devin", "workflows"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".github", "copilot"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".factory"))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, ".pi"))).toBe(false);
   });
 
@@ -293,32 +223,6 @@ describe("init() integration", () => {
     expect(
       fs.existsSync(
         path.join(tmpDir, ".agents", "skills", "devflow-meta", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".agents", "skills", "devflow-use", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".agents", "skills", "devflow-diagnose", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(tmpDir, ".agents", "skills", "devflow-prototype", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(
-          tmpDir,
-          ".agents",
-          "skills",
-          "devflow-prototype",
-          "prototype-findings-template.md",
-        ),
       ),
     ).toBe(true);
     expect(
@@ -377,18 +281,6 @@ describe("init() integration", () => {
     expect(trackedPaths).toContain(
       ".agents/skills/devflow-spec-bootstrap/references/spec-writing.md",
     );
-    expect(trackedPaths).toContain(
-      ".agents/skills/devflow-session-insight/SKILL.md",
-    );
-    expect(trackedPaths).toContain(
-      ".agents/skills/devflow-session-insight/references/cli-quick-reference.md",
-    );
-    expect(trackedPaths).toContain(".agents/skills/devflow-use/SKILL.md");
-    expect(trackedPaths).toContain(".agents/skills/devflow-diagnose/SKILL.md");
-    expect(trackedPaths).toContain(".agents/skills/devflow-prototype/SKILL.md");
-    expect(trackedPaths).toContain(
-      ".agents/skills/devflow-prototype/prototype-findings-template.md",
-    );
   });
 
   it("#3g qoder platform creates .qoder/commands + .qoder/skills", async () => {
@@ -440,34 +332,24 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
   });
 
-  it("#3i ignores legacy platform option keys that are not init choices", async () => {
-    await init({
-      yes: true,
-      cursor: true,
-      opencode: true,
-      kilo: true,
-      kiro: true,
-      gemini: true,
-      antigravity: true,
-      windsurf: true,
-      copilot: true,
-      droid: true,
-      pi: true,
-    } as unknown as Parameters<typeof init>[0]);
+  it("#3o reasonix platform emits devflow-start skill without runAs:subagent", async () => {
+    await init({ yes: true, reasonix: true });
 
-    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".cursor"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".opencode"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".kilocode"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".kiro", "skills"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".gemini"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".agent", "workflows"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".windsurf", "workflows"))).toBe(
-      false,
+    // Reasonix is agentCapable && !hasHooks → devflow-start ships as a plain
+    // user-invocable skill. It must NOT carry the `runAs: subagent` frontmatter
+    // — that field is reserved for devflow-implement / devflow-check which run
+    // as isolated subagent loops.
+    const startSkill = path.join(
+      tmpDir,
+      ".reasonix",
+      "skills",
+      "devflow-start",
+      "SKILL.md",
     );
-    expect(fs.existsSync(path.join(tmpDir, ".github", "copilot"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".factory"))).toBe(false);
-    expect(fs.existsSync(path.join(tmpDir, ".pi"))).toBe(false);
+    expect(fs.existsSync(startSkill)).toBe(true);
+    expect(fs.readFileSync(startSkill, "utf-8")).not.toContain(
+      "runAs: subagent",
+    );
   });
 
   it("#4 force mode overwrites previously modified files", async () => {
@@ -845,80 +727,139 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(tmpDir, DIR_NAMES.WORKFLOW))).toBe(false);
   });
 
-  it("#20b -y --registry --categories pulls matching remote marketplace templates", async () => {
+  it("#21 -y --registry records direct spec registry source and tracks downloaded spec files", async () => {
+    registryDownload.files.set("index.md", "# remote spec\n");
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            version: 1,
-            templates: [
-              {
-                id: "common-spec",
-                type: "spec",
-                name: "Common Spec",
-                path: "specs/common",
-                tags: ["common"],
-              },
-              {
-                id: "uware-skill",
-                type: "skill",
-                name: "Uware Skill",
-                path: "skills/uware-skill",
-                tags: ["uware"],
-              },
-              {
-                id: "other-spec",
-                type: "spec",
-                name: "Other Spec",
-                path: "specs/other",
-                tags: ["other"],
-              },
-            ],
-          }),
-          { status: 200 },
-        ),
-      ),
+      vi.fn().mockResolvedValue({
+        status: 404,
+        ok: false,
+      }),
     );
-    vi.mocked(downloadTemplate).mockImplementation(async (source, options) => {
-      const dir = options?.dir;
-      if (!dir) return undefined;
-      fs.mkdirSync(dir, { recursive: true });
-      if (String(source).includes("uware-skill")) {
-        fs.writeFileSync(path.join(dir, "SKILL.md"), "remote skill\n");
-      } else {
-        fs.writeFileSync(path.join(dir, "rules.md"), "remote spec\n");
-      }
-      return undefined;
-    });
 
     await init({
       yes: true,
-      registry: "gh:myorg/registry/marketplace",
-      categories: "common,uware",
+      registry: `gitlab:local/registry/spec`,
+      overwrite: true,
     });
 
-    expect(
+    const config = fs.readFileSync(
+      path.join(tmpDir, DIR_NAMES.WORKFLOW, "config.yaml"),
+      "utf-8",
+    );
+    expect(config).toContain("registry:");
+    expect(config).toContain("spec:");
+    expect(config).toContain("source: gitlab:local/registry/spec");
+
+    const hashFile = JSON.parse(
       fs.readFileSync(
-        path.join(tmpDir, ".devflow", "spec", "rules.md"),
+        path.join(tmpDir, DIR_NAMES.WORKFLOW, ".template-hashes.json"),
         "utf-8",
       ),
-    ).toBe("remote spec\n");
-    expect(
+    ) as { hashes?: Record<string, string> };
+    expect(hashFile.hashes?.[".devflow/spec/index.md"]).toBe(
+      computeHash("# remote spec\n"),
+    );
+  });
+
+  it("#22 -y --registry --template records marketplace template source and tracks downloaded spec files", async () => {
+    registryDownload.files.set("index.md", "# golang spec\n");
+    const index = JSON.stringify({
+      version: 1,
+      templates: [
+        {
+          id: "golang-spec",
+          type: "spec",
+          name: "Golang",
+          path: "backend",
+        },
+      ],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(index),
+      }),
+    );
+
+    await init({
+      yes: true,
+      registry: "gitlab:local/registry/marketplace",
+      template: "golang-spec",
+      overwrite: true,
+    });
+
+    const config = fs.readFileSync(
+      path.join(tmpDir, DIR_NAMES.WORKFLOW, "config.yaml"),
+      "utf-8",
+    );
+    expect(config).toContain("registry:");
+    expect(config).toContain("spec:");
+    expect(config).toContain("source: gitlab:local/registry/marketplace");
+    expect(config).toContain("template: golang-spec");
+
+    const hashFile = JSON.parse(
       fs.readFileSync(
-        path.join(
-          tmpDir,
-          ".agents",
-          "skills",
-          "uware-skill",
-          "SKILL.md",
-        ),
+        path.join(tmpDir, DIR_NAMES.WORKFLOW, ".template-hashes.json"),
         "utf-8",
       ),
-    ).toBe("remote skill\n");
+    ) as { hashes?: Record<string, string> };
+    expect(hashFile.hashes?.[".devflow/spec/index.md"]).toBe(
+      computeHash("# golang spec\n"),
+    );
+  });
+
+  it("#23 existing project --registry --template still refreshes spec and records source", async () => {
+    await init({ yes: true, user: "alice" });
+
+    registryDownload.files.set("index.md", "# refreshed golang spec\n");
+    const index = JSON.stringify({
+      version: 1,
+      templates: [
+        {
+          id: "golang-spec",
+          type: "spec",
+          name: "Golang",
+          path: "backend",
+        },
+      ],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(index),
+      }),
+    );
+
+    await init({
+      yes: true,
+      user: "alice",
+      registry: "gitlab:local/registry/marketplace",
+      template: "golang-spec",
+      overwrite: true,
+    });
+
+    const config = fs.readFileSync(
+      path.join(tmpDir, DIR_NAMES.WORKFLOW, "config.yaml"),
+      "utf-8",
+    );
+    expect(config).toContain("source: gitlab:local/registry/marketplace");
+    expect(config).toContain("template: golang-spec");
     expect(
-      fs.existsSync(path.join(tmpDir, ".devflow", "spec", "other.md")),
-    ).toBe(false);
+      fs.readFileSync(path.join(tmpDir, PATHS.SPEC, "index.md"), "utf-8"),
+    ).toBe("# refreshed golang spec\n");
+
+    const hashFile = JSON.parse(
+      fs.readFileSync(
+        path.join(tmpDir, DIR_NAMES.WORKFLOW, ".template-hashes.json"),
+        "utf-8",
+      ),
+    ) as { hashes?: Record<string, string> };
+    expect(hashFile.hashes?.[".devflow/spec/index.md"]).toBe(
+      computeHash("# refreshed golang spec\n"),
+    );
   });
 
   it("#19 polyrepo: writes git: true for sibling .git packages", async () => {
@@ -992,5 +933,128 @@ describe("init() integration", () => {
         expect(hook.timeout).toBeGreaterThanOrEqual(15);
       }
     }
+  });
+
+  // ===========================================================================
+  // Claude Code statusLine interactive opt-in (--with-statusline)
+  // ===========================================================================
+
+  /** Install an inquirer mock that answers the tools checkbox with claude and
+   *  the statusLine confirm with the given answer. Records every statusLine
+   *  confirm question so tests can assert it fired (or not) and its default. */
+  async function installStatuslinePromptMock(
+    withStatusline: boolean,
+  ): Promise<{ confirms: { name?: string; default?: boolean }[] }> {
+    const inquirer = (await import("inquirer")).default;
+    const confirms: { name?: string; default?: boolean }[] = [];
+    vi.mocked(inquirer.prompt).mockImplementation(((questions: unknown) => {
+      const q = Array.isArray(questions) ? questions[0] : questions;
+      const question = q as { name?: string; default?: boolean };
+      if (question.name === "tools") {
+        return Promise.resolve({ tools: ["claude"] });
+      }
+      if (question.name === "withStatusline") {
+        confirms.push(question);
+        return Promise.resolve({ withStatusline });
+      }
+      return Promise.resolve({});
+    }) as never);
+    return { confirms };
+  }
+
+  it("#24 interactive init: statusLine confirm Yes installs statusline artifacts", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    const { confirms } = await installStatuslinePromptMock(true);
+
+    await init({ user: "alice" });
+
+    // Asked exactly once, defaulting to No
+    expect(confirms).toHaveLength(1);
+    expect(confirms[0].default).toBe(false);
+    expect(
+      fs.existsSync(path.join(tmpDir, ".claude", "hooks", "statusline.py")),
+    ).toBe(true);
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(tmpDir, ".claude", "settings.json"), "utf-8"),
+    ) as Record<string, unknown>;
+    expect(settings).toHaveProperty("statusLine");
+  });
+
+  it("#25 interactive init: statusLine confirm No (default) installs nothing", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    const { confirms } = await installStatuslinePromptMock(false);
+
+    await init({ user: "alice" });
+
+    expect(confirms).toHaveLength(1);
+    expect(
+      fs.existsSync(path.join(tmpDir, ".claude", "hooks", "statusline.py")),
+    ).toBe(false);
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(tmpDir, ".claude", "settings.json"), "utf-8"),
+    ) as Record<string, unknown>;
+    expect(settings).not.toHaveProperty("statusLine");
+  });
+
+  it("#26 -y mode never shows the statusLine confirm", async () => {
+    const { confirms } = await installStatuslinePromptMock(true);
+
+    await init({ yes: true, claude: true });
+
+    expect(confirms).toHaveLength(0);
+    expect(
+      fs.existsSync(path.join(tmpDir, ".claude", "hooks", "statusline.py")),
+    ).toBe(false);
+  });
+
+  it("#27 --with-statusline skips the confirm and installs", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    // Would answer No if (wrongly) asked — flag must win without prompting
+    const { confirms } = await installStatuslinePromptMock(false);
+
+    await init({ user: "alice", claude: true, withStatusline: true });
+
+    expect(confirms).toHaveLength(0);
+    expect(
+      fs.existsSync(path.join(tmpDir, ".claude", "hooks", "statusline.py")),
+    ).toBe(true);
+  });
+
+  it("#28 reinit add-platform: statusLine confirm fires for newly added claude", async () => {
+    // user is required so the bootstrap task is created — otherwise the second
+    // init routes through the aborted-init recovery instead of handleReinit
+    await init({ yes: true, qoder: true, user: "alice" });
+    expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);
+
+    const { confirms } = await installStatuslinePromptMock(true);
+    await init({ claude: true });
+
+    expect(confirms).toHaveLength(1);
+    expect(confirms[0].default).toBe(false);
+    expect(
+      fs.existsSync(path.join(tmpDir, ".claude", "hooks", "statusline.py")),
+    ).toBe(true);
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(tmpDir, ".claude", "settings.json"), "utf-8"),
+    ) as Record<string, unknown>;
+    expect(settings).toHaveProperty("statusLine");
+  });
+
+  it("#29 reinit add-platform: no confirm when claude is already configured", async () => {
+    await init({ yes: true, claude: true, user: "alice" });
+
+    const { confirms } = await installStatuslinePromptMock(true);
+    // Re-running with --claude skips the already-configured platform — the
+    // confirm must be pre-filtered out, not asked and then silently ignored
+    await init({ claude: true });
+
+    expect(confirms).toHaveLength(0);
+    expect(
+      fs.existsSync(path.join(tmpDir, ".claude", "hooks", "statusline.py")),
+    ).toBe(false);
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(tmpDir, ".claude", "settings.json"), "utf-8"),
+    ) as Record<string, unknown>;
+    expect(settings).not.toHaveProperty("statusLine");
   });
 });

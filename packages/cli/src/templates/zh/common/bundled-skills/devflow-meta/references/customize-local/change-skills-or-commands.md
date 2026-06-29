@@ -1,26 +1,36 @@
-# 更改本地 Skills、Commands、Prompts 和 Workflows
+# Change Local Skills, Commands, Prompts, And Workflows
 
-当用户想更改 AI 入口点、自动触发规则或显式命令行为时，编辑本地平台目录中的 skills、commands、prompts 或 workflows。
+When the user wants to change AI entry points, auto-trigger rules, or explicit command behavior, edit skills, commands, prompts, or workflows in local platform directories.
 
-## 先读取这些文件
+Before editing, classify the skill you are about to touch:
+
+- **Bundled upstream skill** — `devflow-meta`, `devflow-spec-bootstrap`, `devflow-session-insight`, `devflow-channel`. Source of truth lives in the DevFlow CLI repo under `packages/cli/src/templates/common/bundled-skills/<name>/`; auto-dispatched to every platform's skill root by `getBundledSkillTemplates()` on `devflow init` / `devflow update`. Local edits here are tracked by `.devflow/.template-hashes.json` and will be flagged on the next update.
+- **Project-local skill** — anything else under `.{platform}/skills/`. Owned by the user; not refreshed by `devflow update`.
+
+The remainder of this file uses "skill" for the local file; the override and conflict rules differ between the two cases.
+
+## Read These Files First
 
 1. `.devflow/workflow.md`
-2. 目标平台 skill/command/prompt/workflow 目录
-3. 相关 agent 或 hook 文件
-4. 项目规则是否已存在于 `.devflow/spec/`
+2. Target platform skill/command/prompt/workflow directory
+3. Related agent or hook files
+4. Whether project rules already exist in `.devflow/spec/`
+5. `.devflow/.template-hashes.json` — confirms whether the skill you are about to edit is upstream-owned (entry present) or project-local (entry absent)
 
-## 选择哪种入口类型
+## Which Entry Type To Choose
 
-| 目标 | 建议 |
+| Goal | Recommendation |
 | --- | --- |
-| AI 应自动知道某项能力 | 添加或修改 skill。 |
-| 用户想用命令手动触发 | 添加或修改 command/prompt/workflow。 |
-| 团队项目约定 | 优先使用 `.devflow/spec/` 或项目本地 skill。 |
-| 更改 DevFlow 流程语义 | 同步 `.devflow/workflow.md`。 |
+| AI should automatically know a capability | Add or modify a skill. |
+| User wants to trigger manually with a command | Add or modify a command/prompt/workflow. |
+| Team project conventions | Prefer `.devflow/spec/` or a project-local skill — never a bundled skill directory. |
+| Tweak a bundled skill (`devflow-meta` et al.) for the user's own project | Create a project-local sibling skill (different name) that overrides intent, or edit `.devflow/spec/`. Edits inside the bundled skill directory survive only until the next `devflow update` and will need a "keep" choice each time. |
+| Contribute the change back upstream | Edit `packages/cli/src/templates/common/bundled-skills/<name>/` in the DevFlow CLI repo, not the deployed copy. |
+| Change DevFlow flow semantics | Synchronize `.devflow/workflow.md`. |
 
-## 修改 Skill
+## Modify A Skill
 
-Skill 通常是：
+A skill is usually:
 
 ```text
 <skill-name>/
@@ -28,51 +38,86 @@ Skill 通常是：
 └── references/
 ```
 
-`SKILL.md` 应保持简短，并负责触发/路由。长内容放在 `references/` 中，供 AI 按需读取。
+`SKILL.md` should be short and responsible for triggering/routing. Put long content in `references/` so AI can read it on demand.
 
-frontmatter description 应说明何时使用该 skill。示例：
+The frontmatter description should specify when to use the skill. Example:
 
 ```yaml
 description: "Use when customizing this project's deployment workflow and release checklist."
 ```
 
-不要写“helpful project skill”这类模糊描述；它们可能错误触发。
+Do not write vague descriptions such as "helpful project skill"; they can trigger incorrectly.
 
-## 修改 Command/Prompt/Workflow
+### Bundled vs. Project-Local
 
-显式入口点应说明：
+The same directory shape is used by two very different ownership models:
 
-- 用户如何触发它。
-- 要读取哪些 `.devflow/` 文件。
-- 要运行哪些脚本。
-- 完成后如何报告。
+| Aspect | Bundled (`devflow-meta`, `devflow-spec-bootstrap`, `devflow-session-insight`, `devflow-channel`) | Project-local |
+| --- | --- | --- |
+| Source of truth | `packages/cli/src/templates/common/bundled-skills/<name>/` in DevFlow CLI repo | Inside the user project itself |
+| Dispatch | Auto-dispatched to every platform skill root by `getBundledSkillTemplates()` (`packages/cli/src/templates/common/index.ts`) on `devflow init` / `devflow update` | Created by the user (or another skill) and never moved |
+| Hash tracking | Every file recorded in `.devflow/.template-hashes.json`; conflict prompt on update | Not tracked |
+| Editing locally | Allowed but will be marked "modified by user" on next update | Free editing |
+| The right way to customize | Add a *new* project-local skill with a *different* name that supplements (or supersedes) the bundled one | Edit the file directly |
 
-如果命令只是重复工作流规则，优先让它引用/读取 `.devflow/workflow.md`，而不是维护第二份流程副本。
+If the goal is "make my project's AI behave differently when discussing release notes," the answer is almost always a project-local skill, not surgery on `devflow-meta/`.
 
-## 常见路径
+## Modify A Command/Prompt/Workflow
 
-| 平台 | 入口目录 |
+Explicit entry points should state:
+
+- How the user triggers it.
+- Which `.devflow/` files to read.
+- Which scripts to run.
+- How to report after completion.
+
+If a command only repeats workflow rules, prefer making it reference/read `.devflow/workflow.md` instead of maintaining a second copy of the flow.
+
+## Common Paths
+
+| Platform | Entry directories |
 | --- | --- |
 | Claude Code | `.claude/skills/`, `.claude/commands/` |
 | Cursor | `.cursor/skills/`, `.cursor/commands/` |
 | OpenCode | `.opencode/skills/`, `.opencode/commands/` |
 | Codex | `.agents/skills/`, `.codex/skills/` |
+| Gemini CLI | `.agents/skills/`, `.gemini/commands/` |
+| Kiro | `.kiro/skills/` |
+| Qoder | `.qoder/skills/`, `.qoder/commands/` |
+| CodeBuddy | `.codebuddy/skills/`, `.codebuddy/commands/` |
 | GitHub Copilot | `.github/skills/`, `.github/prompts/` |
-| Kilo / Antigravity / Windsurf | workflows + skills |
+| Factory Droid | `.factory/skills/`, `.factory/commands/` |
+| Pi Agent | `.pi/skills/` |
+| Reasonix | `.reasonix/skills/` (no separate commands dir; slash commands built into the platform) |
+| ZCode | `.agents/skills/`, `.zcode/commands/` |
+| Kilo / Antigravity / Devin | workflows + skills |
 
-## 添加项目本地 Skill
+Every directory above is a deploy target for the four bundled skills. Each platform receives a full copy on `devflow init` and refresh on `devflow update`; nothing has to be wired by hand.
 
-如果用户想记录团队私有定制，创建项目本地 skill，例如：
+## Add A Project-Local Skill
+
+If the user wants to document team-private customizations, create a project-local skill — never put project-private content into a bundled skill directory, since `devflow update` will overwrite it.
 
 ```text
 .claude/skills/project-devflow-local/
 └── SKILL.md
 ```
 
-对于多平台项目，在每个平台 skill 目录添加等价版本，或在支持共享层的平台上使用 `.agents/skills/`。
+For multi-platform projects, add equivalent versions in each platform skill directory, or use `.agents/skills/` on platforms that support the shared layer (Codex, Gemini CLI).
 
-## 说明
+Pick a name that does **not** collide with the bundled set:
 
-- 不要把每个平台的语法混进同一个文件。
-- 不要只更改一个平台入口点却声称支持所有平台。
-- 不要把长期工程约定藏在命令里；把它们写入 `.devflow/spec/`。
+- `devflow-meta`
+- `devflow-spec-bootstrap`
+- `devflow-session-insight`
+- `devflow-channel`
+
+A reused name causes `getBundledSkillTemplates()` to overwrite the project-local copy on the next update. A common convention is to prefix the project name: `acme-devflow-deploy`, `acme-devflow-onboarding`.
+
+## Notes
+
+- Do not mix every platform's syntax into one file.
+- Do not change only one platform entry point while claiming all platforms are supported.
+- Do not hide long-term engineering conventions inside a command; write them to `.devflow/spec/`.
+- Do not hand-edit files inside `devflow-meta/`, `devflow-spec-bootstrap/`, `devflow-session-insight/`, or `devflow-channel/` under any `.{platform}/skills/` directory expecting the change to persist — they are bundled and refreshed by `devflow update`. Either contribute upstream or add a project-local skill that complements them.
+- After `devflow update` reports a "modified by you" conflict on a bundled skill file, choose **keep** only if you accept maintaining the divergence by hand; otherwise accept the overwrite and re-apply the intent as a project-local skill.

@@ -492,7 +492,7 @@ def _extract_range(content: str, start_header: str, end_header: str) -> str:
 
 
 _BREADCRUMB_TAG_RE = re.compile(
-    r"\[workflow-state:(?P<status>[A-Za-z0-9_-]+)\]\s*\n.*?\n\s*\[/workflow-state:(?P=status)\]",
+    r"\[workflow-state:([A-Za-z0-9_-]+)\]\s*\n.*?\n\s*\[/workflow-state:\1\]",
     re.DOTALL,
 )
 

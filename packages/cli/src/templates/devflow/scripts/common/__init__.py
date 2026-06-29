@@ -4,6 +4,8 @@ Common utilities for DevFlow workflow scripts.
 This module provides shared functionality used by other DevFlow scripts.
 """
 
+# pyright: reportUnusedImport=false
+
 import io
 import sys
 

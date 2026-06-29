@@ -1,20 +1,20 @@
-# 规范任务规划
+# Spec Task Planning
 
-默认执行模型使用单个代理。代理可以创建 DevFlow tasks 以便追踪，但该技能不应要求特定平台、CLI 或并行 worker 模型。
+Use a single agent as the default execution model. The agent may create DevFlow tasks for traceability, but the skill should not require a specific platform, CLI, or parallel worker model.
 
-## 拆分方式
+## Decomposition
 
-围绕真实所有权边界创建规范工作单元：
+Create spec work units around real ownership boundaries:
 
-- 当某个包有自己的约定时，以一个包为单位。
-- 当同一个包有不同 frontend、backend、CLI、worker 或 shared-library 规则时，以一个层级为单位。
-- 当某个模式跨越多个包且不由单一层级拥有时，写一个横切 guide。
+- One package when a package has its own conventions.
+- One layer when the same package has distinct frontend, backend, CLI, worker, or shared-library rules.
+- One cross-cutting guide when a pattern spans packages and is not owned by one layer.
 
-避免人为拆分。小型 library 通常只需要一次聚焦的规范梳理，而不是多个任务。
+Avoid artificial decomposition. A small library usually needs one focused spec pass, not several tasks.
 
-## 任务形状
+## Task Shape
 
-当 DevFlow task 有用时，编写包含这些章节的简洁 PRD：
+When a DevFlow task is useful, write a concise PRD with these sections:
 
 ```markdown
 # Fill <package-or-layer> DevFlow Specs
@@ -48,15 +48,14 @@ Summarize the concrete findings from repository analysis.
 - [ ] Claims are backed by source files, tests, or project docs.
 ```
 
-## 可选辅助代理
+## Optional Helper Agents
 
-如果宿主支持 subagents，辅助代理可以检查独立包或运行验证。它们是可选的。主代理仍负责集成和最终质量。
+If the host supports subagents, helpers can inspect independent packages or run verification. They are optional. The main agent still owns integration and final quality.
 
-辅助任务必须有清晰所有权：
+Helper tasks must have clear ownership:
 
-- 只读研究任务可以检查分配范围所需的任何源码。
-- 写入任务应拥有互不重叠的 spec 目录。
-- 验证任务应检查占位符移除、失效链接和一致性。
+- Read-only research tasks may inspect any source needed for the assigned scope.
+- Write tasks should own disjoint spec directories.
+- Verification tasks should check placeholder removal, broken links, and consistency.
 
-不要在技能中编码辅助代理名称、供应商专属命令或平台专属路由。只写必要工作和验收标准。
-
+Do not encode helper-agent names, vendor-specific commands, or platform-specific routing in the skill. Put only the required work and acceptance criteria in the task.

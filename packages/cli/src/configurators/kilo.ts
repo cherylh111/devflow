@@ -11,7 +11,7 @@ import {
 /**
  * Configure Kilo CLI:
  * - workflows/ — start + finish-work as slash commands
- * - skills/devflow-{name}/SKILL.md — other 5 as auto-triggered skills
+ * - skills/devflow-{name}/SKILL.md — auto-triggered skills from `common/skills/`
  */
 export async function configureKilo(cwd: string): Promise<void> {
   const ctx = AI_TOOLS.kilo.templateContext;
