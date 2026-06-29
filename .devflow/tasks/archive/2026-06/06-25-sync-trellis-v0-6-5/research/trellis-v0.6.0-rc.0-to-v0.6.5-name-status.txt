@@ -1,0 +1,655 @@
+M	.agents/skills/trellis-brainstorm/SKILL.md
+M	.agents/skills/trellis-break-loop/SKILL.md
+A	.agents/skills/trellis-channel/SKILL.md
+A	.agents/skills/trellis-channel/references/command-reference.md
+A	.agents/skills/trellis-channel/references/forum.md
+A	.agents/skills/trellis-channel/references/progress-debugging.md
+A	.agents/skills/trellis-channel/references/workers.md
+A	.agents/skills/trellis-channel/references/workflows.md
+M	.agents/skills/trellis-continue/SKILL.md
+M	.agents/skills/trellis-meta/SKILL.md
+M	.agents/skills/trellis-meta/references/customize-local/change-agents.md
+M	.agents/skills/trellis-meta/references/customize-local/change-skills-or-commands.md
+M	.agents/skills/trellis-meta/references/customize-local/change-workflow.md
+M	.agents/skills/trellis-meta/references/customize-local/overview.md
+A	.agents/skills/trellis-meta/references/local-architecture/bundled-skills.md
+M	.agents/skills/trellis-meta/references/local-architecture/generated-files.md
+A	.agents/skills/trellis-meta/references/local-architecture/multi-agent-channel.md
+M	.agents/skills/trellis-meta/references/local-architecture/overview.md
+M	.agents/skills/trellis-meta/references/platform-files/agents.md
+M	.agents/skills/trellis-meta/references/platform-files/hooks-and-settings.md
+M	.agents/skills/trellis-meta/references/platform-files/overview.md
+M	.agents/skills/trellis-meta/references/platform-files/platform-map.md
+M	.agents/skills/trellis-meta/references/platform-files/skills-and-commands.md
+A	.agents/skills/trellis-session-insight/SKILL.md
+A	.agents/skills/trellis-session-insight/references/cli-quick-reference.md
+A	.agents/skills/trellis-session-insight/references/triggering-patterns.md
+A	.agents/skills/trellis-spec-bootstrap/SKILL.md
+A	.agents/skills/trellis-spec-bootstrap/references/mcp-setup.md
+A	.agents/skills/trellis-spec-bootstrap/references/repository-analysis.md
+A	.agents/skills/trellis-spec-bootstrap/references/spec-task-planning.md
+A	.agents/skills/trellis-spec-bootstrap/references/spec-writing.md
+M	.claude/agents/trellis-check.md
+M	.claude/agents/trellis-implement.md
+M	.claude/agents/trellis-research.md
+M	.claude/commands/trellis/continue.md
+M	.claude/commands/trellis/create-manifest.md
+M	.claude/skills/gitnexus/gitnexus-cli/SKILL.md
+M	.claude/skills/gitnexus/gitnexus-debugging/SKILL.md
+M	.claude/skills/gitnexus/gitnexus-exploring/SKILL.md
+M	.claude/skills/gitnexus/gitnexus-guide/SKILL.md
+M	.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md
+M	.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md
+M	.claude/skills/trellis-brainstorm/SKILL.md
+M	.claude/skills/trellis-break-loop/SKILL.md
+A	.claude/skills/trellis-channel/SKILL.md
+A	.claude/skills/trellis-channel/references/command-reference.md
+A	.claude/skills/trellis-channel/references/forum.md
+A	.claude/skills/trellis-channel/references/progress-debugging.md
+A	.claude/skills/trellis-channel/references/workers.md
+A	.claude/skills/trellis-channel/references/workflows.md
+M	.claude/skills/trellis-meta/SKILL.md
+M	.claude/skills/trellis-meta/references/customize-local/change-agents.md
+M	.claude/skills/trellis-meta/references/customize-local/change-skills-or-commands.md
+M	.claude/skills/trellis-meta/references/customize-local/change-workflow.md
+M	.claude/skills/trellis-meta/references/customize-local/overview.md
+A	.claude/skills/trellis-meta/references/local-architecture/bundled-skills.md
+M	.claude/skills/trellis-meta/references/local-architecture/generated-files.md
+A	.claude/skills/trellis-meta/references/local-architecture/multi-agent-channel.md
+M	.claude/skills/trellis-meta/references/local-architecture/overview.md
+M	.claude/skills/trellis-meta/references/platform-files/agents.md
+M	.claude/skills/trellis-meta/references/platform-files/hooks-and-settings.md
+M	.claude/skills/trellis-meta/references/platform-files/overview.md
+M	.claude/skills/trellis-meta/references/platform-files/platform-map.md
+M	.claude/skills/trellis-meta/references/platform-files/skills-and-commands.md
+A	.claude/skills/trellis-session-insight/SKILL.md
+A	.claude/skills/trellis-session-insight/references/cli-quick-reference.md
+A	.claude/skills/trellis-session-insight/references/triggering-patterns.md
+A	.claude/skills/trellis-spec-bootstrap/SKILL.md
+A	.claude/skills/trellis-spec-bootstrap/references/mcp-setup.md
+A	.claude/skills/trellis-spec-bootstrap/references/repository-analysis.md
+A	.claude/skills/trellis-spec-bootstrap/references/spec-task-planning.md
+A	.claude/skills/trellis-spec-bootstrap/references/spec-writing.md
+M	.codex/skills/create-manifest/SKILL.md
+M	.cursor/agents/trellis-check.md
+M	.cursor/agents/trellis-implement.md
+M	.cursor/agents/trellis-research.md
+M	.cursor/commands/trellis-continue.md
+M	.cursor/skills/trellis-brainstorm/SKILL.md
+M	.cursor/skills/trellis-break-loop/SKILL.md
+A	.cursor/skills/trellis-channel/SKILL.md
+A	.cursor/skills/trellis-channel/references/command-reference.md
+A	.cursor/skills/trellis-channel/references/forum.md
+A	.cursor/skills/trellis-channel/references/progress-debugging.md
+A	.cursor/skills/trellis-channel/references/workers.md
+A	.cursor/skills/trellis-channel/references/workflows.md
+M	.cursor/skills/trellis-meta/SKILL.md
+M	.cursor/skills/trellis-meta/references/customize-local/change-agents.md
+M	.cursor/skills/trellis-meta/references/customize-local/change-skills-or-commands.md
+M	.cursor/skills/trellis-meta/references/customize-local/change-workflow.md
+M	.cursor/skills/trellis-meta/references/customize-local/overview.md
+A	.cursor/skills/trellis-meta/references/local-architecture/bundled-skills.md
+M	.cursor/skills/trellis-meta/references/local-architecture/generated-files.md
+A	.cursor/skills/trellis-meta/references/local-architecture/multi-agent-channel.md
+M	.cursor/skills/trellis-meta/references/local-architecture/overview.md
+M	.cursor/skills/trellis-meta/references/platform-files/agents.md
+M	.cursor/skills/trellis-meta/references/platform-files/hooks-and-settings.md
+M	.cursor/skills/trellis-meta/references/platform-files/overview.md
+M	.cursor/skills/trellis-meta/references/platform-files/platform-map.md
+M	.cursor/skills/trellis-meta/references/platform-files/skills-and-commands.md
+A	.cursor/skills/trellis-session-insight/SKILL.md
+A	.cursor/skills/trellis-session-insight/references/cli-quick-reference.md
+A	.cursor/skills/trellis-session-insight/references/triggering-patterns.md
+A	.cursor/skills/trellis-spec-bootstrap/SKILL.md
+A	.cursor/skills/trellis-spec-bootstrap/references/mcp-setup.md
+A	.cursor/skills/trellis-spec-bootstrap/references/repository-analysis.md
+A	.cursor/skills/trellis-spec-bootstrap/references/spec-task-planning.md
+A	.cursor/skills/trellis-spec-bootstrap/references/spec-writing.md
+M	.github/ISSUE_TEMPLATE/config.yml
+D	.github/ISSUE_TEMPLATE/question.yml
+M	.github/workflows/ci.yml
+M	.opencode/commands/trellis/continue.md
+M	.opencode/skills/trellis-brainstorm/SKILL.md
+M	.opencode/skills/trellis-break-loop/SKILL.md
+A	.opencode/skills/trellis-channel/SKILL.md
+A	.opencode/skills/trellis-channel/references/command-reference.md
+A	.opencode/skills/trellis-channel/references/forum.md
+A	.opencode/skills/trellis-channel/references/progress-debugging.md
+A	.opencode/skills/trellis-channel/references/workers.md
+A	.opencode/skills/trellis-channel/references/workflows.md
+M	.opencode/skills/trellis-meta/SKILL.md
+M	.opencode/skills/trellis-meta/references/customize-local/change-agents.md
+M	.opencode/skills/trellis-meta/references/customize-local/change-skills-or-commands.md
+M	.opencode/skills/trellis-meta/references/customize-local/change-workflow.md
+M	.opencode/skills/trellis-meta/references/customize-local/overview.md
+A	.opencode/skills/trellis-meta/references/local-architecture/bundled-skills.md
+M	.opencode/skills/trellis-meta/references/local-architecture/generated-files.md
+A	.opencode/skills/trellis-meta/references/local-architecture/multi-agent-channel.md
+M	.opencode/skills/trellis-meta/references/local-architecture/overview.md
+M	.opencode/skills/trellis-meta/references/platform-files/agents.md
+M	.opencode/skills/trellis-meta/references/platform-files/hooks-and-settings.md
+M	.opencode/skills/trellis-meta/references/platform-files/overview.md
+M	.opencode/skills/trellis-meta/references/platform-files/platform-map.md
+M	.opencode/skills/trellis-meta/references/platform-files/skills-and-commands.md
+A	.opencode/skills/trellis-session-insight/SKILL.md
+A	.opencode/skills/trellis-session-insight/references/cli-quick-reference.md
+A	.opencode/skills/trellis-session-insight/references/triggering-patterns.md
+A	.opencode/skills/trellis-spec-bootstrap/SKILL.md
+A	.opencode/skills/trellis-spec-bootstrap/references/mcp-setup.md
+A	.opencode/skills/trellis-spec-bootstrap/references/repository-analysis.md
+A	.opencode/skills/trellis-spec-bootstrap/references/spec-task-planning.md
+A	.opencode/skills/trellis-spec-bootstrap/references/spec-writing.md
+M	.pi/agents/trellis-check.md
+M	.pi/agents/trellis-implement.md
+M	.pi/agents/trellis-research.md
+M	.pi/extensions/trellis/index.ts
+M	.pi/prompts/trellis-continue.md
+M	.pi/skills/trellis-brainstorm/SKILL.md
+M	.pi/skills/trellis-break-loop/SKILL.md
+A	.pi/skills/trellis-channel/SKILL.md
+A	.pi/skills/trellis-channel/references/command-reference.md
+A	.pi/skills/trellis-channel/references/forum.md
+A	.pi/skills/trellis-channel/references/progress-debugging.md
+A	.pi/skills/trellis-channel/references/workers.md
+A	.pi/skills/trellis-channel/references/workflows.md
+M	.pi/skills/trellis-meta/SKILL.md
+M	.pi/skills/trellis-meta/references/customize-local/change-agents.md
+M	.pi/skills/trellis-meta/references/customize-local/change-skills-or-commands.md
+M	.pi/skills/trellis-meta/references/customize-local/change-workflow.md
+M	.pi/skills/trellis-meta/references/customize-local/overview.md
+A	.pi/skills/trellis-meta/references/local-architecture/bundled-skills.md
+M	.pi/skills/trellis-meta/references/local-architecture/generated-files.md
+A	.pi/skills/trellis-meta/references/local-architecture/multi-agent-channel.md
+M	.pi/skills/trellis-meta/references/local-architecture/overview.md
+M	.pi/skills/trellis-meta/references/platform-files/agents.md
+M	.pi/skills/trellis-meta/references/platform-files/hooks-and-settings.md
+M	.pi/skills/trellis-meta/references/platform-files/overview.md
+M	.pi/skills/trellis-meta/references/platform-files/platform-map.md
+M	.pi/skills/trellis-meta/references/platform-files/skills-and-commands.md
+A	.pi/skills/trellis-session-insight/SKILL.md
+A	.pi/skills/trellis-session-insight/references/cli-quick-reference.md
+A	.pi/skills/trellis-session-insight/references/triggering-patterns.md
+A	.pi/skills/trellis-spec-bootstrap/SKILL.md
+A	.pi/skills/trellis-spec-bootstrap/references/mcp-setup.md
+A	.pi/skills/trellis-spec-bootstrap/references/repository-analysis.md
+A	.pi/skills/trellis-spec-bootstrap/references/spec-task-planning.md
+A	.pi/skills/trellis-spec-bootstrap/references/spec-writing.md
+M	.trellis/.template-hashes.json
+M	.trellis/.version
+M	.trellis/agents/check.md
+M	.trellis/agents/implement.md
+M	.trellis/config.yaml
+M	.trellis/scripts/add_session.py
+M	.trellis/scripts/common/cli_adapter.py
+M	.trellis/scripts/common/safe_commit.py
+M	.trellis/scripts/common/task_store.py
+M	.trellis/scripts/common/workflow_phase.py
+M	.trellis/spec/cli/backend/commands-channel.md
+M	.trellis/spec/cli/backend/commands-mem.md
+M	.trellis/spec/cli/backend/commands-update.md
+M	.trellis/spec/cli/backend/commands-workflow.md
+M	.trellis/spec/cli/backend/configurator-shared.md
+M	.trellis/spec/cli/backend/platform-integration.md
+M	.trellis/spec/cli/backend/quality-guidelines.md
+M	.trellis/spec/cli/backend/release-process.md
+M	.trellis/spec/cli/backend/script-conventions.md
+M	.trellis/spec/cli/backend/workflow-state-contract.md
+A	.trellis/spec/core/backend/index.md
+M	.trellis/spec/docs-site/docs/directory-structure.md
+M	.trellis/spec/docs-site/docs/release-lifecycle.md
+M	.trellis/spec/docs-site/docs/sync-on-change.md
+M	.trellis/spec/guides/index.md
+A	.trellis/spec/tech/repo/index.md
+R100	.trellis/tasks/04-24-shared-hooks-dead-files/check.jsonl	.trellis/tasks/06-17-architecture-diagram/check.jsonl
+A	.trellis/tasks/06-17-architecture-diagram/design.md
+R100	.trellis/tasks/04-24-shared-hooks-dead-files/implement.jsonl	.trellis/tasks/06-17-architecture-diagram/implement.jsonl
+A	.trellis/tasks/06-17-architecture-diagram/implement.md
+A	.trellis/tasks/06-17-architecture-diagram/prd.md
+A	.trellis/tasks/06-17-architecture-diagram/task.json
+R100	.trellis/tasks/04-25-autopilot-run-queue/check.jsonl	.trellis/tasks/06-17-benchmark-showcase/check.jsonl
+A	.trellis/tasks/06-17-benchmark-showcase/design.md
+R100	.trellis/tasks/04-25-autopilot-run-queue/implement.jsonl	.trellis/tasks/06-17-benchmark-showcase/implement.jsonl
+A	.trellis/tasks/06-17-benchmark-showcase/implement.md
+A	.trellis/tasks/06-17-benchmark-showcase/prd.md
+A	.trellis/tasks/06-17-benchmark-showcase/task.json
+R100	.trellis/tasks/04-30-skills-sh-listing-cherry-studio/check.jsonl	.trellis/tasks/06-18-brainstorm-prd-dedup/check.jsonl
+R100	.trellis/tasks/04-30-skills-sh-listing-cherry-studio/implement.jsonl	.trellis/tasks/06-18-brainstorm-prd-dedup/implement.jsonl
+A	.trellis/tasks/06-18-brainstorm-prd-dedup/prd.md
+A	.trellis/tasks/06-18-brainstorm-prd-dedup/task.json
+R100	.trellis/tasks/05-02-trellis-code-opencode/check.jsonl	.trellis/tasks/06-18-channel-driven-workflow-ux-bugs/check.jsonl
+R100	.trellis/tasks/05-02-trellis-code-opencode/implement.jsonl	.trellis/tasks/06-18-channel-driven-workflow-ux-bugs/implement.jsonl
+A	.trellis/tasks/06-18-channel-driven-workflow-ux-bugs/prd.md
+A	.trellis/tasks/06-18-channel-driven-workflow-ux-bugs/research/root-cause.md
+A	.trellis/tasks/06-18-channel-driven-workflow-ux-bugs/task.json
+R100	.trellis/tasks/05-08-fix-copilot-pi-hook-injection-248-249/check.jsonl	.trellis/tasks/06-21-fix-kiro-workflow-injection/check.jsonl
+A	.trellis/tasks/06-21-fix-kiro-workflow-injection/design.md
+R100	.trellis/tasks/05-08-fix-copilot-pi-hook-injection-248-249/implement.jsonl	.trellis/tasks/06-21-fix-kiro-workflow-injection/implement.jsonl
+A	.trellis/tasks/06-21-fix-kiro-workflow-injection/implement.md
+A	.trellis/tasks/06-21-fix-kiro-workflow-injection/prd.md
+A	.trellis/tasks/06-21-fix-kiro-workflow-injection/task.json
+R100	.trellis/tasks/05-08-marketplace-skill-chat-recall/check.jsonl	.trellis/tasks/06-24-issue-292-jsonl-gate/check.jsonl
+R100	.trellis/tasks/05-08-marketplace-skill-chat-recall/implement.jsonl	.trellis/tasks/06-24-issue-292-jsonl-gate/implement.jsonl
+A	.trellis/tasks/06-24-issue-292-jsonl-gate/prd.md
+A	.trellis/tasks/06-24-issue-292-jsonl-gate/task.json
+R100	.trellis/tasks/04-20-plugin-system-design/fp-analysis.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/fp-analysis.md
+R100	.trellis/tasks/04-20-plugin-system-design/fp-progress.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/fp-progress.md
+R100	.trellis/tasks/04-20-plugin-system-design/prd.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/prd.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/agent-trace-ecosystem.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/agent-trace-ecosystem.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/agent-trace-spec.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/agent-trace-spec.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/claude-code-hook-api.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/claude-code-hook-api.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/cursor-chat-storage.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/cursor-chat-storage.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/cursor-trace-ux.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/cursor-trace-ux.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/fp-spec-memory-trace-boundary.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/fp-spec-memory-trace-boundary.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/karpathy-llm-wiki.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/karpathy-llm-wiki.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/memory-systems-landscape.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/memory-systems-landscape.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/opencode-plugin-api.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/opencode-plugin-api.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/otel-mcp-semconv.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/otel-mcp-semconv.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/serena-memory.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/serena-memory.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/session-export-tools.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/session-export-tools.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/supermemory.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/supermemory.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/trace-as-memory-feedstock.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/trace-as-memory-feedstock.md
+R100	.trellis/tasks/04-20-plugin-system-design/research/trellis-existing-extension-points.md	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/research/trellis-existing-extension-points.md
+R093	.trellis/tasks/04-20-plugin-system-design/task.json	.trellis/tasks/archive/2026-06/04-20-plugin-system-design/task.json
+R100	.trellis/tasks/04-21-session-scoped-task-state/check.jsonl	.trellis/tasks/archive/2026-06/04-21-session-scoped-task-state/check.jsonl
+R100	.trellis/tasks/04-21-session-scoped-task-state/implement.jsonl	.trellis/tasks/archive/2026-06/04-21-session-scoped-task-state/implement.jsonl
+R100	.trellis/tasks/04-21-session-scoped-task-state/prd.md	.trellis/tasks/archive/2026-06/04-21-session-scoped-task-state/prd.md
+R100	.trellis/tasks/04-21-session-scoped-task-state/research/session-identity-platform-survey.md	.trellis/tasks/archive/2026-06/04-21-session-scoped-task-state/research/session-identity-platform-survey.md
+R092	.trellis/tasks/04-21-session-scoped-task-state/task.json	.trellis/tasks/archive/2026-06/04-21-session-scoped-task-state/task.json
+R100	.trellis/tasks/05-08-scratch-start-task/check.jsonl	.trellis/tasks/archive/2026-06/04-24-shared-hooks-dead-files/check.jsonl
+R100	.trellis/tasks/05-08-scratch-start-task/implement.jsonl	.trellis/tasks/archive/2026-06/04-24-shared-hooks-dead-files/implement.jsonl
+R100	.trellis/tasks/04-24-shared-hooks-dead-files/prd.md	.trellis/tasks/archive/2026-06/04-24-shared-hooks-dead-files/prd.md
+R094	.trellis/tasks/04-24-shared-hooks-dead-files/task.json	.trellis/tasks/archive/2026-06/04-24-shared-hooks-dead-files/task.json
+R100	.trellis/tasks/05-11-investigate-pi-extension-subagent-context-double-injection/check.jsonl	.trellis/tasks/archive/2026-06/04-25-autopilot-run-queue/check.jsonl
+R100	.trellis/tasks/05-11-investigate-pi-extension-subagent-context-double-injection/implement.jsonl	.trellis/tasks/archive/2026-06/04-25-autopilot-run-queue/implement.jsonl
+R100	.trellis/tasks/04-25-autopilot-run-queue/prd.md	.trellis/tasks/archive/2026-06/04-25-autopilot-run-queue/prd.md
+R090	.trellis/tasks/04-25-autopilot-run-queue/task.json	.trellis/tasks/archive/2026-06/04-25-autopilot-run-queue/task.json
+R100	.trellis/tasks/04-27-docs-site-beta-task-pi-docs-audit/check.jsonl	.trellis/tasks/archive/2026-06/04-27-docs-site-beta-task-pi-docs-audit/check.jsonl
+R100	.trellis/tasks/04-27-docs-site-beta-task-pi-docs-audit/implement.jsonl	.trellis/tasks/archive/2026-06/04-27-docs-site-beta-task-pi-docs-audit/implement.jsonl
+R100	.trellis/tasks/04-27-docs-site-beta-task-pi-docs-audit/prd.md	.trellis/tasks/archive/2026-06/04-27-docs-site-beta-task-pi-docs-audit/prd.md
+R100	.trellis/tasks/04-27-docs-site-beta-task-pi-docs-audit/research/docs-site-beta-audit.md	.trellis/tasks/archive/2026-06/04-27-docs-site-beta-task-pi-docs-audit/research/docs-site-beta-audit.md
+R094	.trellis/tasks/04-27-docs-site-beta-task-pi-docs-audit/task.json	.trellis/tasks/archive/2026-06/04-27-docs-site-beta-task-pi-docs-audit/task.json
+R100	.trellis/tasks/04-27-platform-compat-feedback/check.jsonl	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/check.jsonl
+R100	.trellis/tasks/04-27-platform-compat-feedback/implement.jsonl	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/implement.jsonl
+R100	.trellis/tasks/04-27-platform-compat-feedback/prd.md	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/prd.md
+R100	.trellis/tasks/04-27-platform-compat-feedback/research/claude-code-session-env-file.md	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/research/claude-code-session-env-file.md
+R100	.trellis/tasks/04-27-platform-compat-feedback/research/claude-code-settings-precedence.md	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/research/claude-code-settings-precedence.md
+R100	.trellis/tasks/04-27-platform-compat-feedback/research/opencode-skills-vs-commands.md	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/research/opencode-skills-vs-commands.md
+R090	.trellis/tasks/04-27-platform-compat-feedback/task.json	.trellis/tasks/archive/2026-06/04-27-platform-compat-feedback/task.json
+R100	.trellis/tasks/04-28-release-manifest-0-5-0-beta-17/check.jsonl	.trellis/tasks/archive/2026-06/04-28-release-manifest-0-5-0-beta-17/check.jsonl
+R100	.trellis/tasks/04-28-release-manifest-0-5-0-beta-17/implement.jsonl	.trellis/tasks/archive/2026-06/04-28-release-manifest-0-5-0-beta-17/implement.jsonl
+R100	.trellis/tasks/04-28-release-manifest-0-5-0-beta-17/prd.md	.trellis/tasks/archive/2026-06/04-28-release-manifest-0-5-0-beta-17/prd.md
+R090	.trellis/tasks/04-28-release-manifest-0-5-0-beta-17/task.json	.trellis/tasks/archive/2026-06/04-28-release-manifest-0-5-0-beta-17/task.json
+R100	.trellis/tasks/04-28-remove-init-promo-output/check.jsonl	.trellis/tasks/archive/2026-06/04-28-remove-init-promo-output/check.jsonl
+R100	.trellis/tasks/04-28-remove-init-promo-output/implement.jsonl	.trellis/tasks/archive/2026-06/04-28-remove-init-promo-output/implement.jsonl
+R100	.trellis/tasks/04-28-remove-init-promo-output/prd.md	.trellis/tasks/archive/2026-06/04-28-remove-init-promo-output/prd.md
+R090	.trellis/tasks/04-28-remove-init-promo-output/task.json	.trellis/tasks/archive/2026-06/04-28-remove-init-promo-output/task.json
+R100	.trellis/tasks/04-29-docs-architecture-workflow-narrative/check.jsonl	.trellis/tasks/archive/2026-06/04-29-docs-architecture-workflow-narrative/check.jsonl
+R100	.trellis/tasks/04-29-docs-architecture-workflow-narrative/implement.jsonl	.trellis/tasks/archive/2026-06/04-29-docs-architecture-workflow-narrative/implement.jsonl
+R100	.trellis/tasks/04-29-docs-architecture-workflow-narrative/prd.md	.trellis/tasks/archive/2026-06/04-29-docs-architecture-workflow-narrative/prd.md
+R092	.trellis/tasks/04-29-docs-architecture-workflow-narrative/task.json	.trellis/tasks/archive/2026-06/04-29-docs-architecture-workflow-narrative/task.json
+R100	.trellis/tasks/04-29-update-agents-md-template/check.jsonl	.trellis/tasks/archive/2026-06/04-29-update-agents-md-template/check.jsonl
+R100	.trellis/tasks/04-29-update-agents-md-template/implement.jsonl	.trellis/tasks/archive/2026-06/04-29-update-agents-md-template/implement.jsonl
+R100	.trellis/tasks/04-29-update-agents-md-template/prd.md	.trellis/tasks/archive/2026-06/04-29-update-agents-md-template/prd.md
+R090	.trellis/tasks/04-29-update-agents-md-template/task.json	.trellis/tasks/archive/2026-06/04-29-update-agents-md-template/task.json
+R100	.trellis/tasks/04-30-docs-site-how-it-works-architecture-rewrite/check.jsonl	.trellis/tasks/archive/2026-06/04-30-docs-site-how-it-works-architecture-rewrite/check.jsonl
+R100	.trellis/tasks/04-30-docs-site-how-it-works-architecture-rewrite/implement.jsonl	.trellis/tasks/archive/2026-06/04-30-docs-site-how-it-works-architecture-rewrite/implement.jsonl
+R100	.trellis/tasks/04-30-docs-site-how-it-works-architecture-rewrite/prd.md	.trellis/tasks/archive/2026-06/04-30-docs-site-how-it-works-architecture-rewrite/prd.md
+R091	.trellis/tasks/04-30-docs-site-how-it-works-architecture-rewrite/task.json	.trellis/tasks/archive/2026-06/04-30-docs-site-how-it-works-architecture-rewrite/task.json
+R100	.trellis/tasks/04-30-docs-site-meta-sync-workflow-state/check.jsonl	.trellis/tasks/archive/2026-06/04-30-docs-site-meta-sync-workflow-state/check.jsonl
+R100	.trellis/tasks/04-30-docs-site-meta-sync-workflow-state/implement.jsonl	.trellis/tasks/archive/2026-06/04-30-docs-site-meta-sync-workflow-state/implement.jsonl
+R100	.trellis/tasks/04-30-docs-site-meta-sync-workflow-state/prd.md	.trellis/tasks/archive/2026-06/04-30-docs-site-meta-sync-workflow-state/prd.md
+R090	.trellis/tasks/04-30-docs-site-meta-sync-workflow-state/task.json	.trellis/tasks/archive/2026-06/04-30-docs-site-meta-sync-workflow-state/task.json
+R100	.trellis/tasks/05-13-channel-post-text-input/check.jsonl	.trellis/tasks/archive/2026-06/04-30-skills-sh-listing-cherry-studio/check.jsonl
+R100	.trellis/tasks/05-13-channel-post-text-input/implement.jsonl	.trellis/tasks/archive/2026-06/04-30-skills-sh-listing-cherry-studio/implement.jsonl
+R100	.trellis/tasks/04-30-skills-sh-listing-cherry-studio/prd.md	.trellis/tasks/archive/2026-06/04-30-skills-sh-listing-cherry-studio/prd.md
+R100	.trellis/tasks/04-30-skills-sh-listing-cherry-studio/research/cherry-studio-skill-discovery.md	.trellis/tasks/archive/2026-06/04-30-skills-sh-listing-cherry-studio/research/cherry-studio-skill-discovery.md
+R100	.trellis/tasks/04-30-skills-sh-listing-cherry-studio/research/skills-sh-submission.md	.trellis/tasks/archive/2026-06/04-30-skills-sh-listing-cherry-studio/research/skills-sh-submission.md
+R090	.trellis/tasks/04-30-skills-sh-listing-cherry-studio/task.json	.trellis/tasks/archive/2026-06/04-30-skills-sh-listing-cherry-studio/task.json
+R100	.trellis/tasks/05-13-create-migration-manifest/check.jsonl	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/check.jsonl
+R100	.trellis/tasks/05-13-create-migration-manifest/implement.jsonl	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/implement.jsonl
+R100	.trellis/tasks/05-02-trellis-code-opencode/prd.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/prd.md
+R100	.trellis/tasks/05-02-trellis-code-opencode/research/opencode-distribution-feasibility.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/research/opencode-distribution-feasibility.md
+R100	.trellis/tasks/05-02-trellis-code-opencode/research/opencode-extension-surfaces.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/research/opencode-extension-surfaces.md
+R100	.trellis/tasks/05-02-trellis-code-opencode/research/opencode-fork-landscape.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/research/opencode-fork-landscape.md
+R100	.trellis/tasks/05-02-trellis-code-opencode/research/opencode-forkability.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/research/opencode-forkability.md
+R100	.trellis/tasks/05-02-trellis-code-opencode/research/opencode-foundation.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/research/opencode-foundation.md
+R100	.trellis/tasks/05-02-trellis-code-opencode/research/opencode-runtime-architecture.md	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/research/opencode-runtime-architecture.md
+R090	.trellis/tasks/05-02-trellis-code-opencode/task.json	.trellis/tasks/archive/2026-06/05-02-trellis-code-opencode/task.json
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/check.jsonl	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/check.jsonl
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/implement.jsonl	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/implement.jsonl
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/prd.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/prd.md
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/research/claude-agent-sdk.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/research/claude-agent-sdk.md
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/research/mcp-tools-setup.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/research/mcp-tools-setup.md
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/research/mimo-v2-5-pro.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/research/mimo-v2-5-pro.md
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/research/opencode-driver.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/research/opencode-driver.md
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/research/tb2-agent-landscape.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/research/tb2-agent-landscape.md
+R100	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/research/terminal-bench-2.md	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/research/terminal-bench-2.md
+R091	.trellis/tasks/05-02-trellis-spec-compounding-benchmark-toy-phase/task.json	.trellis/tasks/archive/2026-06/05-02-trellis-spec-compounding-benchmark-toy-phase/task.json
+R100	.trellis/tasks/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/check.jsonl	.trellis/tasks/archive/2026-06/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/check.jsonl
+R100	.trellis/tasks/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/implement.jsonl	.trellis/tasks/archive/2026-06/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/implement.jsonl
+R100	.trellis/tasks/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/prd.md	.trellis/tasks/archive/2026-06/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/prd.md
+R091	.trellis/tasks/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/task.json	.trellis/tasks/archive/2026-06/05-06-fix-codex-generic-sub-agent-trellis-workflow-bleed-240/task.json
+R100	.trellis/tasks/05-08-0-5-8-prompt-layer-cleanup/check.jsonl	.trellis/tasks/archive/2026-06/05-08-0-5-8-prompt-layer-cleanup/check.jsonl
+R100	.trellis/tasks/05-08-0-5-8-prompt-layer-cleanup/implement.jsonl	.trellis/tasks/archive/2026-06/05-08-0-5-8-prompt-layer-cleanup/implement.jsonl
+R100	.trellis/tasks/05-08-0-5-8-prompt-layer-cleanup/prd.md	.trellis/tasks/archive/2026-06/05-08-0-5-8-prompt-layer-cleanup/prd.md
+R090	.trellis/tasks/05-08-0-5-8-prompt-layer-cleanup/task.json	.trellis/tasks/archive/2026-06/05-08-0-5-8-prompt-layer-cleanup/task.json
+R100	.trellis/tasks/05-13-review-pr-271-claudecode-root-file/check.jsonl	.trellis/tasks/archive/2026-06/05-08-fix-copilot-pi-hook-injection-248-249/check.jsonl
+R100	.trellis/tasks/05-13-review-pr-271-claudecode-root-file/implement.jsonl	.trellis/tasks/archive/2026-06/05-08-fix-copilot-pi-hook-injection-248-249/implement.jsonl
+R100	.trellis/tasks/05-08-fix-copilot-pi-hook-injection-248-249/prd.md	.trellis/tasks/archive/2026-06/05-08-fix-copilot-pi-hook-injection-248-249/prd.md
+R100	.trellis/tasks/05-08-fix-copilot-pi-hook-injection-248-249/research/copilot-injection-paths.md	.trellis/tasks/archive/2026-06/05-08-fix-copilot-pi-hook-injection-248-249/research/copilot-injection-paths.md
+R100	.trellis/tasks/05-08-fix-copilot-pi-hook-injection-248-249/research/pi-extension-hook-contract.md	.trellis/tasks/archive/2026-06/05-08-fix-copilot-pi-hook-injection-248-249/research/pi-extension-hook-contract.md
+R091	.trellis/tasks/05-08-fix-copilot-pi-hook-injection-248-249/task.json	.trellis/tasks/archive/2026-06/05-08-fix-copilot-pi-hook-injection-248-249/task.json
+R100	.trellis/tasks/05-15-parent-child-task-guidance/check.jsonl	.trellis/tasks/archive/2026-06/05-08-marketplace-skill-chat-recall/check.jsonl
+R100	.trellis/tasks/05-15-parent-child-task-guidance/implement.jsonl	.trellis/tasks/archive/2026-06/05-08-marketplace-skill-chat-recall/implement.jsonl
+R100	.trellis/tasks/05-08-marketplace-skill-chat-recall/prd.md	.trellis/tasks/archive/2026-06/05-08-marketplace-skill-chat-recall/prd.md
+R091	.trellis/tasks/05-08-marketplace-skill-chat-recall/task.json	.trellis/tasks/archive/2026-06/05-08-marketplace-skill-chat-recall/task.json
+R100	.trellis/tasks/05-15-worker-dispatcher-observability-gaps/check.jsonl	.trellis/tasks/archive/2026-06/05-08-scratch-start-task/check.jsonl
+R100	.trellis/tasks/05-15-worker-dispatcher-observability-gaps/implement.jsonl	.trellis/tasks/archive/2026-06/05-08-scratch-start-task/implement.jsonl
+R089	.trellis/tasks/05-08-scratch-start-task/task.json	.trellis/tasks/archive/2026-06/05-08-scratch-start-task/task.json
+R100	.trellis/tasks/05-08-temporary-task/check.jsonl	.trellis/tasks/archive/2026-06/05-08-temporary-task/check.jsonl
+R100	.trellis/tasks/05-08-temporary-task/implement.jsonl	.trellis/tasks/archive/2026-06/05-08-temporary-task/implement.jsonl
+R100	.trellis/tasks/05-08-temporary-task/prd.md	.trellis/tasks/archive/2026-06/05-08-temporary-task/prd.md
+R089	.trellis/tasks/05-08-temporary-task/task.json	.trellis/tasks/archive/2026-06/05-08-temporary-task/task.json
+R100	.trellis/tasks/05-10-docs-site-config-yaml-guide/check.jsonl	.trellis/tasks/archive/2026-06/05-10-docs-site-config-yaml-guide/check.jsonl
+R100	.trellis/tasks/05-10-docs-site-config-yaml-guide/implement.jsonl	.trellis/tasks/archive/2026-06/05-10-docs-site-config-yaml-guide/implement.jsonl
+R100	.trellis/tasks/05-10-docs-site-config-yaml-guide/prd.md	.trellis/tasks/archive/2026-06/05-10-docs-site-config-yaml-guide/prd.md
+R090	.trellis/tasks/05-10-docs-site-config-yaml-guide/task.json	.trellis/tasks/archive/2026-06/05-10-docs-site-config-yaml-guide/task.json
+R100	.trellis/tasks/05-10-fix-workflow-update-drift-codex-inline/break-loop.md	.trellis/tasks/archive/2026-06/05-10-fix-workflow-update-drift-codex-inline/break-loop.md
+R100	.trellis/tasks/05-10-fix-workflow-update-drift-codex-inline/check.jsonl	.trellis/tasks/archive/2026-06/05-10-fix-workflow-update-drift-codex-inline/check.jsonl
+R100	.trellis/tasks/05-10-fix-workflow-update-drift-codex-inline/implement.jsonl	.trellis/tasks/archive/2026-06/05-10-fix-workflow-update-drift-codex-inline/implement.jsonl
+R100	.trellis/tasks/05-10-fix-workflow-update-drift-codex-inline/prd.md	.trellis/tasks/archive/2026-06/05-10-fix-workflow-update-drift-codex-inline/prd.md
+R090	.trellis/tasks/05-10-fix-workflow-update-drift-codex-inline/task.json	.trellis/tasks/archive/2026-06/05-10-fix-workflow-update-drift-codex-inline/task.json
+R100	.trellis/tasks/05-10-session-auto-commit-config/check.jsonl	.trellis/tasks/archive/2026-06/05-10-session-auto-commit-config/check.jsonl
+R100	.trellis/tasks/05-10-session-auto-commit-config/implement.jsonl	.trellis/tasks/archive/2026-06/05-10-session-auto-commit-config/implement.jsonl
+R100	.trellis/tasks/05-10-session-auto-commit-config/prd.md	.trellis/tasks/archive/2026-06/05-10-session-auto-commit-config/prd.md
+R091	.trellis/tasks/05-10-session-auto-commit-config/task.json	.trellis/tasks/archive/2026-06/05-10-session-auto-commit-config/task.json
+R100	.trellis/tasks/05-10-spec-sweep-may10/check.jsonl	.trellis/tasks/archive/2026-06/05-10-spec-sweep-may10/check.jsonl
+R100	.trellis/tasks/05-10-spec-sweep-may10/implement.jsonl	.trellis/tasks/archive/2026-06/05-10-spec-sweep-may10/implement.jsonl
+R100	.trellis/tasks/05-10-spec-sweep-may10/prd.md	.trellis/tasks/archive/2026-06/05-10-spec-sweep-may10/prd.md
+R090	.trellis/tasks/05-10-spec-sweep-may10/task.json	.trellis/tasks/archive/2026-06/05-10-spec-sweep-may10/task.json
+R100	.trellis/tasks/05-16-rename-spec-bootstrap-skill/check.jsonl	.trellis/tasks/archive/2026-06/05-11-investigate-pi-extension-subagent-context-double-injection/check.jsonl
+R100	.trellis/tasks/05-16-rename-spec-bootstrap-skill/implement.jsonl	.trellis/tasks/archive/2026-06/05-11-investigate-pi-extension-subagent-context-double-injection/implement.jsonl
+R100	.trellis/tasks/05-11-investigate-pi-extension-subagent-context-double-injection/prd.md	.trellis/tasks/archive/2026-06/05-11-investigate-pi-extension-subagent-context-double-injection/prd.md
+R091	.trellis/tasks/05-11-investigate-pi-extension-subagent-context-double-injection/task.json	.trellis/tasks/archive/2026-06/05-11-investigate-pi-extension-subagent-context-double-injection/task.json
+R100	.trellis/tasks/05-19-main-0-5-18-release-manifest/check.jsonl	.trellis/tasks/archive/2026-06/05-13-channel-post-text-input/check.jsonl
+R100	.trellis/tasks/05-19-main-0-5-18-release-manifest/implement.jsonl	.trellis/tasks/archive/2026-06/05-13-channel-post-text-input/implement.jsonl
+R100	.trellis/tasks/05-13-channel-post-text-input/implement.md	.trellis/tasks/archive/2026-06/05-13-channel-post-text-input/implement.md
+R100	.trellis/tasks/05-13-channel-post-text-input/prd.md	.trellis/tasks/archive/2026-06/05-13-channel-post-text-input/prd.md
+R092	.trellis/tasks/05-13-channel-post-text-input/task.json	.trellis/tasks/archive/2026-06/05-13-channel-post-text-input/task.json
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/break-loop-event-payload-sot.md	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/break-loop-event-payload-sot.md
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/check.jsonl	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/check.jsonl
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/design.md	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/design.md
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/implement.jsonl	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/implement.jsonl
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/implement.md	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/implement.md
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/prd.md	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/prd.md
+R100	.trellis/tasks/05-13-channel-topics-managed-agents/research/architect-brainstorm.md	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/research/architect-brainstorm.md
+R092	.trellis/tasks/05-13-channel-topics-managed-agents/task.json	.trellis/tasks/archive/2026-06/05-13-channel-topics-managed-agents/task.json
+A	.trellis/tasks/archive/2026-06/05-13-create-migration-manifest/check.jsonl
+A	.trellis/tasks/archive/2026-06/05-13-create-migration-manifest/implement.jsonl
+R100	.trellis/tasks/05-13-create-migration-manifest/prd.md	.trellis/tasks/archive/2026-06/05-13-create-migration-manifest/prd.md
+R089	.trellis/tasks/05-13-create-migration-manifest/task.json	.trellis/tasks/archive/2026-06/05-13-create-migration-manifest/task.json
+A	.trellis/tasks/archive/2026-06/05-13-review-pr-271-claudecode-root-file/check.jsonl
+A	.trellis/tasks/archive/2026-06/05-13-review-pr-271-claudecode-root-file/implement.jsonl
+R100	.trellis/tasks/05-13-review-pr-271-claudecode-root-file/prd.md	.trellis/tasks/archive/2026-06/05-13-review-pr-271-claudecode-root-file/prd.md
+R090	.trellis/tasks/05-13-review-pr-271-claudecode-root-file/task.json	.trellis/tasks/archive/2026-06/05-13-review-pr-271-claudecode-root-file/task.json
+R100	.trellis/tasks/05-13-trellis-core-sdk-package/check.jsonl	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/check.jsonl
+R100	.trellis/tasks/05-13-trellis-core-sdk-package/design.md	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/design.md
+R100	.trellis/tasks/05-13-trellis-core-sdk-package/implement.jsonl	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/implement.jsonl
+R100	.trellis/tasks/05-13-trellis-core-sdk-package/implement.md	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/implement.md
+R100	.trellis/tasks/05-13-trellis-core-sdk-package/prd.md	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/prd.md
+R100	.trellis/tasks/05-13-trellis-core-sdk-package/research.md	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/research.md
+R091	.trellis/tasks/05-13-trellis-core-sdk-package/task.json	.trellis/tasks/archive/2026-06/05-13-trellis-core-sdk-package/task.json
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/check.jsonl	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/check.jsonl
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/design.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/design.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/implement.jsonl	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/implement.jsonl
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/implement.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/implement.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/prd.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/prd.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/research/architect-review-3.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/research/architect-review-3.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/research/architect-review.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/research/architect-review.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/research/evidence-pass.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/research/evidence-pass.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/research/implementation-review.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/research/implementation-review.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/research/issue-intake.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/research/issue-intake.md
+R100	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/research/planning-review-2.md	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/research/planning-review-2.md
+R091	.trellis/tasks/05-14-channel-lib-worker-lifecycle-subscriptions/task.json	.trellis/tasks/archive/2026-06/05-14-channel-lib-worker-lifecycle-subscriptions/task.json
+A	.trellis/tasks/archive/2026-06/05-15-parent-child-task-guidance/check.jsonl
+A	.trellis/tasks/archive/2026-06/05-15-parent-child-task-guidance/implement.jsonl
+R100	.trellis/tasks/05-15-parent-child-task-guidance/prd.md	.trellis/tasks/archive/2026-06/05-15-parent-child-task-guidance/prd.md
+R090	.trellis/tasks/05-15-parent-child-task-guidance/task.json	.trellis/tasks/archive/2026-06/05-15-parent-child-task-guidance/task.json
+A	.trellis/tasks/archive/2026-06/05-15-worker-dispatcher-observability-gaps/check.jsonl
+A	.trellis/tasks/archive/2026-06/05-15-worker-dispatcher-observability-gaps/implement.jsonl
+R100	.trellis/tasks/05-15-worker-dispatcher-observability-gaps/prd.md	.trellis/tasks/archive/2026-06/05-15-worker-dispatcher-observability-gaps/prd.md
+R091	.trellis/tasks/05-15-worker-dispatcher-observability-gaps/task.json	.trellis/tasks/archive/2026-06/05-15-worker-dispatcher-observability-gaps/task.json
+A	.trellis/tasks/archive/2026-06/05-16-rename-spec-bootstrap-skill/check.jsonl
+A	.trellis/tasks/archive/2026-06/05-16-rename-spec-bootstrap-skill/implement.jsonl
+R100	.trellis/tasks/05-16-rename-spec-bootstrap-skill/prd.md	.trellis/tasks/archive/2026-06/05-16-rename-spec-bootstrap-skill/prd.md
+R094	.trellis/tasks/05-16-rename-spec-bootstrap-skill/task.json	.trellis/tasks/archive/2026-06/05-16-rename-spec-bootstrap-skill/task.json
+A	.trellis/tasks/archive/2026-06/05-19-main-0-5-18-release-manifest/check.jsonl
+A	.trellis/tasks/archive/2026-06/05-19-main-0-5-18-release-manifest/implement.jsonl
+R100	.trellis/tasks/05-19-main-0-5-18-release-manifest/prd.md	.trellis/tasks/archive/2026-06/05-19-main-0-5-18-release-manifest/prd.md
+R090	.trellis/tasks/05-19-main-0-5-18-release-manifest/task.json	.trellis/tasks/archive/2026-06/05-19-main-0-5-18-release-manifest/task.json
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/design.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/implement.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/prd.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/0.6.0-json-template.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/0.6.0-manifest-draft.json
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/CRITIQUE-VERIFY.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/CRITIQUE.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-changelog.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-channel.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-docsjson.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-dogfood.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-manifest.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-meta.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-npm-ready.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-preflight.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-rootcontent.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/PRESHIP-VERIFY-tests.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/SHIP-VERDICT.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/bundled-trellis-channel/SKILL.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/bundled-trellis-channel/references/command-reference.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/bundled-trellis-channel/references/forum.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/bundled-trellis-channel/references/progress-debugging.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/bundled-trellis-channel/references/workers.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/bundled-trellis-channel/references/workflows.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/channel-cli-surface.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-channel-porting-plan.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-meta-drift.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-meta-rewrite/SKILL.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-meta-rewrite/change-skills-or-commands-delta.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-meta-rewrite/platform-map-delta.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-meta-rewrite/references/local-architecture/bundled-skills.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/trellis-meta-rewrite/references/local-architecture/multi-agent-channel.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/v0.5.0-changelog-structure.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/v0.6.0-changelog-en-draft.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/v0.6.0-changelog-zh-draft.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/research/v06-cycle-synthesis.md
+A	.trellis/tasks/archive/2026-06/06-15-release-v0-6-0-ga/task.json
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/design.md
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/implement.md
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/prd.md
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/research/issue-triage-report.md
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/research/pr-345-review.md
+A	.trellis/tasks/archive/2026-06/06-17-community-governance/task.json
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/design.md
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/implement.md
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/prd.md
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/research/audit-findings.md
+A	.trellis/tasks/archive/2026-06/06-17-workflow-simplify-redundant-steps/task.json
+A	.trellis/tasks/archive/2026-06/06-18-fix-trellis-staging-scope/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-fix-trellis-staging-scope/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-fix-trellis-staging-scope/prd.md
+A	.trellis/tasks/archive/2026-06/06-18-fix-trellis-staging-scope/research/303-break-loop.md
+A	.trellis/tasks/archive/2026-06/06-18-fix-trellis-staging-scope/task.json
+A	.trellis/tasks/archive/2026-06/06-18-fix-windows-mem-cwd/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-fix-windows-mem-cwd/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-fix-windows-mem-cwd/prd.md
+A	.trellis/tasks/archive/2026-06/06-18-fix-windows-mem-cwd/task.json
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/design.md
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/implement.md
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/prd.md
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/research/pi-session-store.md
+A	.trellis/tasks/archive/2026-06/06-18-pi-mem-adapter/task.json
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/design.md
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/implement.md
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/prd.md
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/research/spec-drift-scan.md
+A	.trellis/tasks/archive/2026-06/06-18-spec-maintainer-audit/task.json
+A	.trellis/tasks/archive/2026-06/06-18-support-devin-platform/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-support-devin-platform/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-18-support-devin-platform/prd.md
+A	.trellis/tasks/archive/2026-06/06-18-support-devin-platform/research/windsurf-to-devin.md
+A	.trellis/tasks/archive/2026-06/06-18-support-devin-platform/task.json
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/prd.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/00-summary.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/01-filtercommands-fanout.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/02-start-template-semantics.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/03-workflow-md-platform-blocks.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/04-opencode-deep-dive.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/05-reasonix-subagent.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/06-test-impact.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/07-migration-update-impact.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/research/08-gitnexus-impact.md
+A	.trellis/tasks/archive/2026-06/06-22-platform-start-skill-coverage/task.json
+A	.trellis/tasks/archive/2026-06/06-24-06-24-fix-pi-session-start-context/check.jsonl
+A	.trellis/tasks/archive/2026-06/06-24-06-24-fix-pi-session-start-context/implement.jsonl
+A	.trellis/tasks/archive/2026-06/06-24-06-24-fix-pi-session-start-context/prd.md
+A	.trellis/tasks/archive/2026-06/06-24-06-24-fix-pi-session-start-context/task.json
+M	.trellis/workflow.md
+A	.trellis/workspace/hauryn/index.md
+A	.trellis/workspace/hauryn/journal-1.md
+M	.trellis/workspace/taosu/index.md
+M	.trellis/workspace/taosu/journal-5.md
+M	AGENTS.md
+M	CLAUDE.md
+M	README.md
+M	README_CN.md
+M	assets/wx_link7.jpg
+A	assets/wx_link8.jpg
+M	docs-site
+M	marketplace
+M	packages/cli/package.json
+M	packages/cli/scripts/release.js
+M	packages/cli/src/cli/index.ts
+M	packages/cli/src/commands/channel/messages.ts
+M	packages/cli/src/commands/channel/supervisor.ts
+M	packages/cli/src/commands/init.ts
+M	packages/cli/src/commands/mem.ts
+M	packages/cli/src/commands/uninstall.ts
+M	packages/cli/src/commands/update.ts
+M	packages/cli/src/configurators/antigravity.ts
+M	packages/cli/src/configurators/claude.ts
+M	packages/cli/src/configurators/codebuddy.ts
+M	packages/cli/src/configurators/codex.ts
+M	packages/cli/src/configurators/copilot.ts
+M	packages/cli/src/configurators/cursor.ts
+R063	packages/cli/src/configurators/windsurf.ts	packages/cli/src/configurators/devin.ts
+M	packages/cli/src/configurators/droid.ts
+M	packages/cli/src/configurators/gemini.ts
+M	packages/cli/src/configurators/index.ts
+M	packages/cli/src/configurators/kilo.ts
+M	packages/cli/src/configurators/kiro.ts
+M	packages/cli/src/configurators/pi.ts
+M	packages/cli/src/configurators/shared.ts
+A	packages/cli/src/configurators/trae.ts
+A	packages/cli/src/configurators/zcode.ts
+A	packages/cli/src/migrations/manifests/0.6.0.json
+A	packages/cli/src/migrations/manifests/0.6.1.json
+A	packages/cli/src/migrations/manifests/0.6.2.json
+A	packages/cli/src/migrations/manifests/0.6.3.json
+A	packages/cli/src/migrations/manifests/0.6.4.json
+A	packages/cli/src/migrations/manifests/0.6.5.json
+A	packages/cli/src/templates/claude/hooks/statusline.py
+M	packages/cli/src/templates/claude/index.ts
+M	packages/cli/src/templates/codex/skills/brainstorm/SKILL.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-channel/SKILL.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-channel/references/command-reference.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-channel/references/forum.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-channel/references/progress-debugging.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-channel/references/workers.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-channel/references/workflows.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/SKILL.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/change-agents.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/change-hooks.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/change-skills-or-commands.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/change-workflow.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/overview.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/local-architecture/bundled-skills.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/local-architecture/generated-files.md
+A	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/local-architecture/multi-agent-channel.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/local-architecture/overview.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/platform-files/agents.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/platform-files/hooks-and-settings.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/platform-files/overview.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/platform-files/platform-map.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-meta/references/platform-files/skills-and-commands.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-session-insight/SKILL.md
+M	packages/cli/src/templates/common/bundled-skills/trellis-session-insight/references/cli-quick-reference.md
+M	packages/cli/src/templates/common/commands/continue.md
+M	packages/cli/src/templates/common/skills/brainstorm.md
+M	packages/cli/src/templates/common/skills/break-loop.md
+M	packages/cli/src/templates/copilot/prompts/brainstorm.prompt.md
+M	packages/cli/src/templates/copilot/prompts/finish-work.prompt.md
+A	packages/cli/src/templates/kiro/agents/trellis.json
+A	packages/cli/src/templates/kiro/hooks/trellis-workflow-state.kiro.hook
+M	packages/cli/src/templates/kiro/index.ts
+M	packages/cli/src/templates/pi/agents/trellis-check.md
+M	packages/cli/src/templates/pi/agents/trellis-implement.md
+M	packages/cli/src/templates/pi/agents/trellis-research.md
+M	packages/cli/src/templates/pi/extensions/trellis/index.ts.txt
+M	packages/cli/src/templates/shared-hooks/index.ts
+M	packages/cli/src/templates/shared-hooks/inject-workflow-state.py
+M	packages/cli/src/templates/shared-hooks/session-start.py
+A	packages/cli/src/templates/trae/agents/trellis-check.md
+A	packages/cli/src/templates/trae/agents/trellis-implement.md
+A	packages/cli/src/templates/trae/agents/trellis-research.md
+A	packages/cli/src/templates/trae/hooks.json
+A	packages/cli/src/templates/trae/index.ts
+M	packages/cli/src/templates/trellis/scripts/add_session.py
+M	packages/cli/src/templates/trellis/scripts/common/active_task.py
+M	packages/cli/src/templates/trellis/scripts/common/cli_adapter.py
+M	packages/cli/src/templates/trellis/scripts/common/safe_commit.py
+M	packages/cli/src/templates/trellis/scripts/common/task_store.py
+M	packages/cli/src/templates/trellis/scripts/common/workflow_phase.py
+M	packages/cli/src/templates/trellis/workflow.md
+A	packages/cli/src/templates/zcode/agents/trellis-check.md
+A	packages/cli/src/templates/zcode/agents/trellis-implement.md
+A	packages/cli/src/templates/zcode/index.ts
+M	packages/cli/src/types/ai-tools.ts
+M	packages/cli/test/commands/init.integration.test.ts
+M	packages/cli/test/commands/mem-helpers.test.ts
+M	packages/cli/test/commands/mem-integration.test.ts
+M	packages/cli/test/commands/update.integration.test.ts
+M	packages/cli/test/configurators/index.test.ts
+M	packages/cli/test/configurators/platforms.test.ts
+M	packages/cli/test/configurators/shared.test.ts
+M	packages/cli/test/registry-invariants.test.ts
+M	packages/cli/test/regression.test.ts
+A	packages/cli/test/scripts/add-session.integration.test.ts
+A	packages/cli/test/scripts/inject-workflow-state-kiro.integration.test.ts
+A	packages/cli/test/templates/kiro.test.ts
+M	packages/cli/test/templates/pi.test.ts
+M	packages/cli/test/templates/shared-hooks.test.ts
+A	packages/cli/test/templates/trae.test.ts
+M	packages/cli/test/templates/trellis.test.ts
+M	packages/core/package.json
+M	packages/core/src/mem/adapters/claude.ts
+A	packages/core/src/mem/adapters/pi.ts
+M	packages/core/src/mem/internal/paths.ts
+M	packages/core/src/mem/projects.ts
+M	packages/core/src/mem/sessions.ts
+M	packages/core/src/mem/types.ts
+M	packages/core/test/mem/adapters.test.ts
+M	packages/core/test/mem/api.test.ts
+M	packages/core/test/mem/phase.test.ts

@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "prepare": "husky",
+    "build": "pnpm --filter @enpd/devflow-core build && pnpm --filter @enpd/devflow build",
+    "build:core": "pnpm --filter @enpd/devflow-core build",
+    "build:cli": "pnpm --filter @enpd/devflow build",
+    "test": "pnpm --filter @enpd/devflow-core test && pnpm --filter @enpd/devflow test",
+    "test:core": "pnpm --filter @enpd/devflow-core test",
+    "test:cli": "pnpm --filter @enpd/devflow test",
+    "lint": "pnpm --filter @enpd/devflow-core lint && pnpm --filter @enpd/devflow lint",
+    "typecheck": "pnpm --filter @enpd/devflow-core build && pnpm --filter @enpd/devflow typecheck",
+    "release": "pnpm --filter @enpd/devflow release",
+    "release:minor": "pnpm --filter @enpd/devflow release:minor",
+    "release:major": "pnpm --filter @enpd/devflow release:major",
+    "release:beta": "pnpm --filter @enpd/devflow release:beta",
+    "release:rc": "pnpm --filter @enpd/devflow release:rc",
+    "release:promote": "pnpm --filter @enpd/devflow release:promote",
+    "release:check": "node packages/cli/scripts/release-preflight.js check-versions",
+    "release:plan": "node packages/cli/scripts/release-preflight.js publish-plan"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  }
+}

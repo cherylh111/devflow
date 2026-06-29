@@ -1,0 +1,107 @@
+01ec8d65 (HEAD -> main, tag: v0.6.5, origin/main, origin/HEAD) 0.6.5
+0872202b fix(zcode): avoid shared command-skill drift
+ac1a3949 fix(workflow): enforce class-2 pull-based routing invariant
+84ce61cc fix(workflow): route trae through pull-based implement block
+2220e1ab chore(release): prepare v0.6.5
+569f93a0 docs(spec): correct filterCommands two-flag rule + submodule push contract
+81d9077e Merge pull request #363 from mindfold-ai/fix/issue-355-pi-session-start
+e95be41e Merge pull request #364 from mindfold-ai/fix/ci-sync-trae-workflow
+8456145c ci: run on marketplace pointer changes
+701f731c chore: sync marketplace workflow mirror
+f710bc88 Merge pull request #359 from fawks96/feature/support-trae
+47c78526 chore(task): record pi context PR metadata
+44a29132 fix(pi): inject startup Trellis context
+e1459dd8 Merge pull request #362 from mindfold-ai/fix/issue-320-brainstorm-prd-converge
+a295a455 fix(brainstorm): require lossless prd convergence
+907423d7 fix: address CodeRabbit review comments on PR #359
+a8d0e3ce Merge pull request #361 from mindfold-ai/fix/issue-292-jsonl-gate
+0feadb22 fix(workflow): require curated jsonl before start
+64fcae93 Merge pull request #360 from mindfold-ai/fix/issue-356-hook-stdin
+f1e475a9 fix(hooks): avoid blocking on empty stdin
+33c7f735 Merge pull request #347 from ruttybob/feat/pi-subagents-tools
+0904738c Merge pull request #352 from wsolarq11/fix/channel-spawn-windows
+1ae46de3 chore(assets): refresh WeChat group QR (八群) (#357)
+d4957fcf feat: add Trae IDE platform support
+28d30c0a (tag: v0.6.4) 0.6.4
+b032e609 chore: pre-release updates
+1c763742 chore: record journal
+13f73c40 chore(task): archive 06-22-platform-start-skill-coverage
+40791b8b fix(configurators): emit trellis-start on agentCapable && !hasHooks platforms
+91346e90 chore: bump docs-site pointer + track kiro hook task
+fbb38c93 fix(kiro): wire per-turn workflow injection for the main session
+8e79e5e3 fix(pi): lowercase tool names + drop dead PI_TOOL_ALLOWLIST
+af6df73e Merge branch 'main' into feat/pi-subagents-tools
+d48e4b81 chore: record journal
+906fc9a0 chore(task): archive 06-18-spec-maintainer-audit
+ba2288aa chore(task): archive 04-29-docs-architecture-workflow-narrative
+3c2f947f chore(task): record spec maintainer audit validation
+db07899e docs(spec): repair Trellis package map and stale specs
+65e55ea8 chore(task): archive 35 shipped/closed/stale tasks (cleanup)
+bccfd2df fix(channel): resolve .exe path from npm .cmd shim on Windows
+6faf02d6 chore: refresh gitnexus index after 0.6.3 (#325 devin + #335 thinking frameworks)
+d6a6bc2c chore(task): archive 06-17-community-governance
+855b4f90 chore(task): archive 06-18-support-devin-platform
+1d50e8d1 (tag: v0.6.3) 0.6.3
+8fa5f2ec docs(release): 0.6.3 manifest changelog covering all bundled changes
+6206ba9c chore(skills): sync dogfood copies for thinking frameworks (#335)
+76c0252c chore(docs): bump docs-site pointer for v0.6.3 changelog
+e2e600c5 feat(skills): add first-principles + bayesian thinking frameworks (#335)
+6c59df7a feat(pi): support tools frontmatter in trellis_subagent
+16ad2468 chore(task): mark #325 devin sync complete (docs + spec)
+50f1d5cc docs(spec): rename windsurf to devin in dev specs (#325)
+d9005c57 chore(docs): bump docs-site pointer for devin rename (#325)
+f81c3108 chore(task): track #325 devin platform support
+c019b7a8 chore(skills): sync local dispatch copies for devin rename (#325)
+1a9a9475 feat(platform): rename Windsurf to Devin (#325)
+55b86a30 chore(task): archive 06-18-fix-windows-mem-cwd
+6027802f chore(task): archive 06-18-fix-trellis-staging-scope
+26411cd1 chore: refresh gitnexus index after #300 + #303 fixes
+ad23b768 chore(task): track #303 staging-scope fix + #325 devin platform research
+3b9fc5a0 chore(scripts): sync local dispatch copies for #303 staging fix
+71c0ff62 fix(scripts): scope .trellis staging to current task (#303)
+12216a91 chore(task): track fix-windows-mem-cwd (#300)
+5f18dfe9 fix(mem): claude cwd filter returns 0 on Windows (#300)
+fc613809 chore: refresh gitnexus index after pi mem adapter merge
+2f50cd39 docs: complete pi mem-adapter coverage (#345 follow-up)
+e82b45f1 chore(task): record issue triage + pr-345 review + backlog tasks
+528d129f chore(skills): refresh local dispatch copies for pi mem adapter (#345)
+c54eab6f Merge pull request #345 from GowayLee/feat/pi-mem-adapter
+7653a829 Merge branch 'mindfold-ai:main' into main
+dd0ccc3d chore: record journal
+3e0775b9 chore(task): archive 06-18-pi-mem-adapter
+bfd9fff6 feat(mem): add Pi session adapter
+a87b18fd chore(github): route questions to discussions, disable blank issues
+8dda6f4e chore(docs): bump docs-site submodule for statusline opt-in docs
+4fcdbc69 Merge pull request #333 from wang199001/feat/statusline-opt-in
+5b416339 chore(docs): bump docs-site submodule for zcode + reasonix platform list
+9cbe6c9e Merge pull request #330 from CNHLAIA/feat/zcode-platform
+c417312c chore(docs): bump docs-site submodule for #340 upgrade-vs-update clarification
+5aa82cb8 chore: refresh gitnexus integration docs
+e83233c9 chore(task): track community-governance planning artifacts
+3c3219cf chore(task): untrack community-governance artifacts (3rd time, pnpm release sweep)
+d8a947a7 (tag: v0.6.2) 0.6.2
+ec123deb chore: pre-release updates
+90ec0e36 fix(workflow): /continue routing pointed at deleted Phase 3.1
+4af71072 chore(task): archive 06-17-workflow-simplify-redundant-steps
+81960120 chore(task): untrack community-governance task artifacts (again)
+c8ed3e21 (tag: v0.6.1) 0.6.1
+5ee43ecc chore: pre-release updates
+118e39ad chore(release): add 0.6.1 migration manifest + docs-site changelog
+d66405d9 chore(task): untrack community-governance task artifacts
+1fd56ba7 chore(skills): refresh local dispatch copies
+91970b68 refactor(workflow): drop redundant Phase 3.1, fold into 2.2 + 3.4
+ecd07a2c Merge branch 'main' into feat/statusline-opt-in
+c4e06fa0 docs: update platform count and trellis-meta references for ZCode + Reasonix
+4905ecd3 feat: add ZCode (智谱) platform support
+29b5141b chore(task): archive 06-15-release-v0-6-0-ga
+cc65b5c5 docs(spec): release-lifecycle — capture 0.6.0 GA first-real-run lessons
+f2cc0745 (tag: v0.6.0) 0.6.0
+5bfa0842 chore: pre-release updates
+5deacf6b chore(docs): bump docs-site submodule for v0.6.0 trellis-channel + trellis-meta changelog sections
+b0cdcb05 fix(release): address pre-ship verify blockers for 0.6.0 GA
+7c3a7cc7 chore(release): bump docs-site submodule for v0.6.0 ga changelog
+524827da chore(release): 0.6.0 GA bundled skills + manifest
+3c3bb027 Release v0.6.0 (RC stabilization → GA prep) (#338)
+c6635b08 feat(claude): add opt-in trellis init --with-statusline flag
+caa4e310 chore(readme): update WeChat group QR to group 8 (#331)
+d1aa3c00 docs: refresh WeChat group 7 QR (valid until Jun 17)

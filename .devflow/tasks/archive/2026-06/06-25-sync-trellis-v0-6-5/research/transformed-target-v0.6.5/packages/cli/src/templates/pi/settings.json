@@ -1,0 +1,12 @@
+{
+  "enableSkillCommands": true,
+  "extensions": [
+    "./extensions/devflow/index.ts"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "prompts": [
+    "./prompts"
+  ]
+}

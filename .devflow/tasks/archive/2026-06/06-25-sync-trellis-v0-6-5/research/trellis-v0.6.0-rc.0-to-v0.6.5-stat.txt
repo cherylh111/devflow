@@ -1,0 +1,656 @@
+ .agents/skills/trellis-brainstorm/SKILL.md         |  63 ++-
+ .agents/skills/trellis-break-loop/SKILL.md         |  58 +++
+ .agents/skills/trellis-channel/SKILL.md            |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .agents/skills/trellis-channel/references/forum.md | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .../skills/trellis-channel/references/workers.md   | 276 +++++++++++
+ .../skills/trellis-channel/references/workflows.md | 128 +++++
+ .agents/skills/trellis-continue/SKILL.md           |   2 +-
+ .agents/skills/trellis-meta/SKILL.md               |  80 ++--
+ .../references/customize-local/change-agents.md    |   2 +
+ .../customize-local/change-skills-or-commands.md   |  53 ++-
+ .../references/customize-local/change-workflow.md  |   2 +-
+ .../references/customize-local/overview.md         |   4 +-
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/generated-files.md          |   4 +-
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../references/local-architecture/overview.md      |   2 +-
+ .../references/platform-files/agents.md            |   4 +-
+ .../platform-files/hooks-and-settings.md           |   2 +
+ .../references/platform-files/overview.md          |   4 +-
+ .../references/platform-files/platform-map.md      |  18 +-
+ .../platform-files/skills-and-commands.md          |   4 +-
+ .agents/skills/trellis-session-insight/SKILL.md    |  81 ++++
+ .../references/cli-quick-reference.md              |  65 +++
+ .../references/triggering-patterns.md              |  93 ++++
+ .agents/skills/trellis-spec-bootstrap/SKILL.md     |  41 ++
+ .../trellis-spec-bootstrap/references/mcp-setup.md |  90 ++++
+ .../references/repository-analysis.md              |  59 +++
+ .../references/spec-task-planning.md               |  61 +++
+ .../references/spec-writing.md                     |  70 +++
+ .claude/agents/trellis-check.md                    |   2 +-
+ .claude/agents/trellis-implement.md                |   2 +-
+ .claude/agents/trellis-research.md                 |   2 +-
+ .claude/commands/trellis/continue.md               |   2 +-
+ .claude/commands/trellis/create-manifest.md        |   2 +-
+ .claude/skills/gitnexus/gitnexus-cli/SKILL.md      |  17 +-
+ .../skills/gitnexus/gitnexus-debugging/SKILL.md    |  30 +-
+ .../skills/gitnexus/gitnexus-exploring/SKILL.md    |  22 +-
+ .claude/skills/gitnexus/gitnexus-guide/SKILL.md    |   2 +-
+ .../gitnexus/gitnexus-impact-analysis/SKILL.md     |  20 +-
+ .../skills/gitnexus/gitnexus-refactoring/SKILL.md  |  50 +-
+ .claude/skills/trellis-brainstorm/SKILL.md         |  60 +++
+ .claude/skills/trellis-break-loop/SKILL.md         |  58 +++
+ .claude/skills/trellis-channel/SKILL.md            |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .claude/skills/trellis-channel/references/forum.md | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .../skills/trellis-channel/references/workers.md   | 276 +++++++++++
+ .../skills/trellis-channel/references/workflows.md | 128 +++++
+ .claude/skills/trellis-meta/SKILL.md               |  80 ++--
+ .../references/customize-local/change-agents.md    |   2 +
+ .../customize-local/change-skills-or-commands.md   |  53 ++-
+ .../references/customize-local/change-workflow.md  |   2 +-
+ .../references/customize-local/overview.md         |   4 +-
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/generated-files.md          |   4 +-
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../references/local-architecture/overview.md      |   2 +-
+ .../references/platform-files/agents.md            |   4 +-
+ .../platform-files/hooks-and-settings.md           |   2 +
+ .../references/platform-files/overview.md          |   4 +-
+ .../references/platform-files/platform-map.md      |  18 +-
+ .../platform-files/skills-and-commands.md          |   4 +-
+ .claude/skills/trellis-session-insight/SKILL.md    |  81 ++++
+ .../references/cli-quick-reference.md              |  65 +++
+ .../references/triggering-patterns.md              |  93 ++++
+ .claude/skills/trellis-spec-bootstrap/SKILL.md     |  41 ++
+ .../trellis-spec-bootstrap/references/mcp-setup.md |  90 ++++
+ .../references/repository-analysis.md              |  59 +++
+ .../references/spec-task-planning.md               |  61 +++
+ .../references/spec-writing.md                     |  70 +++
+ .codex/skills/create-manifest/SKILL.md             |   2 +-
+ .cursor/agents/trellis-check.md                    |   2 +-
+ .cursor/agents/trellis-implement.md                |   2 +-
+ .cursor/agents/trellis-research.md                 |   2 +-
+ .cursor/commands/trellis-continue.md               |   2 +-
+ .cursor/skills/trellis-brainstorm/SKILL.md         |  43 ++
+ .cursor/skills/trellis-break-loop/SKILL.md         |  58 +++
+ .cursor/skills/trellis-channel/SKILL.md            |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .cursor/skills/trellis-channel/references/forum.md | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .../skills/trellis-channel/references/workers.md   | 276 +++++++++++
+ .../skills/trellis-channel/references/workflows.md | 128 +++++
+ .cursor/skills/trellis-meta/SKILL.md               |  80 ++--
+ .../references/customize-local/change-agents.md    |   2 +
+ .../customize-local/change-skills-or-commands.md   |  53 ++-
+ .../references/customize-local/change-workflow.md  |   2 +-
+ .../references/customize-local/overview.md         |   4 +-
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/generated-files.md          |   4 +-
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../references/local-architecture/overview.md      |   2 +-
+ .../references/platform-files/agents.md            |   4 +-
+ .../platform-files/hooks-and-settings.md           |   2 +
+ .../references/platform-files/overview.md          |   4 +-
+ .../references/platform-files/platform-map.md      |  18 +-
+ .../platform-files/skills-and-commands.md          |   4 +-
+ .cursor/skills/trellis-session-insight/SKILL.md    |  81 ++++
+ .../references/cli-quick-reference.md              |  65 +++
+ .../references/triggering-patterns.md              |  93 ++++
+ .cursor/skills/trellis-spec-bootstrap/SKILL.md     |  41 ++
+ .../trellis-spec-bootstrap/references/mcp-setup.md |  90 ++++
+ .../references/repository-analysis.md              |  59 +++
+ .../references/spec-task-planning.md               |  61 +++
+ .../references/spec-writing.md                     |  70 +++
+ .github/ISSUE_TEMPLATE/config.yml                  |  12 +-
+ .github/ISSUE_TEMPLATE/question.yml                |  16 -
+ .github/workflows/ci.yml                           |   2 +
+ .opencode/commands/trellis/continue.md             |   2 +-
+ .opencode/skills/trellis-brainstorm/SKILL.md       |  43 ++
+ .opencode/skills/trellis-break-loop/SKILL.md       |  58 +++
+ .opencode/skills/trellis-channel/SKILL.md          |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .../skills/trellis-channel/references/forum.md     | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .../skills/trellis-channel/references/workers.md   | 276 +++++++++++
+ .../skills/trellis-channel/references/workflows.md | 128 +++++
+ .opencode/skills/trellis-meta/SKILL.md             |  80 ++--
+ .../references/customize-local/change-agents.md    |   2 +
+ .../customize-local/change-skills-or-commands.md   |  53 ++-
+ .../references/customize-local/change-workflow.md  |   2 +-
+ .../references/customize-local/overview.md         |   4 +-
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/generated-files.md          |   4 +-
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../references/local-architecture/overview.md      |   2 +-
+ .../references/platform-files/agents.md            |   4 +-
+ .../platform-files/hooks-and-settings.md           |   2 +
+ .../references/platform-files/overview.md          |   4 +-
+ .../references/platform-files/platform-map.md      |  18 +-
+ .../platform-files/skills-and-commands.md          |   4 +-
+ .opencode/skills/trellis-session-insight/SKILL.md  |  81 ++++
+ .../references/cli-quick-reference.md              |  65 +++
+ .../references/triggering-patterns.md              |  93 ++++
+ .opencode/skills/trellis-spec-bootstrap/SKILL.md   |  41 ++
+ .../trellis-spec-bootstrap/references/mcp-setup.md |  90 ++++
+ .../references/repository-analysis.md              |  59 +++
+ .../references/spec-task-planning.md               |  61 +++
+ .../references/spec-writing.md                     |  70 +++
+ .pi/agents/trellis-check.md                        |   2 +-
+ .pi/agents/trellis-implement.md                    |   2 +-
+ .pi/agents/trellis-research.md                     |   2 +-
+ .pi/extensions/trellis/index.ts                    |  18 +-
+ .pi/prompts/trellis-continue.md                    |   2 +-
+ .pi/skills/trellis-brainstorm/SKILL.md             |  43 ++
+ .pi/skills/trellis-break-loop/SKILL.md             |  58 +++
+ .pi/skills/trellis-channel/SKILL.md                |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .pi/skills/trellis-channel/references/forum.md     | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .pi/skills/trellis-channel/references/workers.md   | 276 +++++++++++
+ .pi/skills/trellis-channel/references/workflows.md | 128 +++++
+ .pi/skills/trellis-meta/SKILL.md                   |  80 ++--
+ .../references/customize-local/change-agents.md    |   2 +
+ .../customize-local/change-skills-or-commands.md   |  53 ++-
+ .../references/customize-local/change-workflow.md  |   2 +-
+ .../references/customize-local/overview.md         |   4 +-
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/generated-files.md          |   4 +-
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../references/local-architecture/overview.md      |   2 +-
+ .../references/platform-files/agents.md            |   4 +-
+ .../platform-files/hooks-and-settings.md           |   2 +
+ .../references/platform-files/overview.md          |   4 +-
+ .../references/platform-files/platform-map.md      |  18 +-
+ .../platform-files/skills-and-commands.md          |   4 +-
+ .pi/skills/trellis-session-insight/SKILL.md        |  81 ++++
+ .../references/cli-quick-reference.md              |  65 +++
+ .../references/triggering-patterns.md              |  93 ++++
+ .pi/skills/trellis-spec-bootstrap/SKILL.md         |  41 ++
+ .../trellis-spec-bootstrap/references/mcp-setup.md |  90 ++++
+ .../references/repository-analysis.md              |  59 +++
+ .../references/spec-task-planning.md               |  61 +++
+ .../references/spec-writing.md                     |  70 +++
+ .trellis/.template-hashes.json                     | 252 ++++++----
+ .trellis/.version                                  |   2 +-
+ .trellis/agents/check.md                           | 392 ++--------------
+ .trellis/agents/implement.md                       |  59 ++-
+ .trellis/config.yaml                               |  71 +--
+ .trellis/scripts/add_session.py                    |  32 +-
+ .trellis/scripts/common/cli_adapter.py             |  78 +--
+ .trellis/scripts/common/safe_commit.py             |  62 ++-
+ .trellis/scripts/common/task_store.py              |   4 +-
+ .trellis/scripts/common/workflow_phase.py          |   2 +-
+ .trellis/spec/cli/backend/commands-channel.md      |  17 +-
+ .trellis/spec/cli/backend/commands-mem.md          | 463 +++++++++++-------
+ .trellis/spec/cli/backend/commands-update.md       |   2 +-
+ .trellis/spec/cli/backend/commands-workflow.md     |   4 +-
+ .trellis/spec/cli/backend/configurator-shared.md   |  28 +-
+ .trellis/spec/cli/backend/platform-integration.md  | 137 ++++--
+ .trellis/spec/cli/backend/quality-guidelines.md    |  14 +-
+ .trellis/spec/cli/backend/release-process.md       |  49 +-
+ .trellis/spec/cli/backend/script-conventions.md    | 110 ++++-
+ .../spec/cli/backend/workflow-state-contract.md    |   4 +-
+ .trellis/spec/core/backend/index.md                |  59 +++
+ .../spec/docs-site/docs/directory-structure.md     |   2 +-
+ .trellis/spec/docs-site/docs/release-lifecycle.md  |  38 ++
+ .trellis/spec/docs-site/docs/sync-on-change.md     |  27 +-
+ .trellis/spec/guides/index.md                      |  12 +
+ .trellis/spec/tech/repo/index.md                   |  54 +++
+ .../check.jsonl                                    |   0
+ .../tasks/06-17-architecture-diagram/design.md     | 202 ++++++++
+ .../implement.jsonl                                |   0
+ .../tasks/06-17-architecture-diagram/implement.md  |  88 ++++
+ .trellis/tasks/06-17-architecture-diagram/prd.md   |  88 ++++
+ .../tasks/06-17-architecture-diagram/task.json     |  26 +
+ .../check.jsonl                                    |   0
+ .trellis/tasks/06-17-benchmark-showcase/design.md  | 108 +++++
+ .../implement.jsonl                                |   0
+ .../tasks/06-17-benchmark-showcase/implement.md    |  90 ++++
+ .trellis/tasks/06-17-benchmark-showcase/prd.md     |  99 ++++
+ .trellis/tasks/06-17-benchmark-showcase/task.json  |  26 +
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .trellis/tasks/06-18-brainstorm-prd-dedup/prd.md   |  40 ++
+ .../tasks/06-18-brainstorm-prd-dedup/task.json     |  26 +
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../06-18-channel-driven-workflow-ux-bugs/prd.md   |  43 ++
+ .../research/root-cause.md                         |  54 +++
+ .../task.json                                      |  26 +
+ .../check.jsonl                                    |   0
+ .../06-21-fix-kiro-workflow-injection/design.md    |  73 +++
+ .../implement.jsonl                                |   0
+ .../06-21-fix-kiro-workflow-injection/implement.md |  47 ++
+ .../tasks/06-21-fix-kiro-workflow-injection/prd.md |  42 ++
+ .../06-21-fix-kiro-workflow-injection/task.json    |  26 +
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .trellis/tasks/06-24-issue-292-jsonl-gate/prd.md   |  27 ++
+ .../tasks/06-24-issue-292-jsonl-gate/task.json     |  26 +
+ .../04-20-plugin-system-design/fp-analysis.md      |   0
+ .../04-20-plugin-system-design/fp-progress.md      |   0
+ .../2026-06}/04-20-plugin-system-design/prd.md     |   0
+ .../research/agent-trace-ecosystem.md              |   0
+ .../research/agent-trace-spec.md                   |   0
+ .../research/claude-code-hook-api.md               |   0
+ .../research/cursor-chat-storage.md                |   0
+ .../research/cursor-trace-ux.md                    |   0
+ .../research/fp-spec-memory-trace-boundary.md      |   0
+ .../research/karpathy-llm-wiki.md                  |   0
+ .../research/memory-systems-landscape.md           |   0
+ .../research/opencode-plugin-api.md                |   0
+ .../research/otel-mcp-semconv.md                   |   0
+ .../research/serena-memory.md                      |   0
+ .../research/session-export-tools.md               |   0
+ .../research/supermemory.md                        |   0
+ .../research/trace-as-memory-feedstock.md          |   0
+ .../research/trellis-existing-extension-points.md  |   0
+ .../2026-06}/04-20-plugin-system-design/task.json  |   6 +-
+ .../04-21-session-scoped-task-state/check.jsonl    |   0
+ .../implement.jsonl                                |   0
+ .../04-21-session-scoped-task-state/prd.md         |   0
+ .../research/session-identity-platform-survey.md   |   0
+ .../04-21-session-scoped-task-state/task.json      |   4 +-
+ .../04-24-shared-hooks-dead-files}/check.jsonl     |   0
+ .../04-24-shared-hooks-dead-files}/implement.jsonl |   0
+ .../2026-06}/04-24-shared-hooks-dead-files/prd.md  |   0
+ .../04-24-shared-hooks-dead-files/task.json        |   4 +-
+ .../2026-06/04-25-autopilot-run-queue}/check.jsonl |   0
+ .../04-25-autopilot-run-queue}/implement.jsonl     |   0
+ .../2026-06}/04-25-autopilot-run-queue/prd.md      |   0
+ .../2026-06}/04-25-autopilot-run-queue/task.json   |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../04-27-docs-site-beta-task-pi-docs-audit/prd.md |   0
+ .../research/docs-site-beta-audit.md               |   0
+ .../task.json                                      |   6 +-
+ .../04-27-platform-compat-feedback/check.jsonl     |   0
+ .../04-27-platform-compat-feedback/implement.jsonl |   0
+ .../2026-06}/04-27-platform-compat-feedback/prd.md |   0
+ .../research/claude-code-session-env-file.md       |   0
+ .../research/claude-code-settings-precedence.md    |   0
+ .../research/opencode-skills-vs-commands.md        |   0
+ .../04-27-platform-compat-feedback/task.json       |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../04-28-release-manifest-0-5-0-beta-17/prd.md    |   0
+ .../04-28-release-manifest-0-5-0-beta-17/task.json |   4 +-
+ .../04-28-remove-init-promo-output/check.jsonl     |   0
+ .../04-28-remove-init-promo-output/implement.jsonl |   0
+ .../2026-06}/04-28-remove-init-promo-output/prd.md |   0
+ .../04-28-remove-init-promo-output/task.json       |   6 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../04-29-update-agents-md-template/check.jsonl    |   0
+ .../implement.jsonl                                |   0
+ .../04-29-update-agents-md-template/prd.md         |   0
+ .../04-29-update-agents-md-template/task.json      |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../04-30-skills-sh-listing-cherry-studio/prd.md   |   0
+ .../research/cherry-studio-skill-discovery.md      |   0
+ .../research/skills-sh-submission.md               |   0
+ .../task.json                                      |   4 +-
+ .../05-02-trellis-code-opencode}/check.jsonl       |   0
+ .../05-02-trellis-code-opencode}/implement.jsonl   |   0
+ .../2026-06}/05-02-trellis-code-opencode/prd.md    |   0
+ .../research/opencode-distribution-feasibility.md  |   0
+ .../research/opencode-extension-surfaces.md        |   0
+ .../research/opencode-fork-landscape.md            |   0
+ .../research/opencode-forkability.md               |   0
+ .../research/opencode-foundation.md                |   0
+ .../research/opencode-runtime-architecture.md      |   0
+ .../2026-06}/05-02-trellis-code-opencode/task.json |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../research/claude-agent-sdk.md                   |   0
+ .../research/mcp-tools-setup.md                    |   0
+ .../research/mimo-v2-5-pro.md                      |   0
+ .../research/opencode-driver.md                    |   0
+ .../research/tb2-agent-landscape.md                |   0
+ .../research/terminal-bench-2.md                   |   0
+ .../task.json                                      |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../05-08-0-5-8-prompt-layer-cleanup/check.jsonl   |   0
+ .../implement.jsonl                                |   0
+ .../05-08-0-5-8-prompt-layer-cleanup/prd.md        |   0
+ .../05-08-0-5-8-prompt-layer-cleanup/task.json     |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../research/copilot-injection-paths.md            |   0
+ .../research/pi-extension-hook-contract.md         |   0
+ .../task.json                                      |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../05-08-marketplace-skill-chat-recall/prd.md     |   0
+ .../05-08-marketplace-skill-chat-recall/task.json  |   4 +-
+ .../2026-06/05-08-scratch-start-task}/check.jsonl  |   0
+ .../05-08-scratch-start-task}/implement.jsonl      |   0
+ .../2026-06}/05-08-scratch-start-task/task.json    |   4 +-
+ .../2026-06}/05-08-temporary-task/check.jsonl      |   0
+ .../2026-06}/05-08-temporary-task/implement.jsonl  |   0
+ .../2026-06}/05-08-temporary-task/prd.md           |   0
+ .../2026-06}/05-08-temporary-task/task.json        |   4 +-
+ .../05-10-docs-site-config-yaml-guide/check.jsonl  |   0
+ .../implement.jsonl                                |   0
+ .../05-10-docs-site-config-yaml-guide/prd.md       |   0
+ .../05-10-docs-site-config-yaml-guide/task.json    |   4 +-
+ .../break-loop.md                                  |   0
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../05-10-session-auto-commit-config/check.jsonl   |   0
+ .../implement.jsonl                                |   0
+ .../05-10-session-auto-commit-config/prd.md        |   0
+ .../05-10-session-auto-commit-config/task.json     |   4 +-
+ .../2026-06}/05-10-spec-sweep-may10/check.jsonl    |   0
+ .../05-10-spec-sweep-may10/implement.jsonl         |   0
+ .../2026-06}/05-10-spec-sweep-may10/prd.md         |   0
+ .../2026-06}/05-10-spec-sweep-may10/task.json      |   4 +-
+ .../check.jsonl                                    |   0
+ .../implement.jsonl                                |   0
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../05-13-channel-post-text-input}/check.jsonl     |   0
+ .../05-13-channel-post-text-input}/implement.jsonl |   0
+ .../05-13-channel-post-text-input/implement.md     |   0
+ .../2026-06}/05-13-channel-post-text-input/prd.md  |   0
+ .../05-13-channel-post-text-input/task.json        |   4 +-
+ .../break-loop-event-payload-sot.md                |   0
+ .../check.jsonl                                    |   0
+ .../05-13-channel-topics-managed-agents/design.md  |   0
+ .../implement.jsonl                                |   0
+ .../implement.md                                   |   0
+ .../05-13-channel-topics-managed-agents/prd.md     |   0
+ .../research/architect-brainstorm.md               |   0
+ .../05-13-channel-topics-managed-agents/task.json  |   4 +-
+ .../05-13-create-migration-manifest/check.jsonl    |   1 +
+ .../implement.jsonl                                |   1 +
+ .../05-13-create-migration-manifest/prd.md         |   0
+ .../05-13-create-migration-manifest/task.json      |   4 +-
+ .../check.jsonl                                    |   1 +
+ .../implement.jsonl                                |   1 +
+ .../prd.md                                         |   0
+ .../task.json                                      |   4 +-
+ .../05-13-trellis-core-sdk-package/check.jsonl     |   0
+ .../05-13-trellis-core-sdk-package/design.md       |   0
+ .../05-13-trellis-core-sdk-package/implement.jsonl |   0
+ .../05-13-trellis-core-sdk-package/implement.md    |   0
+ .../2026-06}/05-13-trellis-core-sdk-package/prd.md |   0
+ .../05-13-trellis-core-sdk-package/research.md     |   0
+ .../05-13-trellis-core-sdk-package/task.json       |   4 +-
+ .../check.jsonl                                    |   0
+ .../design.md                                      |   0
+ .../implement.jsonl                                |   0
+ .../implement.md                                   |   0
+ .../prd.md                                         |   0
+ .../research/architect-review-3.md                 |   0
+ .../research/architect-review.md                   |   0
+ .../research/evidence-pass.md                      |   0
+ .../research/implementation-review.md              |   0
+ .../research/issue-intake.md                       |   0
+ .../research/planning-review-2.md                  |   0
+ .../task.json                                      |   4 +-
+ .../05-15-parent-child-task-guidance/check.jsonl   |   1 +
+ .../implement.jsonl                                |   1 +
+ .../05-15-parent-child-task-guidance/prd.md        |   0
+ .../05-15-parent-child-task-guidance/task.json     |   4 +-
+ .../check.jsonl                                    |   1 +
+ .../implement.jsonl                                |   1 +
+ .../prd.md                                         |   0
+ .../task.json                                      |   6 +-
+ .../05-16-rename-spec-bootstrap-skill/check.jsonl  |   1 +
+ .../implement.jsonl                                |   1 +
+ .../05-16-rename-spec-bootstrap-skill/prd.md       |   0
+ .../05-16-rename-spec-bootstrap-skill/task.json    |   4 +-
+ .../05-19-main-0-5-18-release-manifest/check.jsonl |   1 +
+ .../implement.jsonl                                |   1 +
+ .../05-19-main-0-5-18-release-manifest/prd.md      |   0
+ .../05-19-main-0-5-18-release-manifest/task.json   |   4 +-
+ .../2026-06/06-15-release-v0-6-0-ga/check.jsonl    |   1 +
+ .../2026-06/06-15-release-v0-6-0-ga/design.md      | 160 +++++++
+ .../06-15-release-v0-6-0-ga/implement.jsonl        |   1 +
+ .../2026-06/06-15-release-v0-6-0-ga/implement.md   | 207 ++++++++
+ .../archive/2026-06/06-15-release-v0-6-0-ga/prd.md |  70 +++
+ .../research/0.6.0-json-template.md                | 185 ++++++++
+ .../research/0.6.0-manifest-draft.json             |   1 +
+ .../research/CRITIQUE-VERIFY.md                    | 174 +++++++
+ .../06-15-release-v0-6-0-ga/research/CRITIQUE.md   | 127 +++++
+ .../research/PRESHIP-VERIFY-changelog.md           |  83 ++++
+ .../research/PRESHIP-VERIFY-channel.md             |  26 +
+ .../research/PRESHIP-VERIFY-docsjson.md            |  66 +++
+ .../research/PRESHIP-VERIFY-dogfood.md             |  98 ++++
+ .../research/PRESHIP-VERIFY-manifest.md            |  56 +++
+ .../research/PRESHIP-VERIFY-meta.md                |  58 +++
+ .../research/PRESHIP-VERIFY-npm-ready.md           | 163 +++++++
+ .../research/PRESHIP-VERIFY-preflight.md           |  68 +++
+ .../research/PRESHIP-VERIFY-rootcontent.md         |  52 ++
+ .../research/PRESHIP-VERIFY-tests.md               |  58 +++
+ .../research/SHIP-VERDICT.md                       |  34 ++
+ .../research/bundled-trellis-channel/SKILL.md      |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .../bundled-trellis-channel/references/forum.md    | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .../bundled-trellis-channel/references/workers.md  | 276 +++++++++++
+ .../references/workflows.md                        | 128 +++++
+ .../research/channel-cli-surface.md                | 263 +++++++++++
+ .../research/trellis-channel-porting-plan.md       | 160 +++++++
+ .../research/trellis-meta-drift.md                 | 521 +++++++++++++++++++++
+ .../research/trellis-meta-rewrite/SKILL.md         |  85 ++++
+ .../change-skills-or-commands-delta.md             | 329 +++++++++++++
+ .../trellis-meta-rewrite/platform-map-delta.md     | 190 ++++++++
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../research/v0.5.0-changelog-structure.md         | 250 ++++++++++
+ .../research/v0.6.0-changelog-en-draft.md          | 227 +++++++++
+ .../research/v0.6.0-changelog-zh-draft.md          | 256 ++++++++++
+ .../research/v06-cycle-synthesis.md                | 298 ++++++++++++
+ .../2026-06/06-15-release-v0-6-0-ga/task.json      |  26 +
+ .../2026-06/06-17-community-governance/check.jsonl |   1 +
+ .../2026-06/06-17-community-governance/design.md   |  64 +++
+ .../06-17-community-governance/implement.jsonl     |   1 +
+ .../06-17-community-governance/implement.md        |  47 ++
+ .../2026-06/06-17-community-governance/prd.md      |  72 +++
+ .../research/issue-triage-report.md                | 134 ++++++
+ .../research/pr-345-review.md                      | 106 +++++
+ .../2026-06/06-17-community-governance/task.json   |  26 +
+ .../check.jsonl                                    |   1 +
+ .../design.md                                      |  95 ++++
+ .../implement.jsonl                                |   1 +
+ .../implement.md                                   | 120 +++++
+ .../06-17-workflow-simplify-redundant-steps/prd.md |  54 +++
+ .../research/audit-findings.md                     | 189 ++++++++
+ .../task.json                                      |  26 +
+ .../06-18-fix-trellis-staging-scope/check.jsonl    |   1 +
+ .../implement.jsonl                                |   1 +
+ .../2026-06/06-18-fix-trellis-staging-scope/prd.md |  42 ++
+ .../research/303-break-loop.md                     | 151 ++++++
+ .../06-18-fix-trellis-staging-scope/task.json      |  26 +
+ .../2026-06/06-18-fix-windows-mem-cwd/check.jsonl  |   1 +
+ .../06-18-fix-windows-mem-cwd/implement.jsonl      |   1 +
+ .../2026-06/06-18-fix-windows-mem-cwd/prd.md       |  43 ++
+ .../2026-06/06-18-fix-windows-mem-cwd/task.json    |  26 +
+ .../2026-06/06-18-pi-mem-adapter/check.jsonl       |   6 +
+ .../archive/2026-06/06-18-pi-mem-adapter/design.md | 132 ++++++
+ .../2026-06/06-18-pi-mem-adapter/implement.jsonl   |   6 +
+ .../2026-06/06-18-pi-mem-adapter/implement.md      |  75 +++
+ .../archive/2026-06/06-18-pi-mem-adapter/prd.md    |  49 ++
+ .../research/pi-session-store.md                   | 114 +++++
+ .../archive/2026-06/06-18-pi-mem-adapter/task.json |  26 +
+ .../06-18-spec-maintainer-audit/check.jsonl        |   1 +
+ .../2026-06/06-18-spec-maintainer-audit/design.md  |  78 +++
+ .../06-18-spec-maintainer-audit/implement.jsonl    |   1 +
+ .../06-18-spec-maintainer-audit/implement.md       |  48 ++
+ .../2026-06/06-18-spec-maintainer-audit/prd.md     |  71 +++
+ .../research/spec-drift-scan.md                    | 203 ++++++++
+ .../2026-06/06-18-spec-maintainer-audit/task.json  |  26 +
+ .../06-18-support-devin-platform/check.jsonl       |   1 +
+ .../06-18-support-devin-platform/implement.jsonl   |   1 +
+ .../2026-06/06-18-support-devin-platform/prd.md    |  66 +++
+ .../research/windsurf-to-devin.md                  |  69 +++
+ .../2026-06/06-18-support-devin-platform/task.json |  26 +
+ .../check.jsonl                                    |   6 +
+ .../implement.jsonl                                |  11 +
+ .../06-22-platform-start-skill-coverage/prd.md     | 128 +++++
+ .../research/00-summary.md                         |  49 ++
+ .../research/01-filtercommands-fanout.md           |  74 +++
+ .../research/02-start-template-semantics.md        |  45 ++
+ .../research/03-workflow-md-platform-blocks.md     |  99 ++++
+ .../research/04-opencode-deep-dive.md              |  75 +++
+ .../research/05-reasonix-subagent.md               |  93 ++++
+ .../research/06-test-impact.md                     |  64 +++
+ .../research/07-migration-update-impact.md         | 105 +++++
+ .../research/08-gitnexus-impact.md                 |  68 +++
+ .../06-22-platform-start-skill-coverage/task.json  |  26 +
+ .../check.jsonl                                    |   1 +
+ .../implement.jsonl                                |   1 +
+ .../prd.md                                         |  25 +
+ .../task.json                                      |  26 +
+ .trellis/workflow.md                               |  54 +--
+ .trellis/workspace/hauryn/index.md                 |  41 ++
+ .trellis/workspace/hauryn/journal-1.md             |  39 ++
+ .trellis/workspace/taosu/index.md                  |   8 +-
+ .trellis/workspace/taosu/journal-5.md              |  69 +++
+ AGENTS.md                                          |  76 +--
+ CLAUDE.md                                          |  76 +--
+ README.md                                          |   2 +-
+ README_CN.md                                       |   4 +-
+ assets/wx_link7.jpg                                | Bin 249765 -> 179217 bytes
+ assets/wx_link8.jpg                                | Bin 0 -> 253210 bytes
+ docs-site                                          |   2 +-
+ marketplace                                        |   2 +-
+ packages/cli/package.json                          |   2 +-
+ packages/cli/scripts/release.js                    |   6 +-
+ packages/cli/src/cli/index.ts                      |  21 +-
+ packages/cli/src/commands/channel/messages.ts      |   2 +-
+ packages/cli/src/commands/channel/supervisor.ts    |  35 +-
+ packages/cli/src/commands/init.ts                  |  73 ++-
+ packages/cli/src/commands/mem.ts                   |   7 +-
+ packages/cli/src/commands/uninstall.ts             |   1 +
+ packages/cli/src/commands/update.ts                |  39 +-
+ packages/cli/src/configurators/antigravity.ts      |   2 +-
+ packages/cli/src/configurators/claude.ts           |  54 ++-
+ packages/cli/src/configurators/codebuddy.ts        |   2 +-
+ packages/cli/src/configurators/codex.ts            |  25 +-
+ packages/cli/src/configurators/copilot.ts          |   2 +-
+ packages/cli/src/configurators/cursor.ts           |   2 +-
+ .../src/configurators/{windsurf.ts => devin.ts}    |  12 +-
+ packages/cli/src/configurators/droid.ts            |   2 +-
+ packages/cli/src/configurators/gemini.ts           |   2 +-
+ packages/cli/src/configurators/index.ts            |  82 +++-
+ packages/cli/src/configurators/kilo.ts             |   2 +-
+ packages/cli/src/configurators/kiro.ts             |  19 +-
+ packages/cli/src/configurators/pi.ts               |  21 +-
+ packages/cli/src/configurators/shared.ts           |  77 ++-
+ packages/cli/src/configurators/trae.ts             |  70 +++
+ packages/cli/src/configurators/zcode.ts            |  82 ++++
+ packages/cli/src/migrations/manifests/0.6.0.json   |   1 +
+ packages/cli/src/migrations/manifests/0.6.1.json   |   9 +
+ packages/cli/src/migrations/manifests/0.6.2.json   |   9 +
+ packages/cli/src/migrations/manifests/0.6.3.json   |  24 +
+ packages/cli/src/migrations/manifests/0.6.4.json   |   9 +
+ packages/cli/src/migrations/manifests/0.6.5.json   |   9 +
+ .../cli/src/templates/claude/hooks/statusline.py   | 324 +++++++++++++
+ packages/cli/src/templates/claude/index.ts         |  14 +-
+ .../src/templates/codex/skills/brainstorm/SKILL.md |  20 +-
+ .../common/bundled-skills/trellis-channel/SKILL.md |  67 +++
+ .../references/command-reference.md                | 480 +++++++++++++++++++
+ .../trellis-channel/references/forum.md            | 233 +++++++++
+ .../references/progress-debugging.md               | 226 +++++++++
+ .../trellis-channel/references/workers.md          | 276 +++++++++++
+ .../trellis-channel/references/workflows.md        | 128 +++++
+ .../common/bundled-skills/trellis-meta/SKILL.md    |  80 ++--
+ .../references/customize-local/change-agents.md    |   2 +
+ .../references/customize-local/change-hooks.md     |   2 +-
+ .../customize-local/change-skills-or-commands.md   |  53 ++-
+ .../references/customize-local/change-workflow.md  |   2 +-
+ .../references/customize-local/overview.md         |   4 +-
+ .../local-architecture/bundled-skills.md           | 146 ++++++
+ .../local-architecture/generated-files.md          |   6 +-
+ .../local-architecture/multi-agent-channel.md      |  69 +++
+ .../references/local-architecture/overview.md      |   2 +-
+ .../references/platform-files/agents.md            |   4 +-
+ .../platform-files/hooks-and-settings.md           |   3 +
+ .../references/platform-files/overview.md          |   6 +-
+ .../references/platform-files/platform-map.md      |  20 +-
+ .../platform-files/skills-and-commands.md          |   4 +-
+ .../trellis-session-insight/SKILL.md               |   4 +-
+ .../references/cli-quick-reference.md              |  47 +-
+ .../cli/src/templates/common/commands/continue.md  |   2 +-
+ .../cli/src/templates/common/skills/brainstorm.md  |  63 ++-
+ .../cli/src/templates/common/skills/break-loop.md  |  59 +++
+ .../templates/copilot/prompts/brainstorm.prompt.md |  20 +-
+ .../copilot/prompts/finish-work.prompt.md          |   2 +-
+ .../cli/src/templates/kiro/agents/trellis.json     |  34 ++
+ .../kiro/hooks/trellis-workflow-state.kiro.hook    |  14 +
+ packages/cli/src/templates/kiro/index.ts           |  27 +-
+ .../cli/src/templates/pi/agents/trellis-check.md   |   2 +-
+ .../src/templates/pi/agents/trellis-implement.md   |   2 +-
+ .../src/templates/pi/agents/trellis-research.md    |   2 +-
+ .../templates/pi/extensions/trellis/index.ts.txt   |  92 +++-
+ packages/cli/src/templates/shared-hooks/index.ts   |  26 +-
+ .../shared-hooks/inject-workflow-state.py          |  59 ++-
+ .../src/templates/shared-hooks/session-start.py    |  13 +
+ .../cli/src/templates/trae/agents/trellis-check.md | 108 +++++
+ .../src/templates/trae/agents/trellis-implement.md | 103 ++++
+ .../src/templates/trae/agents/trellis-research.md  | 137 ++++++
+ packages/cli/src/templates/trae/hooks.json         |  27 ++
+ packages/cli/src/templates/trae/index.ts           |  24 +
+ .../src/templates/trellis/scripts/add_session.py   |  32 +-
+ .../trellis/scripts/common/active_task.py          |   2 +
+ .../trellis/scripts/common/cli_adapter.py          | 116 +++--
+ .../trellis/scripts/common/safe_commit.py          |  62 ++-
+ .../templates/trellis/scripts/common/task_store.py |   5 +-
+ .../trellis/scripts/common/workflow_phase.py       |   2 +-
+ packages/cli/src/templates/trellis/workflow.md     |  86 ++--
+ .../src/templates/zcode/agents/trellis-check.md    | 102 ++++
+ .../templates/zcode/agents/trellis-implement.md    | 102 ++++
+ packages/cli/src/templates/zcode/index.ts          |  20 +
+ packages/cli/src/types/ai-tools.ts                 |  74 ++-
+ .../cli/test/commands/init.integration.test.ts     | 281 ++++++++++-
+ packages/cli/test/commands/mem-helpers.test.ts     |   6 +
+ packages/cli/test/commands/mem-integration.test.ts | 175 ++++++-
+ .../cli/test/commands/update.integration.test.ts   |  81 +++-
+ packages/cli/test/configurators/index.test.ts      |  12 +-
+ packages/cli/test/configurators/platforms.test.ts  | 240 +++++++++-
+ packages/cli/test/configurators/shared.test.ts     |  14 +-
+ packages/cli/test/registry-invariants.test.ts      |  26 +-
+ packages/cli/test/regression.test.ts               | 379 +++++++++++++--
+ .../test/scripts/add-session.integration.test.ts   | 224 +++++++++
+ .../inject-workflow-state-kiro.integration.test.ts | 153 ++++++
+ packages/cli/test/templates/kiro.test.ts           |  96 ++++
+ packages/cli/test/templates/pi.test.ts             | 154 +++++-
+ packages/cli/test/templates/shared-hooks.test.ts   |  17 +-
+ packages/cli/test/templates/trae.test.ts           | 228 +++++++++
+ packages/cli/test/templates/trellis.test.ts        |  76 +++
+ packages/core/package.json                         |   2 +-
+ packages/core/src/mem/adapters/claude.ts           |  14 +-
+ packages/core/src/mem/adapters/pi.ts               | 374 +++++++++++++++
+ packages/core/src/mem/internal/paths.ts            |  59 ++-
+ packages/core/src/mem/projects.ts                  |   2 +-
+ packages/core/src/mem/sessions.ts                  |  20 +-
+ packages/core/src/mem/types.ts                     |   2 +-
+ packages/core/test/mem/adapters.test.ts            | 379 ++++++++++++++-
+ packages/core/test/mem/api.test.ts                 | 173 +++++++
+ packages/core/test/mem/phase.test.ts               | 173 ++++++-
+ 655 files changed, 31108 insertions(+), 1889 deletions(-)
