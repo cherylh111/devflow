@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 16
-- **Last Active**: 2026-06-18
+- **Total Sessions**: 17
+- **Last Active**: 2026-06-29
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~564 | Active |
+| `journal-1.md` | ~599 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 17 | 2026-06-29 | Sync Trellis v0.6.5 changes | `18cf9ee`, `2216a59` | `main` |
 | 16 | 2026-06-18 | Finalize skills improvements roadmap | `247ec77` | `main` |
 | 15 | 2026-06-18 | Add TDD guidance to before-dev | `0cb6294` | `main` |
 | 14 | 2026-06-18 | Add seam adapter cross-layer guidance | `36f179e` | `main` |

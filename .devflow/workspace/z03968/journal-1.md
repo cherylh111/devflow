@@ -562,3 +562,38 @@ Completed the parent roadmap final review, recorded completed P0/P1 child outcom
 ### Next Steps
 
 - None - task complete
+
+
+## Session 17: Sync Trellis v0.6.5 changes
+
+**Date**: 2026-06-29
+**Task**: Sync Trellis v0.6.5 changes
+**Package**: devflow
+**Branch**: `main`
+
+### Summary
+
+Synced DevFlow from the Trellis v0.6.0-rc.0 baseline to v0.6.5 while preserving DevFlow package identity, updated CLI/core/templates/workflow assets and configurator contract docs, and validated tests, lint, typecheck, pyright, build-equivalent checks, and branding drift.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `18cf9ee` | (see git log) |
+| `2216a59` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
