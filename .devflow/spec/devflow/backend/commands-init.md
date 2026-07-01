@@ -50,6 +50,10 @@ export function selectMarketplaceTemplates(
   category. Category names are metadata, not template types.
 - `--templates` and `--categories` may be combined. Duplicate ids install once
   in marketplace index order.
+- Batch selectors (`--templates` / `--categories`) run for both single-repo and
+  monorepo checkouts. When a selected `spec` template is installed, built-in
+  blank spec generation is skipped entirely, including monorepo
+  `spec/<package>/...` scaffolding and generic `spec/guides/`.
 - Remote registries use the existing HTTP/Git probe and the backend returned by
   `probeRegistryIndex`.
 - Local registry paths read `<root>/index.json` and copy entries from
@@ -89,10 +93,15 @@ export function selectMarketplaceTemplates(
 - Good: `devflow init -y --registry gh:org/repo/marketplace --categories common,uware`
   probes the remote index, installs all matching entries, and passes the probe's
   backend into each download.
+- Good: the same category command in a detected monorepo installs the selected
+  marketplace `spec` template and does not also write built-in
+  `spec/<package>/backend` or `spec/guides` docs.
 - Base: `devflow init --registry gh:org/repo/marketplace --template backend`
   keeps the historical single-template behavior.
 - Bad: `--categories common,uware` treats `common` and `uware` as template
   types, forcing new hard-coded install paths for every business grouping.
+- Bad: monorepo detection short-circuits `--categories`, causing marketplace
+  templates to be skipped while default per-package spec docs are generated.
 - Bad: a successful Git probe is followed by an HTTP/giget download, breaking
   private registries that only local Git credentials can access.
 
@@ -106,6 +115,9 @@ export function selectMarketplaceTemplates(
 - Integration test for `init -y --registry <remote> --categories ...` proving
   batch remote selection does not hit the old "multiple templates require
   interactive selection" branch.
+- Integration test for `init -y --registry <remote> --categories ...` in a
+  detected monorepo proving the selected marketplace spec is installed and
+  built-in per-package/guides spec scaffolding is absent.
 - Existing Git-backed registry tests must keep asserting probe/download backend
   consistency.
 - Integration tests for `init --registry <source> --template <id>` where the

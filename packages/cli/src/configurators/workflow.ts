@@ -139,7 +139,7 @@ export async function createWorkflowStructure(
 
   // Create spec templates based on project type
   // These are NOT dogfooded - they are generic templates for new projects
-  if (packages && packages.length > 0) {
+  if (packages && packages.length > 0 && !skipSpecTemplates) {
     // Monorepo mode: create per-package spec directories
     await createSpecTemplates(cwd, projectType, packages, remoteSpecPackages);
   } else if (!skipSpecTemplates) {

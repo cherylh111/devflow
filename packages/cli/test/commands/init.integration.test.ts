@@ -862,6 +862,55 @@ describe("init() integration", () => {
     );
   });
 
+  it("#23b -y --registry --categories in monorepo installs selected marketplace specs without built-in specs", async () => {
+    setupPnpmWorkspace(tmpDir, [
+      { rel: "packages/app", name: "app" },
+      { rel: "packages/api", name: "api" },
+    ]);
+    registryDownload.files.set("index.md", "# uware spec\n");
+    const index = JSON.stringify({
+      version: 1,
+      templates: [
+        {
+          id: "uware-spec",
+          type: "spec",
+          name: "Uware",
+          path: "specs/uware",
+          tags: ["common", "uware"],
+        },
+      ],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(index),
+      }),
+    );
+
+    await init({
+      yes: true,
+      registry: "gitlab:local/registry/marketplace",
+      categories: "common,uware",
+      overwrite: true,
+    });
+
+    const specDir = path.join(tmpDir, PATHS.SPEC);
+    expect(fs.readFileSync(path.join(specDir, "index.md"), "utf-8")).toBe(
+      "# uware spec\n",
+    );
+    expect(fs.existsSync(path.join(specDir, "app", "backend"))).toBe(false);
+    expect(fs.existsSync(path.join(specDir, "api", "backend"))).toBe(false);
+    expect(fs.existsSync(path.join(specDir, "guides"))).toBe(false);
+
+    const config = fs.readFileSync(
+      path.join(tmpDir, DIR_NAMES.WORKFLOW, "config.yaml"),
+      "utf-8",
+    );
+    expect(config).toContain("source: gitlab:local/registry/marketplace");
+    expect(config).toContain("template: uware-spec");
+  });
+
   it("#19 polyrepo: writes git: true for sibling .git packages", async () => {
     // Two sibling .git directories — polyrepo fallback should pick them up
     fs.mkdirSync(path.join(tmpDir, "frontend", ".git"), { recursive: true });

@@ -870,7 +870,7 @@ async function handleReinit(
             ),
           ),
         );
-    } else {
+      } else {
         const answers = await inquirer.prompt<{ tools: string[] }>([
           {
             type: "checkbox",
@@ -1240,10 +1240,7 @@ export async function init(options: InitOptions): Promise<void> {
     writeMode = "skip";
     console.log(
       chalk.gray(
-        localized(
-          "Mode: Skip existing files\n",
-          "模式：跳过已有文件\n",
-        ),
+        localized("Mode: Skip existing files\n", "模式：跳过已有文件\n"),
       ),
     );
   } else if (options.yes) {
@@ -1459,10 +1456,7 @@ export async function init(options: InitOptions): Promise<void> {
           {
             type: "confirm",
             name: "useMonorepo",
-            message: localized(
-              "Enable monorepo mode?",
-              "启用 monorepo 模式？",
-            ),
+            message: localized("Enable monorepo mode?", "启用 monorepo 模式？"),
             default: true,
           },
         ]);
@@ -1495,10 +1489,7 @@ export async function init(options: InitOptions): Promise<void> {
                     value: "blank",
                   },
                   {
-                    name: localized(
-                      "Download remote template",
-                      "下载远程模板",
-                    ),
+                    name: localized("Download remote template", "下载远程模板"),
                     value: "remote",
                   },
                 ],
@@ -1684,9 +1675,7 @@ export async function init(options: InitOptions): Promise<void> {
     ? `${registry.rawBaseUrl}/index.json`
     : TEMPLATE_INDEX_URL;
 
-  if (monorepoPackages) {
-    // Monorepo: template selection already handled above
-  } else if (hasBatchTemplateSelection) {
+  if (hasBatchTemplateSelection) {
     let templates: SpecTemplate[];
     if (registry) {
       const probeResult = await probeRegistryIndex(indexUrl, registry);
@@ -1754,6 +1743,8 @@ export async function init(options: InitOptions): Promise<void> {
       return;
     }
     selectedTemplates = selection.templates;
+  } else if (monorepoPackages) {
+    // Monorepo: single-template selection already handled above.
   } else if (options.template) {
     // Template specified via --template flag
     selectedTemplate = options.template;
@@ -1820,10 +1811,13 @@ export async function init(options: InitOptions): Promise<void> {
       // Custom registry: transient error (not a 404) — abort, don't misclassify
       console.log(
         chalk.red(
-          `   ${registryProbeError?.message ?? localized(
-            "Could not reach registry. Check your connection and try again.",
-            "无法访问 registry。请检查连接后重试。",
-          )}`,
+          `   ${
+            registryProbeError?.message ??
+            localized(
+              "Could not reach registry. Check your connection and try again.",
+              "无法访问 registry。请检查连接后重试。",
+            )
+          }`,
         ),
       );
       return;
@@ -1838,10 +1832,7 @@ export async function init(options: InitOptions): Promise<void> {
       );
       console.log(
         chalk.gray(
-          localized(
-            "   Using blank templates.\n",
-            "   将使用空白模板。\n",
-          ),
+          localized("   Using blank templates.\n", "   将使用空白模板。\n"),
         ),
       );
     }
@@ -1995,10 +1986,13 @@ export async function init(options: InitOptions): Promise<void> {
               // Transient error (not 404) — loop back, don't misclassify
               console.log(
                 chalk.yellow(
-                  `   ${customProbe.error?.message ?? localized(
-                    "Could not reach registry. Try again or enter a different source.",
-                    "无法访问 registry。请重试或输入其他来源。",
-                  )}`,
+                  `   ${
+                    customProbe.error?.message ??
+                    localized(
+                      "Could not reach registry. Try again or enter a different source.",
+                      "无法访问 registry。请重试或输入其他来源。",
+                    )
+                  }`,
                 ),
               );
               registry = undefined; // Reset so we don't fall through to direct download
@@ -2009,7 +2003,10 @@ export async function init(options: InitOptions): Promise<void> {
               chalk.red(
                 error instanceof Error
                   ? error.message
-                  : localized("Invalid registry source", "无效的 registry 来源"),
+                  : localized(
+                      "Invalid registry source",
+                      "无效的 registry 来源",
+                    ),
               ),
             );
             // Loop back to picker
@@ -2120,6 +2117,7 @@ export async function init(options: InitOptions): Promise<void> {
   let registrySpecConfigToPersist: SpecRegistryConfig | null = null;
 
   if (selectedTemplates.length > 0) {
+    const downloadedSpecTemplateIds: string[] = [];
     console.log(
       chalk.blue(
         localized(
@@ -2157,8 +2155,15 @@ export async function init(options: InitOptions): Promise<void> {
         console.log(chalk.green(`   ${result.message}`));
         if (template.type === "spec") {
           useRemoteTemplate = true;
+          downloadedSpecTemplateIds.push(template.id);
         }
       }
+    }
+    if (registry && downloadedSpecTemplateIds.length === 1) {
+      registrySpecConfigToPersist = {
+        source: registrySourceForConfig ?? registry.gigetSource,
+        template: downloadedSpecTemplateIds[0],
+      };
     }
   } else if (selectedTemplate) {
     // Marketplace mode: download specific template by ID
@@ -2262,17 +2267,11 @@ export async function init(options: InitOptions): Promise<void> {
             ),
             choices: [
               {
-                name: localized(
-                  "Skip (keep existing)",
-                  "跳过（保留现有内容）",
-                ),
+                name: localized("Skip (keep existing)", "跳过（保留现有内容）"),
                 value: "skip",
               },
               {
-                name: localized(
-                  "Overwrite (replace all)",
-                  "覆盖（全部替换）",
-                ),
+                name: localized("Overwrite (replace all)", "覆盖（全部替换）"),
                 value: "overwrite",
               },
               {
@@ -2423,9 +2422,7 @@ export async function init(options: InitOptions): Promise<void> {
         });
         if (platformId === "claude-code" && options.withStatusline) {
           console.log(
-            chalk.gray(
-              "   → DevFlow statusLine installed (--with-statusline)",
-            ),
+            chalk.gray("   → DevFlow statusLine installed (--with-statusline)"),
           );
         }
       }
